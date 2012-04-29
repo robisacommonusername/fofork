@@ -17,6 +17,23 @@ $fof_installer = true;
 
 include_once("fof-main.php");
 
+//test if there's already an installation or a conflicting table name
+$tables = fof_db_query('SHOW TABLES',1);
+$tableNames = array($FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_FEED_TABLE, 
+				$FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, 
+				$FOF_SUBSCRIPTION_TABLE);
+$conflict = False;
+while ($line = fof_db_get_row($tables)){
+	if (in_array($line[0], $tableNames)){
+		$conflict = True;
+		$conflictName = $line[0];
+		break;
+	}
+}
+if ($conflict){
+	die("Cannot install, there already exists a table named $conflictName in the database");
+}
+
 fof_set_content_type();
 
 // compatibility testing code lifted from SimplePie
