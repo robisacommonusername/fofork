@@ -15,41 +15,35 @@
 include_once("fof-main.php");
 include_once("fof-render.php");
 
-if($_GET['how'] == 'paged' && !isset($_GET['which']))
-{
+if($_GET['how'] == 'paged' && !isset($_GET['which'])){
 	$which = 0;
-}
-else
-{
-	$which = $_GET['which'];
+} else {
+	$which = intval($_GET['which']);
 }
 
-$order = $_GET['order'];
-
-if(!isset($_GET['what']))
-{
+if(!isset($_GET['what'])) {
     $what = "unread";
-}
-else
-{
-    $what = $_GET['what'];
+} else {
+    $what = htmlspecialchars($_GET['what']);
 }
 
-if(!isset($_GET['order']))
-{
-	$order = $fof_prefs_obj->get("order");
+if(!isset($_GET['order'])) {
+	$order = $fof_prefs_obj->get("order") == 'asc' ? 'asc' : 'desc';
+} else {
+	$order = $_GET['order'] == 'asc' ? 'asc' : 'desc';
 }
 
-$how = $_GET['how'];
+$how = htmlspecialchars($_GET['how']);
 $feed = intval($_GET['feed']);
-$when = $_GET['when'];
+$when = htmlspecialchars($_GET['when']);
 $howmany = intval($_GET['howmany']);
 if (!$howmany){
-	$howmany = $fof_prefs_obj->get("howmany");
+	$howmany = intval($fof_prefs_obj->get("howmany"));
 }
+$search = isset($_GET['search']) ? htmlspecialchars($_GET['search']) : "";
 
-$title = fof_view_title($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $_GET['search']);
-$noedit = $_GET['noedit'];
+$title = fof_view_title($feed, $what, $when, $which, $howmany, $search);
+//$noedit = $_GET['noedit'];
 
 ?>
 
@@ -68,12 +62,12 @@ $noedit = $_GET['noedit'];
 
 <br style="clear: both"><br />
 
-<p><?php echo htmlspecialchars($title)?></p> 
+<p><?php echo $title ?></p> 
 
 
 <ul id="item-display-controls" class="inline-list">
 	<li class="orderby"><?php
-	#XSS
+	
 	echo ($order == "desc") ? '[new to old]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=desc\">[new to old]</a>" ;
 	
 	?></li>
@@ -101,18 +95,18 @@ $noedit = $_GET['noedit'];
 		<input type="hidden" name="return" />
 
 <?php
-	$links = fof_get_nav_links($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany']); #XSS
+	$links = fof_get_nav_links($feed, $what, $when, $which, $howmany); #XSS
 
 	if($links)
 	{
 ?>
-		<center><?php echo $links #XSS?></center>
+		<center><?php echo $links?></center>
 
 <?php
 	}
 
 
-$result = fof_get_items(fof_current_user(), $_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $order, $_GET['search']);
+$result = fof_get_items(fof_current_user(), $feed, $what, $when, $which, $howmany, $order, $search);
 
 $first = true;
 
