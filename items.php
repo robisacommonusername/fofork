@@ -70,7 +70,7 @@ $noedit = $_GET['noedit'];
 
 <ul id="item-display-controls" class="inline-list">
 	<li class="orderby"><?php
-
+	#XSS
 	echo ($order == "desc") ? '[new to old]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=desc\">[new to old]</a>" ;
 	
 	?></li>
@@ -98,12 +98,12 @@ $noedit = $_GET['noedit'];
 		<input type="hidden" name="return" />
 
 <?php
-	$links = fof_get_nav_links($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany']);
+	$links = fof_get_nav_links($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany']); #XSS
 
 	if($links)
 	{
 ?>
-		<center><?php echo $links ?></center>
+		<center><?php echo $links #XSS?></center>
 
 <?php
 	}
