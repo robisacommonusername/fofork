@@ -44,6 +44,9 @@ $how = $_GET['how'];
 $feed = intval($_GET['feed']);
 $when = $_GET['when'];
 $howmany = intval($_GET['howmany']);
+if (!$howmany){
+	$howmany = $fof_prefs_obj->get("howmany");
+}
 
 $title = fof_view_title($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $_GET['search']);
 $noedit = $_GET['noedit'];
