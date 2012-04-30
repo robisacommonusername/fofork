@@ -767,7 +767,7 @@ function toggle_favorite(id)
 	
     if(image.star)
     {
-        params += "&remove=true";
+        params.remove = 'true';
         var complete = function()
 		{
 			image.src='image/star-off.gif';
