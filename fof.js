@@ -703,9 +703,9 @@ function add_tag(id, tag)
     throb();
     
     var url = "add-tag.php";
-    var params = "tag=" + tag + "&item=" + id;
+    var params = {tag: tag, item: id};
     var complete = function () { refreshlist(); refreshitem(id); };
-    var options = { method: 'get', parameters: params, onComplete: complete };
+    var options = { method: 'post', parameters: params, onComplete: complete };
     
     new Ajax.Request(url, options);
     
@@ -717,9 +717,9 @@ function remove_tag(id, tag)
     throb();
     
     var url = "add-tag.php";
-    var params = "remove=true&tag=" + tag + "&item=" + id;
+    var params = {remove: 'true', tag: tag, item: id};
     var complete = function () { refreshlist(); refreshitem(id); };
-    var options = { method: 'get', parameters: params, onComplete: complete };
+    var options = { method: 'post', parameters: params, onComplete: complete };
     
     new Ajax.Request(url, options);
     
@@ -731,9 +731,9 @@ function delete_tag(tag)
     throb();
     
     var url = "view-action.php";
-    var params = "deltag=" + tag;
+    var params = {deltag: tag};
     var complete = function () { refreshlist(); };
-    var options = { method: 'get', parameters: params, onComplete: complete };
+    var options = { method: 'post', parameters: params, onComplete: complete };
     
     new Ajax.Request(url, options);
     
@@ -761,8 +761,8 @@ function toggle_favorite(id)
     
     var image = $('fav' + id);    
     
-    var url = "add-tag.php?tag=star";
-    var params = "&item=" + id;
+    var url = "add-tag.php";
+    var params = {tag: 'star', item: id};
     image.src = 'image/star-pending.gif';
 	
     if(image.star)
@@ -803,7 +803,7 @@ function toggle_favorite(id)
 		};
     }
     
-    var options = { method: 'get', parameters: params, onComplete: complete };  
+    var options = { method: 'post', parameters: params, onComplete: complete };  
     new Ajax.Request(url, options);
     
     return false;

@@ -14,9 +14,9 @@
 
 include_once("fof-main.php");
 
-$tags = $_GET['tag'];
-$item = $_GET['item'];
-$remove = $_GET['remove'];
+$tags = $_POST['tag'];
+$item = $_POST['item'];
+$remove = $_POST['remove'];
 
 foreach(explode(" ", $tags) as $tag)
 {

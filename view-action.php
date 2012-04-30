@@ -25,7 +25,7 @@ while (list ($key, $val) = each ($_POST))
     }    
 }
 
-if($_REQUEST['deltag'])
+if($_POST['deltag'])
 {
 	fof_untag(fof_current_user(), $_REQUEST['deltag']);
 }
