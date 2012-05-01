@@ -28,7 +28,9 @@ fof_set_content_type();
 <?php
 
 $order = $fof_prefs_obj->get('feed_order');
-$direction = $fof_prefs_obj->get('feed_direction');
+$allowedOrders = array('feed_age', 'max_date', 'feed_unread', 'feed_url', 'feed_title');
+$order = in_array($order, $allowedOrders) ? $order : 'feed_age' ;
+$direction = $fof_prefs_obj->get('feed_direction') == 'asc' ? 'asc' : 'desc';
 
 if(!isset($_GET['what']))
 {
@@ -36,15 +38,18 @@ if(!isset($_GET['what']))
 }
 else
 {
-    $what = $_GET['what'];
+    $what = htmlspecialchars($_GET['what']);
 }
 
-$when = $_GET['when'];
+$when = htmlspecialchars($_GET['when']);
 
-$search = $_GET['search'];
+$search = htmlspecialchars($_GET['search']);
 
-echo "<script>what='$what'; when='$when';</script>";
+$whatEscaped = addslashes($what);
+$whenEscaped = addslashes($when);
+$searchEscaped = addslashes($search);
 
+echo "<script>what='$whatEscaped'; when='$whenEscaped';</script>";
 
 $feeds = fof_get_feeds(fof_current_user(), $order, $direction);
 
@@ -75,14 +80,14 @@ echo "<script>starred = $starred;</script>";
 <li <?php if($what == "all" && !isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&how=paged">All Items <?php if($total) echo "($total)" ?></a></li>
 <li <?php if(isset($search)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
 <form action="." id="search" <?php if(!isset($search)) echo 'style="display: none"' ?>>
-<input id="searchfield" name="search" value="<?php echo $search?>">
+<input id="searchfield" name="search" value="<?php echo $searchEscaped ?>">
 <?php
 	if($what == "unread")
 		echo "<input type='hidden' name='what' value='all'>";
 	else
-		echo "<input type='hidden' name='what' value='$what'>";
+		echo "<input type='hidden' name='what' value='$whatEscaped'>";
 ?>
-<?php if(isset($_GET['when'])) echo "<input type='hidden' name='what' value='${_GET['when']}'>" ?>
+<?php if(isset($_GET['when'])) echo "<input type='hidden' name='what' value='$whenEscaped'>" ?>
 </form>
 </li>
 </ul>
@@ -115,7 +120,7 @@ if($n)
 <?php
 foreach($tags as $tag)
 {   
-   $tag_name = $tag['tag_name'];
+   $tag_name = htmlspecialchars($tag['tag_name']);
    $tag_id = $tag['tag_id'];
    $count = $tag['count'];
    $unread = $tag['unread'];
@@ -132,10 +137,12 @@ foreach($tags as $tag)
    }
 
    print "<td>";
-   if($unread) print "<a class='unread' href='.?what=$tag_name+unread'>$unread</a>/";
-   print "<a href='.?what=$tag_name'>$count</a></td>";
-   print "<td><b><a href='.?what=$tag_name'>$tag_name</a></b></td>";
-   print "<td><a href=\"#\" title=\"untag all items\" onclick=\"if(confirm('Untag all [$tag_name] items --are you SURE?')) { delete_tag('$tag_name'); return false; }  else { return false; }\">[x]</a></td>";
+   $tagNameEncoded = urlencode($tag_name);
+   $tagNameEscaped = addslashes($tag_name);
+   if($unread) print "<a class='unread' href='.?what=$tagNameEncoded+unread'>$unread</a>/";
+   print "<a href='.?what=$tagNameEncoded'>$count</a></td>";
+   print "<td><b><a href='.?what=$tagNameEncoded'>$tag_name</a></b></td>";
+   print "<td><a href=\"#\" title=\"untag all items\" onclick=\"if(confirm('Untag all [$tagNameEscaped] items --are you SURE?')) { delete_tag('$tagNameEscaped'); return false; }  else { return false; }\">[x]</a></td>";
 
    print "</tr>";
 }
@@ -162,11 +169,11 @@ foreach($tags as $tag)
 
 <?php
 
-$title["feed_age"] = "sort by last update time";
-$title["max_date"] = "sort by last new item";
-$title["feed_unread"] = "sort by number of unread items";
-$title["feed_url"] = "sort by feed URL";
-$title["feed_title"] = "sort by feed title";
+$title['feed_age'] = 'sort by last update time';
+$title['max_date'] = 'sort by last new item';
+$title['feed_unread'] = 'sort by number of unread items';
+$title['feed_url'] = 'sort by feed URL';
+$title['feed_title'] = 'sort by feed title';
 
 $name["feed_age"] = "age";
 $name["max_date"] = "latest";
@@ -174,7 +181,7 @@ $name["feed_unread"] = "#";
 $name["feed_url"] = "feed";
 $name["feed_title"] = "title";
 
-foreach (array("feed_age", "max_date", "feed_unread", "feed_url", "feed_title") as $col)
+foreach ($allowedOrders as $col)
 {
     if($col == $order)
     {
@@ -267,12 +274,12 @@ foreach($feeds as $row)
 	print "</td>";
 
    print "<td>";
-   print "<a href=\"$link\" title=\"home page\"><b>$title</b></a></td>";
+   $stitle = htmlspecialchars(addslashes($title));
+   print "<a href=\"$link\" title=\"home page\"><b>$stitle</b></a></td>";
 
    print "<td><nobr>";
    
    print "<a href=\"update.php?feed=$id\" title=\"update\">u</a>";
-   $stitle = htmlspecialchars(addslashes($title));
    print " <a href=\"#\" title=\"mark all read\" onclick=\"if(confirm('Mark all [$stitle] items as read --are you SURE?')) { mark_feed_read($id); return false; }  else { return false; }\">m</a>";
    print " <a href=\"delete.php?feed=$id\" title=\"delete\" >d</a>";
    
@@ -292,17 +299,18 @@ foreach($feeds as $row)
 
 <?php
 
-$order = $_GET['order'];
-$direction = $_GET['direction'];
+$order = $_GET['order']; //should add checks for allowed orderings
 
 if(!isset($order))
 {
-   $order = "title";
+   $order = 'title';
 }
 
-if(!isset($direction))
+if(!isset($_GET['direction']))
 {
-   $direction = "asc";
+   $direction = 'asc';
+} else {
+	$direction = $_GET['direction'] == 'asc' ? 'asc' :'desc';
 }
 
 ?>

@@ -18,6 +18,7 @@ $prefs =& FoF_Prefs::instance();
 
 if(fof_is_admin() && isset($_POST['adminprefs']))
 {
+	#these all need to be checked for XSS
 	$prefs->set('purge', $_POST['purge']);
 	$prefs->set('manualtimeout', $_POST['manualtimeout']);
 	$prefs->set('autotimeout', $_POST['autotimeout']);
@@ -35,6 +36,7 @@ if(fof_is_admin() && isset($_POST['adminprefs']))
 
 if(isset($_POST['tagfeed']))
 {
+	#these need checking
     $tags = $_POST['tag'];
     $feed_id = $_POST['feed_id'];
     $title = $_POST['title'];
@@ -42,12 +44,15 @@ if(isset($_POST['tagfeed']))
     foreach(explode(" ", $tags) as $tag)
     {
         fof_tag_feed(fof_current_user(), $feed_id, $tag);
+        # XSS
         $message .= " Tagged '$title' as $tag.";
     }
 }
 
+#CSRF issue - use POST
 if(isset($_GET['untagfeed']))
 {
+	#these need checking
     $feed_id = $_GET['untagfeed'];
     $tags = $_GET['tag'];
     $title = $_GET['title'];
@@ -55,12 +60,14 @@ if(isset($_GET['untagfeed']))
     foreach(explode(" ", $tags) as $tag)
     {
         fof_untag_feed(fof_current_user(), $feed_id, $tag);
+        #XSS
         $message .= " Dropped $tag from '$title'.";
     }
 }
 
 if(isset($_POST['prefs']))
 {
+	#these need checking
 	$prefs->set('favicons', isset($_POST['favicons']));
 	$prefs->set('keyboard', isset($_POST['keyboard']));
 	$prefs->set('tzoffset', intval($_POST['tzoffset']));
@@ -127,7 +134,7 @@ if(fof_is_admin() && isset($_POST['changepassword']))
         $username = $_POST['username'];
         $password = $_POST['password'];
         fof_db_change_password($username, $password);
-        
+        #XSS, though only admin can perform it
         $message = "Changed password for $username.";
     }
 }
@@ -149,7 +156,7 @@ if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['p
 if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'])
 {
 	$username = $_POST['username'];
-	
+	#An XSS that only admin can do
 	fof_db_delete_user($username);
 	$message = "User '$username' deleted.";
 }
@@ -158,7 +165,7 @@ include("header.php");
 
 ?>
 
-<?php if(isset($message)) { ?>
+<?php if(isset($message)) { # $message is untrusted?>
 
 <br><font color="red"><?php echo $message ?></font><br>
 
@@ -170,7 +177,7 @@ Default display order: <select name="order"><option value=desc>new to old</optio
 Number of items in paged displays: <input type="string" name="howmany" value="<?php echo $prefs->get('howmany') ?>"><br><br>
 Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($prefs->get('favicons')) echo "checked=true";?> ><br><br>
 Use keyboard shortcuts? <input type="checkbox" name="keyboard" <?php if($prefs->get('keyboard')) echo "checked=true";?> ><br><br>
-Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo $prefs->get('tzoffset')?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset")*60*60) ?>)<br><br>
+Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo $prefs->get('tzoffset') #untrusted?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset")*60*60) ?>)<br><br>
 <table border=0 cellspacing=0 cellpadding=2><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
 <tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
 <br>
@@ -183,8 +190,8 @@ Share
 </select>
 items.
 <?php if($prefs->get('sharing') != "no") echo " <small><i>(your shared page is <a href='./shared.php?user=$fof_user_id'>here</a>)</i></small>";?><br><br>
-Name to be shown on shared page: <input type=string name=sharedname value="<?php echo $prefs->get('sharedname')?>"><br><br>
-URL to be linked on shared page: <input type=string name=sharedurl value="<?php echo $prefs->get('sharedurl')?>">
+Name to be shown on shared page: <input type=string name=sharedname value="<?php echo $prefs->get('sharedname') #XSS?>"><br><br>
+URL to be linked on shared page: <input type=string name=sharedurl value="<?php echo $prefs->get('sharedurl') #XSS?>">
 <br><br>
 
 <input type=submit name=prefs value="Save Preferences">
