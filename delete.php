@@ -23,6 +23,7 @@ if (isset($_POST['confirmed'])){
 	if ($_POST['confirmed'] == 'delete'){
 		fof_delete_subscription(fof_current_user(), $feed_id);
 		printf('Deleted feed %s', htmlspecialchars($title));
+		echo '<script>refreshlist();</script>';
 	} else {
 		exit;
 	}
