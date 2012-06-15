@@ -868,30 +868,32 @@ function continueupdate()
     }
 }
 
-function continueadd()
-{    
-    if(feed = feedi())
-    {
-        f = feed();
-        new Insertion.Bottom($('items'), 'Adding  ' + f['url'] + "... ");
-        $('items').childElements().last().scrollTo();
+function makeAddContinuation(feedlist, hash){
+	var feedi = iterate(feedlist);
+	return function(){
+		if(feed = feedi())
+    	{
+        	f = feed();
+        	new Insertion.Bottom($('items'), 'Adding  ' + f['url'] + "... ");
+        	$('items').childElements().last().scrollTo();
 
-	parameters = {url: f['url'],
-		      unread: document.addform.unread.value
-		      //need to add in the CSRF check has somehow
-		      };
-        new Ajax.Updater('items', 'add-single.php', {
-            method: 'post',
-            parameters: parameters,
-            insertion: Insertion.Bottom,
-            onComplete: continueadd
-        });
-    }
+			parameters = {url: f['url'],
+		      	unread: document.addform.unread.value,
+		      	CSRF_hash: hash
+		      	};
+        	new Ajax.Updater('items', 'add-single.php', {
+            	method: 'post',
+            	parameters: parameters,
+            	insertion: Insertion.Bottom,
+            	onComplete: continueadd
+        	});
+    	}
     else
     {
         new Insertion.Bottom($('items'), '<br>Done!');
         refreshlist();
     }
+	};
 }
 
 function ajaxupdate()
@@ -901,10 +903,10 @@ function ajaxupdate()
     continueupdate();
 }
 
-function ajaxadd()
+function ajaxadd(hash)
 {
     throb();
-    feedi = iterate(feedslist);
+    continueadd = makeAddContinuation(feedslist,hash);
     continueadd();
 }
 
