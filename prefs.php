@@ -18,7 +18,7 @@ $prefs =& FoF_Prefs::instance();
 
 if(fof_is_admin() && isset($_POST['adminprefs']))
 {
-	#these all need to be checked for XSS
+	#these all need to be checked before going in db
 	$prefs->set('purge', $_POST['purge']);
 	$prefs->set('manualtimeout', $_POST['manualtimeout']);
 	$prefs->set('autotimeout', $_POST['autotimeout']);
@@ -36,47 +36,41 @@ if(fof_is_admin() && isset($_POST['adminprefs']))
 
 if(isset($_POST['tagfeed']))
 {
-	#these need checking
-    $tags = $_POST['tag'];
-    $feed_id = $_POST['feed_id'];
-    $title = $_POST['title'];
+    $tags = htmlspecialchars($_POST['tag']);
+    $feed_id = intval($_POST['feed_id']);
+    $title = htmlspecialchars($_POST['title']);
     
     foreach(explode(" ", $tags) as $tag)
     {
         fof_tag_feed(fof_current_user(), $feed_id, $tag);
-        # XSS
-        $message .= " Tagged '$title' as $tag.";
+        $message .= htmlspecialchars(" Tagged '$title' as $tag.");
     }
 }
 
 #CSRF issue - use POST
 if(isset($_GET['untagfeed']))
 {
-	#these need checking
-    $feed_id = $_GET['untagfeed'];
-    $tags = $_GET['tag'];
-    $title = $_GET['title'];
+    $feed_id = intval($_GET['untagfeed']);
+    $tags = htmlspecialchars($_GET['tag']);
+    $title = htmlspecialchars($_GET['title']);
 	
     foreach(explode(" ", $tags) as $tag)
     {
         fof_untag_feed(fof_current_user(), $feed_id, $tag);
-        #XSS
-        $message .= " Dropped $tag from '$title'.";
+        $message .= htmlspecialchars(" Dropped $tag from '$title'.");
     }
 }
 
 if(isset($_POST['prefs']))
 {
-	#these need checking
 	$prefs->set('favicons', isset($_POST['favicons']));
 	$prefs->set('keyboard', isset($_POST['keyboard']));
 	$prefs->set('tzoffset', intval($_POST['tzoffset']));
 	$prefs->set('howmany', intval($_POST['howmany']));
-	$prefs->set('order', $_POST['order']);
-	$prefs->set('sharing', $_POST['sharing']);
-	$prefs->set('sharedname', $_POST['sharedname']);
-	$prefs->set('sharedurl', $_POST['sharedurl']);
-
+	$prefs->set('order', $_POST['order'] == 'asc' ? 'asc' : 'desc');
+	$prefs->set('sharing', $_POST['sharing'] == 'no' ? 'no' : ($_POST['sharing'] == 'all' ? 'all' : 'tagged'));
+	$prefs->set('sharedname', htmlspecialchars($_POST['sharedname']));
+	$prefs->set('sharedurl', htmlspecialchars($_POST['sharedurl']));
 	$prefs->save(fof_current_user());
     
     if($_POST['password'] && ($_POST['password'] == $_POST['password2']))
@@ -134,8 +128,7 @@ if(fof_is_admin() && isset($_POST['changepassword']))
         $username = $_POST['username'];
         $password = $_POST['password'];
         fof_db_change_password($username, $password);
-        #XSS, though only admin can perform it
-        $message = "Changed password for $username.";
+        $message = htmlspecialchars("Changed password for $username.");
     }
 }
 
@@ -156,16 +149,15 @@ if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['p
 if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'])
 {
 	$username = $_POST['username'];
-	#An XSS that only admin can do
 	fof_db_delete_user($username);
-	$message = "User '$username' deleted.";
+	$message = htmlspecialchars("User '$username' deleted.");
 }
 
 include("header.php");
 
 ?>
 
-<?php if(isset($message)) { # $message is untrusted?>
+<?php if(isset($message)) {?>
 
 <br><font color="red"><?php echo $message ?></font><br>
 
@@ -174,10 +166,10 @@ include("header.php");
 <br><h1>Feed on Feeds - Preferences</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
 Default display order: <select name="order"><option value=desc>new to old</option><option value=asc <?php if($prefs->get('order') == "asc") echo "selected";?>>old to new</option></select><br><br>
-Number of items in paged displays: <input type="string" name="howmany" value="<?php echo $prefs->get('howmany') ?>"><br><br>
+Number of items in paged displays: <input type="string" name="howmany" value="<?php echo intval($prefs->get('howmany')) ?>"><br><br>
 Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($prefs->get('favicons')) echo "checked=true";?> ><br><br>
 Use keyboard shortcuts? <input type="checkbox" name="keyboard" <?php if($prefs->get('keyboard')) echo "checked=true";?> ><br><br>
-Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo $prefs->get('tzoffset') #untrusted?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset")*60*60) ?>)<br><br>
+Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo intval($prefs->get('tzoffset'))?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + intval($prefs->get("tzoffset"))*60*60) ?>)<br><br>
 <table border=0 cellspacing=0 cellpadding=2><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
 <tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
 <br>
@@ -190,8 +182,8 @@ Share
 </select>
 items.
 <?php if($prefs->get('sharing') != "no") echo " <small><i>(your shared page is <a href='./shared.php?user=$fof_user_id'>here</a>)</i></small>";?><br><br>
-Name to be shown on shared page: <input type=string name=sharedname value="<?php echo $prefs->get('sharedname') #XSS?>"><br><br>
-URL to be linked on shared page: <input type=string name=sharedurl value="<?php echo $prefs->get('sharedurl') #XSS?>">
+Name to be shown on shared page: <input type=string name=sharedname value="<?php echo htmlspecialchars($prefs->get('sharedname'))?>"><br><br>
+URL to be linked on shared page: <input type=string name=sharedurl value="<?php echo htmlspecialchars($prefs->get('sharedurl'))?>">
 <br><br>
 
 <input type=submit name=prefs value="Save Preferences">
@@ -242,19 +234,20 @@ URL to be linked on shared page: <input type=string name=sharedurl value="<?php 
 foreach($feeds as $row)
 {
    $id = $row['feed_id'];
-   $url = $row['feed_url'];
-   $title = $row['feed_title'];
-   $link = $row['feed_link'];
-   $description = $row['feed_description'];
-   $age = $row['feed_age'];
-   $unread = $row['feed_unread'];
-   $starred = $row['feed_starred'];
-   $items = $row['feed_items'];
-   $agestr = $row['agestr'];
-   $agestrabbr = $row['agestrabbr'];
-   $lateststr = $row['lateststr'];
-   $lateststrabbr = $row['lateststrabbr'];   
+   $url = htmlspecialchars($row['feed_url']);
+   $title = htmlspecialchars($row['feed_title']);
+   $link = htmlspecialchars($row['feed_link']);
+   //$description = $row['feed_description'];
+   //$age = $row['feed_age'];
+   //$unread = $row['feed_unread'];
+   //$starred = $row['feed_starred'];
+   //$items = $row['feed_items'];
+   //$agestr = $row['agestr'];
+   //$agestrabbr = $row['agestrabbr'];
+   //$lateststr = $row['lateststr'];
+   //$lateststrabbr = $row['lateststrabbr'];   
    $tags = $row['tags'];
+   $feed_image = htmlspecialchars($row['feed_image']);
    
    if(++$t % 2)
    {
@@ -265,9 +258,9 @@ foreach($feeds as $row)
       print "<tr>";
    }
 
-   if($row['feed_image'] && $prefs->get('favicons'))
+   if($feed_image && $prefs->get('favicons'))
    {
-	   print "<td><a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a></td>";
+	   print "<td><a href=\"$url\" title=\"feed\"><img src=\"$feed_image\" width=\"16\" height=\"16\" border=\"0\" /></a></td>";
    }
    else
    {
@@ -284,15 +277,12 @@ foreach($feeds as $row)
        {
            $utag = urlencode($tag);
            $utitle = urlencode($title);
+           #do this with javascript and POST
            print "$tag <a href='prefs.php?untagfeed=$id&tag=$utag&title=$utitle'>[x]</a> ";
        }
    }
-   else
-   {
-   }
    
    print "</td>";
-   $title = htmlspecialchars($title);
    print "<td><form method=post action=prefs.php><input type=hidden name=title value=\"$title\"><input type=hidden name=feed_id value=$id><input type=string name=tag> <input type=submit name=tagfeed value='Tag Feed'> <small><i>(separate tags with spaces)</i></small></form></td></tr>";
 }
 ?>
@@ -305,9 +295,9 @@ foreach($feeds as $row)
 <br><h1>Feed on Feeds - Admin Options</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
 Enable logging? <input type=checkbox name=logging <?php if($prefs->get('logging')) echo "checked" ?>><br><br>
-Purge read items after <input size=4 type=string name=purge value="<?php echo $prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
-Allow automatic feed updates every <input size=4 type=string name=autotimeout value="<?php echo $prefs->get('autotimeout')?>"> minutes<br><br>
-Allow manual feed updates every <input size=4 type=string name=manualtimeout value="<?php echo $prefs->get('manualtimeout')?>"> minutes<br><br>
+Purge read items after <input size=4 type=string name=purge value="<?php echo intval($prefs->get('purge'))?>"> days (leave blank to never purge)<br><br>
+Allow automatic feed updates every <input size=4 type=string name=autotimeout value="<?php echo intval($prefs->get('autotimeout'))?>"> minutes<br><br>
+Allow manual feed updates every <input size=4 type=string name=manualtimeout value="<?php echo intval($prefs->get('manualtimeout'))?>"> minutes<br><br>
 <input type=submit name=adminprefs value="Save Options">
 </form>
 
@@ -322,7 +312,7 @@ Username: <input type=string name=username> Password: <input type=string name=pa
 	while($row = fof_db_get_row($result))
 	{
 		$username = $row['user_name'];
-		$delete_options .= "<option value=$username>$username</option>";
+		$delete_options .= htmlspecialchars("<option value=$username>$username</option>");
 	}
 
     if(isset($delete_options))
