@@ -133,8 +133,16 @@ function fof_render_item($item)
 
 		<a
 			href=""
-			onclick="document.getElementById('addtag<?php echo $item_id ?>').style.display = '';
-					 this.style.display = 'none';
+			onclick="
+					var textbox = document.getElementById('addtag<?php echo $item_id ?>');
+					if (this.innerHTML == 'Cancel'){
+						this.innerHTML = 'add tag';
+						this.style.display = '';
+						textbox.style.display = 'none';
+					} else {
+						textbox.style.display = '';
+					 	this.innerHTML = 'Cancel';
+					 }
 					 return false;">
 			add tag
 		</a>
