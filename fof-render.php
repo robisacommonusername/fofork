@@ -109,7 +109,7 @@ function fof_render_item($item)
 		<script>
 			document.getElementById('fav<?php echo $item_id ?>').star = <?php if($star) echo 'true'; else echo 'false'; ?>;
 		</script>
-		<a href="<?php echo $item_link ?>">
+		<a href="<?php echo $item_link ?>" target="_blank">
 			<?php echo $item_title ?>
 		</a>
 	</h1>

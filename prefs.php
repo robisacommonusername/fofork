@@ -19,10 +19,10 @@ $prefs =& FoF_Prefs::instance();
 if(fof_is_admin() && isset($_POST['adminprefs']))
 {
 	#these all need to be checked before going in db
-	$prefs->set('purge', $_POST['purge']);
-	$prefs->set('manualtimeout', $_POST['manualtimeout']);
-	$prefs->set('autotimeout', $_POST['autotimeout']);
-	$prefs->set('logging', $_POST['logging']);
+	$prefs->set('purge', intval($_POST['purge']));
+	$prefs->set('manualtimeout', intval($_POST['manualtimeout']));
+	$prefs->set('autotimeout', intval($_POST['autotimeout']));
+	$prefs->set('logging', $_POST['logging'] ? True : False);
 
 	$prefs->save();
     	
@@ -63,8 +63,8 @@ if(isset($_GET['untagfeed']))
 
 if(isset($_POST['prefs']))
 {
-	$prefs->set('favicons', isset($_POST['favicons']));
-	$prefs->set('keyboard', isset($_POST['keyboard']));
+	$prefs->set('favicons', $_POST['favicons'] ? True : False);
+	$prefs->set('keyboard', $_POST['keyboard'] ? True : False);
 	$prefs->set('tzoffset', intval($_POST['tzoffset']));
 	$prefs->set('howmany', intval($_POST['howmany']));
 	$prefs->set('order', $_POST['order'] == 'asc' ? 'asc' : 'desc');
