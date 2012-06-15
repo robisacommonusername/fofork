@@ -32,6 +32,9 @@ $allowedFields = array(
 	'sharedname' => '100',
 	'sharedurl' => '500'
 );
+if (!fof_authenticate_CSRF_challenge($_POST['CSRF_hash'])){
+	die('CSRF detected in set-prefs.php');
+}
 
 foreach($_POST as $k => $v){
 	if (array_key_exists($k, $allowedFields)){

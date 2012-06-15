@@ -125,7 +125,7 @@ function fof_render_item($item)
 ?>
 		<a href='?what=<?php echo $tag ?>'><?php echo $tag ?></a>
 		
-		<a href='<?php echo $tag ?>' onclick='return remove_tag("<?php echo $item_id ?>", "<?php echo $tag ?>");'>[x]</a>
+		<a href='<?php echo $tag ?>' onclick='return remove_tag("<?php echo $item_id ?>", "<?php echo $tag ?>", "<?php echo fof_compute_CSRF_challenge();?>");'>[x]</a>
 <?php
 		}
     }
@@ -150,7 +150,7 @@ function fof_render_item($item)
 		<div id="addtag<?php echo $item_id ?>" style="display: none !important">
 			<input
 				onfocus="this.value=''"
-				onkeypress="if(event.keyCode == 13) add_tag('<?php echo $item_id ?>', document.getElementById('tag<?php echo $item_id ?>').value);"
+				onkeypress="if(event.keyCode == 13) add_tag('<?php echo $item_id ?>', document.getElementById('tag<?php echo $item_id ?>').value, '<?php echo fof_compute_CSRF_challenge();?>');"
 				type="text"
 				id="tag<?php echo $item_id ?>"
 				size="12"
@@ -160,7 +160,7 @@ function fof_render_item($item)
 				type="button"
 				name="add tag"
 				value="tag"
-				onclick="add_tag('<?php echo $item_id ?>', document.getElementById('tag<?php echo $item_id ?>').value);"
+				onclick="add_tag('<?php echo $item_id ?>', document.getElementById('tag<?php echo $item_id ?>').value, '<?php echo fof_compute_CSRF_challenge();?>');"
 			>
 		</div>
 

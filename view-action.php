@@ -25,7 +25,7 @@ while (list ($key, $val) = each ($_POST))
     }    
 }
 
-if($_POST['deltag'])
+if($_POST['deltag'] && fof_authenticate_CSRF_challenge($_POST['CSRF_hash']))
 {
 	fof_untag(fof_current_user(), $_REQUEST['deltag']);
 }

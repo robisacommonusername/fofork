@@ -15,8 +15,9 @@
 include_once("fof-main.php");
 
 $prefs =& FoF_Prefs::instance();
+$CSRF_hash = $_POST['CSRF_hash'];
 
-if(fof_is_admin() && isset($_POST['adminprefs']))
+if(fof_is_admin() && isset($_POST['adminprefs']) && fof_authentice_CSRF_challenge($CSRF_hash))
 {
 	#these all need to be checked before going in db
 	$prefs->set('purge', intval($_POST['purge']));
@@ -34,7 +35,7 @@ if(fof_is_admin() && isset($_POST['adminprefs']))
     }
 }
 
-if(isset($_POST['tagfeed']))
+if(isset($_POST['tagfeed']) && fof_authenticate_CSRF_challenge($CSRF_hash))
 {
     $tags = htmlspecialchars($_POST['tag']);
     $feed_id = intval($_POST['feed_id']);
@@ -47,8 +48,7 @@ if(isset($_POST['tagfeed']))
     }
 }
 
-#CSRF issue - use POST
-if(isset($_GET['untagfeed']))
+if(isset($_GET['untagfeed']) && fof_authenticate_CSRF_challenge($_GET['CSRF_hash']))
 {
     $feed_id = intval($_GET['untagfeed']);
     $tags = htmlspecialchars($_GET['tag']);
@@ -61,7 +61,7 @@ if(isset($_GET['untagfeed']))
     }
 }
 
-if(isset($_POST['prefs']))
+if(isset($_POST['prefs']) && fof_authenticate_CSRF_challenge($CSRF_hash))
 {
 	$prefs->set('favicons', $_POST['favicons'] ? True : False);
 	$prefs->set('keyboard', $_POST['keyboard'] ? True : False);
@@ -87,7 +87,7 @@ if(isset($_POST['prefs']))
 	$message .= ' Saved prefs.';
 }
 
-if(isset($_POST['plugins']))
+if(isset($_POST['plugins']) && fof_authenticate_CSRF_challenge($CSRF_hash))
 {
     foreach(fof_get_plugin_prefs() as $plugin_pref)
     {
@@ -117,7 +117,7 @@ if(isset($_POST['plugins']))
 	$message .= ' Saved plugin prefs.';
 }
 
-if(fof_is_admin() && isset($_POST['changepassword'])) 
+if(fof_is_admin() && isset($_POST['changepassword']) && fof_authentiate_CSRF_challenge($CSRF_hash)) 
 {
     if($_POST['password'] != $_POST['password2'])
     {
@@ -132,7 +132,7 @@ if(fof_is_admin() && isset($_POST['changepassword']))
     }
 }
 
-if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password']) 
+if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password'] && fof_authenticate_CSRF_challenge($CSRF_hash)) 
 {
     $username = $_POST['username'];
     if (preg_match('/^[a-zA-Z0-9]{1,32}$/',$username)){
@@ -146,7 +146,7 @@ if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['p
 }
 
 
-if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'])
+if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'] && fof_authenticate_CSRF_challenge($CSRF_hash))
 {
 	$username = $_POST['username'];
 	fof_db_delete_user($username);
@@ -154,7 +154,7 @@ if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'])
 }
 
 include("header.php");
-
+$challenge = fof_compute_CSRF_challenge();
 ?>
 
 <?php if(isset($message)) {?>
@@ -165,6 +165,7 @@ include("header.php");
 
 <br><h1>Feed on Feeds - Preferences</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
+<input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
 Default display order: <select name="order"><option value=desc>new to old</option><option value=asc <?php if($prefs->get('order') == "asc") echo "selected";?>>old to new</option></select><br><br>
 Number of items in paged displays: <input type="string" name="howmany" value="<?php echo intval($prefs->get('howmany')) ?>"><br><br>
 Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($prefs->get('favicons')) echo "checked=true";?> ><br><br>
@@ -191,7 +192,7 @@ URL to be linked on shared page: <input type=string name=sharedurl value="<?php 
 
 <br><h1>Feed on Feeds - Plugin Preferences</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
-
+<input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
 <?php
     $plugins = array();
     $dirlist = opendir(FOF_DIR . "/plugins");
@@ -271,19 +272,18 @@ foreach($feeds as $row)
    
    print "<td align=right>";
    
-   if($tags)
-   {
-       foreach($tags as $tag)
+   if($tags){
+   		$challenge = fof_compute_CSRF_challenge();
+   		foreach($tags as $tag)
        {
            $utag = urlencode($tag);
            $utitle = urlencode($title);
-           #do this with javascript and POST
-           print "$tag <a href='prefs.php?untagfeed=$id&tag=$utag&title=$utitle'>[x]</a> ";
+           print "$tag <a href='prefs.php?untagfeed=$id&tag=$utag&title=$utitle&CSRF_hash=$challenge'>[x]</a> ";
        }
    }
    
    print "</td>";
-   print "<td><form method=post action=prefs.php><input type=hidden name=title value=\"$title\"><input type=hidden name=feed_id value=$id><input type=string name=tag> <input type=submit name=tagfeed value='Tag Feed'> <small><i>(separate tags with spaces)</i></small></form></td></tr>";
+   print "<td><form method=post action=prefs.php><input type=\"hidden\" name=\"CSRF_hash\" value=\"$challenge\"><input type=\"hidden\" name=\"title\" value=\"$title\"><input type=hidden name=feed_id value=$id><input type=string name=tag> <input type=submit name=tagfeed value='Tag Feed'> <small><i>(separate tags with spaces)</i></small></form></td></tr>";
 }
 ?>
 </table>
@@ -294,6 +294,7 @@ foreach($feeds as $row)
 
 <br><h1>Feed on Feeds - Admin Options</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
+<input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
 Enable logging? <input type=checkbox name=logging <?php if($prefs->get('logging')) echo "checked" ?>><br><br>
 Purge read items after <input size=4 type=string name=purge value="<?php echo intval($prefs->get('purge'))?>"> days (leave blank to never purge)<br><br>
 Allow automatic feed updates every <input size=4 type=string name=autotimeout value="<?php echo intval($prefs->get('autotimeout'))?>"> minutes<br><br>
@@ -303,6 +304,7 @@ Allow manual feed updates every <input size=4 type=string name=manualtimeout val
 
 <br><h1>Add User</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
+<input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
 Username: <input type=string name=username> Password: <input type=string name=password> <input type=submit name=adduser value="Add user">
 </form>
 
@@ -311,8 +313,8 @@ Username: <input type=string name=username> Password: <input type=string name=pa
 	
 	while($row = fof_db_get_row($result))
 	{
-		$username = $row['user_name'];
-		$delete_options .= htmlspecialchars("<option value=$username>$username</option>");
+		$username = htmlspecialchars($row['user_name']);
+		$delete_options .= "<option value=$username>$username</option>";
 	}
 
     if(isset($delete_options))
@@ -321,12 +323,14 @@ Username: <input type=string name=username> Password: <input type=string name=pa
 
 <br><h1>Delete User</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Delete User - Are you sure?')">
+<input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
 <select name=username><?php echo $delete_options ?></select>
 <input type=submit name=deleteuser value="Delete user"><br>
 </form>
 
 <br><h1>Change User's Password</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Change Password - Are you sure?')">
+<input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
 <table border=0 cellspacing=0 cellpadding=2>
 <tr><td>Select user:</td><td><select name=username><?php echo $delete_options ?></select></td></tr>
 <tr><td>New password:</td><td><input type=password name=password></td></tr>
@@ -337,7 +341,8 @@ Username: <input type=string name=username> Password: <input type=string name=pa
 <?php } ?>
 
 <br>
-<form method="get" action="uninstall.php" onsubmit="return confirm('Really?  This will delete all the database tables!')">
+<form method="post" action="uninstall.php" onsubmit="return confirm('Really?  This will delete all the database tables!')">
+<input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
 <center><input type=submit name=uninstall value="Uninstall Feed on Feeds" style="background-color: #ff9999"></center>
 </form>
 

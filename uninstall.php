@@ -31,7 +31,7 @@ fof_set_content_type();
 
 
 <?php
-if($_GET['really'])
+if($_GET['really'] && fof_authenticate_CSRF_challenge($_GET['CSRF_hash']) && fof_is_admin())
 {
 
 $query = <<<EOQ

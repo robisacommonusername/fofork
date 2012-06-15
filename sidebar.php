@@ -142,7 +142,8 @@ foreach($tags as $tag)
    if($unread) print "<a class='unread' href='.?what=$tagNameEncoded+unread'>$unread</a>/";
    print "<a href='.?what=$tagNameEncoded'>$count</a></td>";
    print "<td><b><a href='.?what=$tagNameEncoded'>$tag_name</a></b></td>";
-   print "<td><a href=\"#\" title=\"untag all items\" onclick=\"if(confirm('Untag all [$tagNameEscaped] items --are you SURE?')) { delete_tag('$tagNameEscaped'); return false; }  else { return false; }\">[x]</a></td>";
+   $CSRF_hash = fof_compute_CSRF_challenge();
+   print "<td><a href=\"#\" title=\"untag all items\" onclick=\"if(confirm('Untag all [$tagNameEscaped] items --are you SURE?')) { delete_tag('$tagNameEscaped', '$CSRF_hash'); return false; }  else { return false; }\">[x]</a></td>";
 
    print "</tr>";
 }
@@ -183,13 +184,14 @@ $name["feed_title"] = "title";
 
 foreach ($allowedOrders as $col)
 {
+	$challenge = fof_compute_CSRF_challenge();
     if($col == $order)
     {
-        $url = "return change_feed_order('$col', '" . ($direction == "asc" ? "desc" : "asc") . "')";
+        $url = "return change_feed_order('$col', '" . ($direction == "asc" ? "desc" : "asc") . "', '$challenge')";
     }
     else
     {
-        $url = "return change_feed_order('$col', 'asc')";
+        $url = "return change_feed_order('$col', 'asc', '$challenge')";
     }
     
     echo "<td><nobr><a href='#' title='$title[$col]' onclick=\"$url\">";

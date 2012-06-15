@@ -12,7 +12,8 @@ function fof_sharing($item)
     $id = $item['item_id'];
     $shared = in_array("shared", $tags) ? true : false;
 	$shared_image = $shared ? "plugins/share-on.gif" : "plugins/share-off.gif";
-	$shared_link = $shared ? "javascript:remove_tag($id, 'shared')" : "javascript:add_tag($id, 'shared')";
+	$CSRF_hash = fof_compute_CSRF_challenge();
+	$shared_link = $shared ? "javascript:remove_tag($id, 'shared', '$CSRF_hash')" : "javascript:add_tag($id, 'shared','$CSRF_hash')";
 	$shared_text = $shared ? "shared" : "not shared";
    
     return "<a href=\"$shared_link\"><img src=\"$shared_image\" width=\"12\" height=\"12\" border=\"0\"/></a> <a href=\"$shared_link\">$shared_text</a> ";

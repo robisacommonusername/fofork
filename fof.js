@@ -689,7 +689,7 @@ function mark_feed_read(id)
     throb();
     
     var url = "view-action.php";
-    var params = "feed=" + id;
+    var params = {feed: id};
     var complete = function () { refreshlist(); };
     var options = { method: 'post', parameters: params, onComplete: complete };
     
@@ -698,12 +698,12 @@ function mark_feed_read(id)
     return false;
 }
 
-function add_tag(id, tag)
+function add_tag(id, tag, hash)
 {
     throb();
     
     var url = "add-tag.php";
-    var params = {tag: tag, item: id};
+    var params = {tag: tag, item: id, CSRF_hash: hash};
     var complete = function () { refreshlist(); refreshitem(id); };
     var options = { method: 'post', parameters: params, onComplete: complete };
     
@@ -712,12 +712,12 @@ function add_tag(id, tag)
     return false;
 }
 
-function remove_tag(id, tag)
+function remove_tag(id, tag, hash)
 {
     throb();
     
     var url = "add-tag.php";
-    var params = {remove: 'true', tag: tag, item: id};
+    var params = {remove: 'true', tag: tag, item: id, CSRF_hash: hash};
     var complete = function () { refreshlist(); refreshitem(id); };
     var options = { method: 'post', parameters: params, onComplete: complete };
     
@@ -726,12 +726,12 @@ function remove_tag(id, tag)
     return false;
 }
 
-function delete_tag(tag)
+function delete_tag(tag,hash)
 {
     throb();
     
     var url = "view-action.php";
-    var params = {deltag: tag};
+    var params = {deltag: tag, CSRF_hash: hash};
     var complete = function () { refreshlist(); };
     var options = { method: 'post', parameters: params, onComplete: complete };
     
@@ -740,12 +740,12 @@ function delete_tag(tag)
     return false;
 }
 
-function change_feed_order(order, direction)
+function change_feed_order(order, direction, hash)
 {
     throb();
     
     var url = "set-prefs.php";
-    var params = "feed_order=" + order + "&feed_direction=" + direction;
+    var params = {feed_order:order, feed_direction:direction, CSRF_hash:hash};
     var complete = function () { refreshlist(); };
     var options = { method: 'post', parameters: params, onComplete: complete };
     
@@ -878,6 +878,7 @@ function continueadd()
 
 	parameters = {url: f['url'],
 		      unread: document.addform.unread.value
+		      //need to add in the CSRF check has somehow
 		      };
         new Ajax.Updater('items', 'add-single.php', {
             method: 'post',

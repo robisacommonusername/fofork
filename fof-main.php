@@ -126,6 +126,20 @@ function fof_username()
     return $fof_user_name;
 }
 
+function fof_compute_CSRF_challenge(){
+	$user_name = $_COOKIE['user_name'];
+    $user_password_hash = $_COOKIE['user_password_hash'];
+    $challenge = sha1($user_name . $user_password_hash);
+    return $challenge;
+}
+
+function fof_authenticate_CSRF_challenge($response){
+	$user_name = $_COOKIE['user_name'];
+    $user_password_hash = $_COOKIE['user_password_hash'];
+    $challenge = sha1($user_name . $user_password_hash);
+    return ($challenge == $response);
+}
+
 function fof_get_users()
 {
     return fof_db_get_users();

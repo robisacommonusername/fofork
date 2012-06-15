@@ -18,12 +18,13 @@ $url = $_POST['rss_url'];
 $opml = $_POST['opml_url'];
 $file = $_POST['opml_file'];
 $unread = $_POST['unread'];
+$CSRF_hash = $_POST['CSRF_hash'];
 
 $feeds = array();
 
-if($url) $feeds[] = $url;
+if($url && fof_authenticate_CSRF_challenge($CSRF_hash)) $feeds[] = $url;
 
-if($opml)
+if($opml && fof_authenticate_CSRF_challenge($CSRF_hash))
 {
 	$sfile = new SimplePie_File($opml);
 	
@@ -38,7 +39,7 @@ if($opml)
 	$feeds = fof_opml_to_array($content);
 }
 
-if($_FILES['opml_file']['tmp_name'])
+if($_FILES['opml_file']['tmp_name'] && fof_authenticate_CSRF_challenge($CSRF_hash))
 {
 	if(!$content_array = file($_FILES['opml_file']['tmp_name']))
 	{
@@ -80,7 +81,7 @@ OPML URL: <input type="hidden" name="MAX_FILE_SIZE" value="100000">
 
 <input type="hidden" name="MAX_FILE_SIZE" value="100000">
 OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo htmlentities($file) ?>"><input type="Submit" value="Upload an OPML file">
-
+ <input type="hidden" name="CSRF_hash" value="<?php echo fof_compute_CSRF_challenge();?>">
 </form>
 
 <?php

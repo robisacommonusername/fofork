@@ -17,6 +17,10 @@ include_once("fof-main.php");
 $tags = $_POST['tag'];
 $item = $_POST['item'];
 $remove = $_POST['remove'];
+$CSRF_hash = $_POST['CSRF_hash'];
+if (!fof_authenticate_CSRF_challenge($CSRF_hash)){
+	die("CSRF detected");
+}
 
 foreach(explode(" ", $tags) as $tag)
 {

@@ -16,7 +16,7 @@ include_once("fof-main.php");
 
 include("header.php");
 
-if (isset($_POST['confirmed'])){
+if (isset($_POST['confirmed']) && fof_authenticate_CSRF_challenge($_POST['CSRF_hash'])){
 	$feed_id = intval($_POST['feed_id']);
 	$feed = fof_db_get_feed_by_id($feed_id);
 	$title = $feed['feed_title'];
@@ -39,6 +39,7 @@ if (isset($_POST['confirmed'])){
 	<input type="radio" name="confirmed" value="delete" CHECKED /> Delete <br />
 	<input type="radio" name="confirmed" value="no_delete" /> Don't delete <br />
 	<input type="submit" value="Continue">
+	<input type="hidden" name="CSRF_hash" value="<?php echo fof_compute_CSRF_challenge();?>">
 	</form>
 	<?php
 }

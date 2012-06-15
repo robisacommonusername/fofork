@@ -16,5 +16,6 @@ include_once("fof-main.php");
 
 $url = $_POST['url'];
 $unread = $_POST['unread'];
+#Need to fix the CSRF here
 print(fof_subscribe(fof_current_user(), $url, $unread));
 ?>
