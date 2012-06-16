@@ -341,10 +341,7 @@ Username: <input type=string name=username> Password: <input type=string name=pa
 <?php } ?>
 
 <br>
-<form method="post" action="uninstall.php" onsubmit="return confirm('Really?  This will delete all the database tables!')">
-<input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
-<center><input type=submit name=uninstall value="Uninstall Feed on Feeds" style="background-color: #ff9999"></center>
-</form>
+<center><b><a href="uninstall.php">Uninstall Feed on Feeds</a></b></center><br />
 
 <?php } ?>
 

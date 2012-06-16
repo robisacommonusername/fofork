@@ -13,6 +13,9 @@
  */
 
 include_once("fof-main.php");
+if (!fof_is_admin()){
+	die('Fuck off, you non-administrator scum.  You are not supposed to be here!');
+}
 
 fof_set_content_type();
 
@@ -31,8 +34,7 @@ fof_set_content_type();
 
 
 <?php
-if($_GET['really'] && fof_authenticate_CSRF_challenge($_GET['CSRF_hash']) && fof_is_admin())
-{
+if($_POST['confirmed'] == 'delete' && fof_authenticate_CSRF_challenge($_POST['CSRF_hash']) && fof_is_admin()){
 
 $query = <<<EOQ
 DROP TABLE `$FOF_FEED_TABLE`;
@@ -72,15 +74,18 @@ fof_db_query($query);
 
 echo 'Done.  Now just delete this entire directory and we\'ll forget this ever happened.';
 }
-else
+elseif (!isset($_POST['confirmed']))
 {
 ?>
-<script>
-if(confirm('This is your last chance.  Do you really want to uninstall Feed on Feeds?'))
-{
-	document.location = './uninstall.php?really=really';
-}
-</script>
-<a href="."><b>phew!</b></a>
+Please be aware the uninstalling will delete all of Feed on Feeds' database tables. <br />
+This is your absolute last chance.  Do you really want to uninstall Feed on Feeds? <br /><br />
+<form name="confirmation_form" method="post" action="uninstall.php">
+<input type="hidden" name="CSRF_hash" value="<?php echo fof_compute_CSRF_challenge();?>">
+<input type="radio" name="confirmed" value="delete"/> Uninstall <br />
+<input type="radio" name="confirmed" value="no_delete" CHECKED/> Don't uninstall <br />
+<input type="submit" value="Continue">
+</form>
 </body></html>
-<?php } ?>
+<?php } else {
+   header( 'Location: ./prefs.php' ) ;
+} ?>
