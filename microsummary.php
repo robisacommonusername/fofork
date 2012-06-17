@@ -2,15 +2,8 @@
 $fof_no_login = 1;
 require("fof-main.php");
 
-if(isset($_COOKIE["user_name"]) && isset($_COOKIE["user_password_hash"]))
-{
-  $user_name = $_COOKIE["user_name"];
-  $user_password_hash = $_COOKIE["user_password_hash"];
-
-  if(fof_authenticate($user_name, $user_password_hash))
-  {
+if(isset($_SESSION['authenticated'])){
     $unread = fof_get_unread_count(fof_current_user());
-  }
 }
 
 echo "Feed on Feeds";

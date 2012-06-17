@@ -22,13 +22,19 @@ fof_set_content_type();
 
 if(isset($_POST["user_name"]) && isset($_POST["user_password"]))
 {
-    if(fof_authenticate($_POST['user_name'], md5($_POST['user_password'] . $_POST['user_name'])))
+    if(fof_db_authenticate($_POST['user_name'], md5($_POST['user_password'] . $_POST['user_name'])))
     {
+    	session_regenerate_id();
+    	$_SESSION['username'] = $_POST['user_name'];
+    	$_SESSION['authenticated'] = True;
+    	$_SESSION['user_id'] = $fof_user_id;
+    	$_SESSION['user_level'] = $fof_user_level;
         Header("Location: .");
         exit();
     }
     else
     {
+    	session_unset();
     	$failed = true;
     }
 }

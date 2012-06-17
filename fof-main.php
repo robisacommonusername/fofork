@@ -25,6 +25,7 @@ require_once("fof-db.php");
 require_once("classes/fof-prefs.php");
 
 fof_db_connect();
+session_start();
 
 if(!$fof_installer)
 {
@@ -78,38 +79,23 @@ function fof_log($message, $topic="debug")
 
 function require_user()
 {
-    if(!isset($_COOKIE["user_name"]) || !isset($_COOKIE["user_password_hash"]))
+    if(!isset($_SESSION['authenticated']))
     {
         Header("Location: login.php");
         exit();
     }
-    
-    $user_name = $_COOKIE["user_name"];
-    $user_password_hash = $_COOKIE["user_password_hash"];
-    
-    if(!fof_authenticate($user_name, $user_password_hash))
-    {
-        Header("Location: login.php");
-        exit();
-    }
-}
-
-function fof_authenticate($user_name, $user_password_hash)
-{
-    global $fof_user_name;
-        
-    if(fof_db_authenticate($user_name, $user_password_hash))
-    {
-        setcookie ( "user_name", $fof_user_name, time()+60*60*24*365*10 );
-        setcookie ( "user_password_hash",  $user_password_hash, time()+60*60*24*365*10 );
-        return true;
-    }
+    global $fof_user_name, $fof_user_level, $fof_user_id;
+    $fof_user_name = $_SESSION['username'];
+    $fof_user_level = $_SESSION['user_level'];
+    $fof_user_id = $_SESSION['user_id'];
 }
 
 function fof_logout()
 {
-    setcookie ( "user_name", "", time() );
-    setcookie ( "user_password_hash", "", time() );
+    session_unset();
+    session_destroy();
+    header('Location: ./login.php');
+    exit();
 }
 
 function fof_current_user()
@@ -127,16 +113,14 @@ function fof_username()
 }
 
 function fof_compute_CSRF_challenge(){
-	$user_name = $_COOKIE['user_name'];
-    $user_password_hash = $_COOKIE['user_password_hash'];
-    $challenge = sha1($user_name . $user_password_hash);
+	$user_name = $_SESSION['username'];
+    $challenge = sha1($user_name . session_id());
     return $challenge;
 }
 
 function fof_authenticate_CSRF_challenge($response){
-	$user_name = $_COOKIE['user_name'];
-    $user_password_hash = $_COOKIE['user_password_hash'];
-    $challenge = sha1($user_name . $user_password_hash);
+	$user_name = $_SESSION['username'];
+    $challenge = sha1($user_name . session_id());
     return ($challenge == $response);
 }
 

@@ -331,7 +331,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
     {
         if(!is_numeric($limit))
         {
-            $limit = $prefs["howmany"];
+            $limit = intval($prefs["howmany"]);
         }
         
         $limit_clause = " limit $start, $limit ";
@@ -340,12 +340,10 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
     $args = array();
     $select = "SELECT i.* , f.* ";
     $from = "FROM $FOF_FEED_TABLE f, $FOF_ITEM_TABLE i, $FOF_SUBSCRIPTION_TABLE s ";
-    #SECURITY - TBC - is username guaranteed safe?? Are there proper checks when user registers?
     $where = sprintf("WHERE s.user_id = %d AND s.feed_id = f.feed_id AND f.feed_id = i.feed_id ", $user_id);
  
     if(!is_null($feed) && $feed != "")
     {
-    	##SECURITY - DANGER - $feed comes directly from $_GET, but won't be escaped, SQL injection
         $where .= sprintf("AND f.feed_id = %d ", $feed);
     }
     
@@ -372,7 +370,6 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
         $args[] = $search;
     }
     
-    #bug - $limit_clause may not be initialised if bad data is passed to $start
     $order_by = "order by i.item_published desc $limit_clause ";
     
     $query = $select . $from . $where . $group . $order_by;
@@ -389,7 +386,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
         $array[] = $row;
     }
     
-    $array = fof_multi_sort($array, 'item_published', $order != "asc");
+    $array = fof_multi_sort($array, 'item_published', $order != 'asc');
     
     $i = 0;
     foreach($array as $item)
