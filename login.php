@@ -29,6 +29,9 @@ if(isset($_POST["user_name"]) && isset($_POST["user_password"]))
     	$_SESSION['authenticated'] = True;
     	$_SESSION['user_id'] = $fof_user_id;
     	$_SESSION['user_level'] = $fof_user_level;
+    	if ($_POST['persistent'] == 'True'){
+    		fof_place_cookie($fof_user_id);
+    	}
         Header("Location: .");
         exit();
     }
@@ -68,9 +71,10 @@ if(isset($_POST["user_name"]) && isset($_POST["user_password"]))
 <div>
 	<form action="login.php" method="POST" style="display: inline">
 		<center><a href="http://feedonfeeds.com/" style="font-size: 20px; font-family: georgia;">Feed on Feeds</a></center><br>
-		User name:<br><input type=string name=user_name style='font-size: 16px'><br><br>
-		Password:<br><input type=password name=user_password style='font-size: 16px'><br><br>
-		<input type=submit value="Log on!" style='font-size: 16px; float: right;'><br>
+		User name:<br /><input type=string name=user_name style='font-size: 16px'><br /><br />
+		Password:<br /><input type=password name=user_password style='font-size: 16px'><br /><br />
+		Remember me:  <input type=checkbox name="persistent" value="True"><br />
+		<input type=submit value="Log on!" style='font-size: 16px; float: right;'><br />
 		<?php if($failed) echo "<br><center><font color=red><b>Incorrect user name or password</b></font></center>"; ?>
 	</form>
 </div>

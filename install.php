@@ -263,6 +263,15 @@ CREATE TABLE IF NOT EXISTS `$FOF_USER_TABLE` (
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 EOQ;
 
+$tables[] = <<<EOQ
+CREATE TABLE IF NOT EXISTS `$FOF_COOKIE_TABLE` (
+  `token_hash` varchar(40) NOT NULL default '',
+  `user_id` int(11) NOT NULL default '0',
+  `user_agent_hash varchar(40) NOT NULL default '',
+  PRIMARY KEY  (`token_hash`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+EOQ;
+
 foreach($tables as $table)
 {
 	if(!fof_db_query($table, 1))

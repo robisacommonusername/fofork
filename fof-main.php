@@ -81,19 +81,56 @@ function require_user()
 {
     if(!isset($_SESSION['authenticated']))
     {
-        Header("Location: login.php");
-        exit();
+    	if (fof_validate_cookie()){
+    		#prevent session fixation
+    		session_regenerate_id();
+    	} else {
+        	Header("Location: login.php");
+        	exit();
+        }
     }
+    #we will eventually remove these globals, for now set them so that
+    #everything keeps working
     global $fof_user_name, $fof_user_level, $fof_user_id;
-    $fof_user_name = $_SESSION['username'];
+    $fof_user_name = $_SESSION['user_name'];
     $fof_user_level = $_SESSION['user_level'];
     $fof_user_id = $_SESSION['user_id'];
+}
+
+function fof_place_cookie($user_id){
+	#generate new random id.  mt_rand gives us ~31 bits of entropy, let's try and up things to 160
+	$new_id = '';
+	for ($i=0; $i<6; $i++){
+		$new_id = sha1($new_id . mt_rand());
+	}
+	$oldToken = isset($_COOKIE['token']) ? $_COOKIE['token'] : False;
+	#store to db and set cookie
+	fof_db_place_cookie($oldToken, $new_id, $user_id, $_SERVER['HTTP_USER_AGENT']);
+	setcookie('token',$new_id, time()+60*60*24*30, $httponly = True); #30 day expiry
+}
+
+function fof_validate_cookie(){
+	if (isset($_COOKIE['token'])){
+		$result = fof_db_validate_cookie($_COOKIE['token'], $_SERVER['HTTP_USER_AGENT']);
+		if (is_array($result)){
+			$_SESSION['authenticated'] = True;
+			$_SESSION['user_name'] = $result['user_name'];
+			$_SESSION['user_id'] = $result['user_id'];
+			$_SESSION['user_level'] = $result['user_level'];
+			return True;
+		}
+	}
+	return False;
 }
 
 function fof_logout()
 {
     session_unset();
     session_destroy();
+    if (isset($_COOKIE['token'])){
+    	fof_db_delete_cookie($_COOKIE['token']);
+    	setcookie('token','');
+    }
     header('Location: ./login.php');
     exit();
 }
@@ -113,13 +150,13 @@ function fof_username()
 }
 
 function fof_compute_CSRF_challenge(){
-	$user_name = $_SESSION['username'];
+	$user_name = $_SESSION['user_name'];
     $challenge = sha1($user_name . session_id());
     return $challenge;
 }
 
 function fof_authenticate_CSRF_challenge($response){
-	$user_name = $_SESSION['username'];
+	$user_name = $_SESSION['user_name'];
     $challenge = sha1($user_name . session_id());
     return ($challenge == $response);
 }

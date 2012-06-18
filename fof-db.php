@@ -18,6 +18,7 @@ $FOF_ITEM_TAG_TABLE = FOF_ITEM_TAG_TABLE;
 $FOF_SUBSCRIPTION_TABLE = FOF_SUBSCRIPTION_TABLE;
 $FOF_TAG_TABLE = FOF_TAG_TABLE;
 $FOF_USER_TABLE = FOF_USER_TABLE;
+$FOF_COOKIE_TABLE = FOF_COOKIE_TABLE;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
@@ -790,6 +791,35 @@ function fof_db_authenticate($user_name, $user_password_hash)
     $fof_user_level = $row['user_level'];
     
     return true;
+}
+
+function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
+	global $FOF_COOKIE_TABLE;
+	# clear previous cookie if there is one.  It is possible, though unlikely, that another user may have the same
+	# token value.  Thus we must delete ALL the records with the old token value, then insert the new record
+	# and NOT simply do an update.  This will slightly inconvenience the second user, who will have to (re) log in,
+	# but will guarantee that 2nd user doesn't get access to first user's account.
+	if ($oldToken)
+		$result = fof_safe_query("DELETE from $FOF_COOKIE_TABLE where token_hash='%s'", sha1($oldToken));
+	$result = fof_safe_query("INSERT into $FOF_COOKIE_TABLE (token_hash, user_id, user_agent_hash) VALUES ('%s', %d, '%s')", sha1($newToken), $uid, sha1($user_agent));
+	return True;
+}
+
+function fof_db_validate_cookie($token, $userAgent){
+	global $FOF_COOKIE_TABLE;
+	$result = fof_safe_query("SELECT * from $FOF_COOKIE_TABLE where token_hash='%s'",sha1($token));
+	if (mysql_num_rows($result) > 0){
+		$row = mysql_fetch_array($result);
+		if (sha1($userAgent) == $row['user_agent_hash']){
+			return $row;
+		}
+	}
+	return False;
+}
+
+function fof_db_delete_cookie($token){
+	global $FOF_COOKIE_TABLE;
+	return (fof_safe_query("DELETE from $FOF_COOKIE_TABLE where token_hash='%s'",sha1($token)));
 }
 
 ?>
