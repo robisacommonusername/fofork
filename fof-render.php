@@ -48,23 +48,20 @@ function fof_render_item($item)
 {
     $items = true;
 
-	$feed_link = $item['feed_link'];
-	$feed_title = $item['feed_title'];
-	$feed_image = $item['feed_image'];
-	$feed_description = $item['feed_description'];
+	$feed_link = addslashes($item['feed_link']);
+	$feed_title = htmlspecialchars($item['feed_title']);
+	$feed_image = addslashes($item['feed_image']);
+	$feed_description = htmlspecialchars($item['feed_description']);
 
-	$item_link = $item['item_link'];
-	$item_id = $item['item_id'];
-	$item_title = $item['item_title'];
+	$item_link = addslashes($item['item_link']);
+	$item_id = intval($item['item_id']);
+	$item_title = htmlspecialchars($item['item_title']);
 	$item_content = $item['item_content'];
-	$item_read = $item['item_read'];
 
 	$prefs = fof_prefs();
 	$offset = $prefs['tzoffset'];
 
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
-	$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);
-	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
 
 	if(!$item_title) $item_title = "[no title]";
 	
@@ -74,27 +71,27 @@ function fof_render_item($item)
 		$item_title = do_highlight("<span>$item_title</span>", $_GET['search'], "highlight");
 	}
 	    
-    $tags = $item['tags'];
+    $tags = array_map(create_function('$x','return htmlspecialchars($x, ENT_QUOTES);'), $item['tags']);
 
-	$star = in_array("star", $tags) ? true : false;
-	$star_image = $star ? "image/star-on.gif" : "image/star-off.gif";
+	$star = in_array('star', $tags);
+	$star_image = $star ? 'image/star-on.gif' : 'image/star-off.gif';
 		
-	$unread = in_array("unread", $tags) ? true : false;
+	$unread = in_array('unread', $tags);
 ?>
 
 <div class="header">
 
 	<span class="controls">
-		<a class='uparrow' href='javascript:hide_body("<?php echo $item_id ?>")'>&uarr;</a>
-		<a class='downarrow' href='javascript:show_body("<?php echo $item_id ?>")'>&darr;</a>
+		<a class="uparrow" href="javascript:hide_body('<?php echo $item_id ?>')">&uarr;</a>
+		<a class='downarrow' href="javascript:show_body('<?php echo $item_id ?>')">&darr;</a>
 		<input
 			type="checkbox"
 			name="c<?php echo $item_id ?>"
 			id="c<?php echo $item_id ?>"
 			value="checked"
-			ondblclick='flag_upto("c<?php echo $item_id?>");'
-            onclick='return checkbox(event);'
-			title='shift-click or double-click to flag all items up to this one'
+			ondblclick="flag_upto('c<?php echo $item_id?>');"
+            onclick="return checkbox(event);"
+			title="shift-click or double-click to flag all items up to this one"
 		/>
 	</span>
 	
@@ -107,7 +104,7 @@ function fof_render_item($item)
 			onclick="return toggle_favorite('<?php echo $item_id ?>')"
 		/>
 		<script>
-			document.getElementById('fav<?php echo $item_id ?>').star = <?php if($star) echo 'true'; else echo 'false'; ?>;
+			document.getElementById("fav<?php echo $item_id ?>").star = <?php if($star) echo 'true'; else echo 'false'; ?>;
 		</script>
 		<a href="<?php echo $item_link ?>" target="_blank">
 			<?php echo $item_title ?>
@@ -123,9 +120,8 @@ function fof_render_item($item)
 		{
 			if($tag == "unread" || $tag == "star") continue;
 ?>
-		<a href='?what=<?php echo $tag ?>'><?php echo $tag ?></a>
-		
-		<a href='<?php echo $tag ?>' onclick='return remove_tag("<?php echo $item_id ?>", "<?php echo $tag ?>", "<?php echo fof_compute_CSRF_challenge();?>");'>[x]</a>
+		<a href="?what=<?php echo $tag ?>"><?php echo $tag ?></a>
+		<a href="<?php echo $tag?>" onclick="return remove_tag('<?php echo $item_id ?>', '<?php echo $tag?>', '<?php echo fof_compute_CSRF_challenge();?>');">[x]</a>
 <?php
 		}
     }
@@ -166,14 +162,14 @@ function fof_render_item($item)
 
     </span>
     
-    <span class='dash'> - </span>
+    <span class="dash"> - </span>
     
     <h2>
 
     <?php $prefs = fof_prefs(); if($feed_image && $prefs['favicons']) { ?>
-    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
+    <a href="<?php echo $feed_link ?>" title="<?php echo $feed_description ?>"><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
     <?php } ?>
-    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><?php echo $feed_title ?></a>
+    <a href="<?php echo $feed_link ?>" title="<?php echo $feed_description ?>"><?php echo $feed_title ?></a>
     </h2>
 
 	<span class="meta">on <?php echo $item_published ?></span>

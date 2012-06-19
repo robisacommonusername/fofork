@@ -1,7 +1,7 @@
 <?php 
 
 fof_add_item_filter('fof_plain');
-fof_add_pref('Strip (most) markup from items', 'plugin_plain_enable', 'boolean');
+fof_add_pref('Strip (most) markup from items', 'plugin_plain_enable', 'boolean', 'is_bool');
 
 function fof_plain($text)
 {

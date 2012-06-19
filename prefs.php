@@ -91,8 +91,10 @@ if(isset($_POST['plugins']) && fof_authenticate_CSRF_challenge($CSRF_hash))
 {
     foreach(fof_get_plugin_prefs() as $plugin_pref)
     {
-        $key = $plugin_pref[1];   
-        $prefs->set($key, $_POST[$key]); #security issue here - this allows arbitrary data
+    	list($name, $key, $type, $sanitiser) = $plugin_pref;
+		if ($sanitiser($_POST[$key])){
+        	$prefs->set($key, $_POST[$key]);
+        }
     }
     
     $plugins = array();
@@ -109,7 +111,7 @@ if(isset($_POST['plugins']) && fof_authenticate_CSRF_challenge($CSRF_hash))
         
     foreach($plugins as $plugin)
     {
-        $prefs->set("plugin_" . $plugin, $_POST[$plugin] != "on"); #SECURITY - need checking
+        $prefs->set("plugin_" . $plugin, $_POST[$plugin] != "on");
     }
 
 	$prefs->save(fof_current_user());

@@ -1007,11 +1007,14 @@ function fof_add_item_prefilter($function)
     $fof_item_prefilters[] = $function;
 }
 
-function fof_add_pref($name, $key, $type="string")
+function default_sanitiser($x){
+	return False;
+}
+function fof_add_pref($name, $key, $type="string", $sanitiser='default_sanitiser')
 {
     global $fof_plugin_prefs;
     
-    $fof_plugin_prefs[] = array($name, $key, $type);
+    $fof_plugin_prefs[] = array($name, $key, $type, $sanitiser);
 }
 
 function fof_add_item_widget($function)

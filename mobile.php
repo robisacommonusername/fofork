@@ -102,12 +102,12 @@ foreach($result as $item)
 	$item_id = intval($item['item_id']);
 	print '<div class="item shown" id="i' . $item_id . '">';
     
-    $feed_link = htmlspecialchars($item['feed_link']);
+    $feed_link = addslashes($item['feed_link']);
 	$feed_title = htmlspecialchars($item['feed_title']);
-	$feed_image = htmlspecialchars($item['feed_image']);
+	$feed_image = addslashes($item['feed_image']);
 	$feed_description = htmlspecialchars($item['feed_description']);
 
-	$item_link = htmlspecialchars($item['item_link']);
+	$item_link = addslashes($item['item_link']);
 	$item_id = intval($item['item_id']);
 	$item_title = htmlspecialchars($item['item_title']);
 	$item_content = $item['item_content']; #need to check if this is escaped properly by simplepie
