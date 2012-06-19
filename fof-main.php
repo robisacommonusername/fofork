@@ -117,6 +117,13 @@ function fof_validate_cookie(){
 			$_SESSION['user_name'] = $result['user_name'];
 			$_SESSION['user_id'] = $result['user_id'];
 			$_SESSION['user_level'] = $result['user_level'];
+			
+			#we will eventually remove these globals, for now set them so that
+    		#everything keeps working
+    		global $fof_user_name, $fof_user_level, $fof_user_id;
+    		$fof_user_name = $_SESSION['user_name'];
+    		$fof_user_level = $_SESSION['user_level'];
+    		$fof_user_id = $_SESSION['user_id'];
 			return True;
 		}
 	}

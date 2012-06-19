@@ -806,12 +806,16 @@ function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 }
 
 function fof_db_validate_cookie($token, $userAgent){
-	global $FOF_COOKIE_TABLE;
+	global $FOF_COOKIE_TABLE, $FOF_USER_TABLE;
 	$result = fof_safe_query("SELECT * from $FOF_COOKIE_TABLE where token_hash='%s'",sha1($token));
 	if (mysql_num_rows($result) > 0){
-		$row = mysql_fetch_array($result);
+		$row = fof_db_get_row($result);
 		if (sha1($userAgent) == $row['user_agent_hash']){
-			return $row;
+			$uid = $row['user_id'];
+			$result = fof_safe_query("SELECT * from $FOF_USER_TABLE where user_id=%d", $uid);
+			if (mysql_num_rows($result) > 0){
+				return fof_db_get_row($result);
+			}
 		}
 	}
 	return False;
