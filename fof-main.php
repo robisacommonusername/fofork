@@ -19,13 +19,13 @@ if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
     echo "You will first need to create a fof-config.php file.  Please copy fof-config-sample.php to fof-config.php and then update the values to match your database settings.";
     die();
 }
-
+session_start();
 require_once("fof-config.php");
 require_once("fof-db.php");
 require_once("classes/fof-prefs.php");
 
 fof_db_connect();
-session_start();
+
 
 if(!$fof_installer)
 {
@@ -36,7 +36,7 @@ if(!$fof_installer)
     }
     else
     {
-        $fof_user_id = 1;
+        $_SESSION['user_id'] = 1;
         $fof_prefs_obj =& FoF_Prefs::instance();
     }
 
@@ -89,12 +89,6 @@ function require_user()
         	exit();
         }
     }
-    #we will eventually remove these globals, for now set them so that
-    #everything keeps working
-    global $fof_user_name, $fof_user_level, $fof_user_id;
-    $fof_user_name = $_SESSION['user_name'];
-    $fof_user_level = $_SESSION['user_level'];
-    $fof_user_id = $_SESSION['user_id'];
 }
 
 function fof_place_cookie($user_id){
@@ -117,13 +111,6 @@ function fof_validate_cookie(){
 			$_SESSION['user_name'] = $result['user_name'];
 			$_SESSION['user_id'] = $result['user_id'];
 			$_SESSION['user_level'] = $result['user_level'];
-			
-			#we will eventually remove these globals, for now set them so that
-    		#everything keeps working
-    		global $fof_user_name, $fof_user_level, $fof_user_id;
-    		$fof_user_name = $_SESSION['user_name'];
-    		$fof_user_level = $_SESSION['user_level'];
-    		$fof_user_id = $_SESSION['user_id'];
 			return True;
 		}
 	}
@@ -144,16 +131,12 @@ function fof_logout()
 
 function fof_current_user()
 {
-    global $fof_user_id;
-    
-    return $fof_user_id;
+    return $_SESSION['user_id'];
 }
 
 function fof_username()
-{
-    global $fof_user_name;
-    
-    return $fof_user_name;
+{  
+    return $_SESSION['user_name'];
 }
 
 function fof_compute_CSRF_challenge(){
@@ -180,10 +163,8 @@ function fof_prefs()
 }
 
 function fof_is_admin()
-{
-    global $fof_user_level;
-    
-    return $fof_user_level == "admin";
+{   
+    return ($_SESSION['user_level'] == "admin");
 }
 
 function fof_get_unread_count($user_id)
@@ -852,69 +833,6 @@ function fof_update_feed($id)
                 fof_apply_tags($feed_id, $id);
 
                 $republished = false;
-                
-                // this was a failed attempt to avoid duplicates when subscribing to
-                // a "planet" type feed when you already have some of the feeds in the
-                // planet subscribed.  in the end there were just too many cases where
-                // dupes still got through (like the 'source' feed url being just slightly
-                // different from the subscribed url).
-                //
-                // maybe a better approach would be simply using the Atom GUID as a
-                // true *GU* ID.
-                
-                /*
-                $source = $item->get_item_tags(SIMPLEPIE_NAMESPACE_ATOM_10, 'source');
-                $links = $source[0]['child'][SIMPLEPIE_NAMESPACE_ATOM_10]['link'];
-                
-                if(is_array($links))
-                {                    
-                    foreach($links as $link)
-                    {
-                        if($link['attribs']['']['rel'] == 'self')
-                        {
-                            $feed_url = $link['attribs']['']['href'];
-                                                        
-                            $feed = fof_db_get_feed_by_url($feed_url);
-                            
-                            if($feed)
-                            {
-                                fof_log("was repub from $feed_url");
-                                
-                                $republished = true;
-                                
-                                $result = fof_get_subscribed_users($feed_id);
-                                
-                                $repub_subscribers = array();
-                                while($row = fof_db_get_row($result))
-                                {
-                                   $repub_subscribers[] = $row['user_id'];
-                                   fof_log("repub_sub: " . $row['user_id']);
-                                }
-                                
-                                $result = fof_get_subscribed_users($feed['feed_id']);
-                                
-                                $original_subscribers = array();
-                                while($row = fof_db_get_row($result))
-                                {
-                                   $original_subscribers[] = $row['user_id'];
-                                   fof_log("orig_sub: " . $row['user_id']);
-                                }
-                                
-                                $new_subscribers = array_diff($repub_subscribers, $original_subscribers);
-                                
-                                fof_db_mark_item_unread($new_subscribers, $id);
-                                
-                                $old_subscribers = array_intersect($original_subscribers, $repub_subscribers);
-
-                                foreach($old_subscribers as $user)
-                                {
-                                    fof_tag_item($user, $id, 'republished');
-                                }
-                            }
-                        }
-                    }
-                }
-                */
 
                 if(!$republished)
                 {

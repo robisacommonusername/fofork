@@ -791,7 +791,7 @@ function fof_db_save_prefs($user_id, $prefs)
 
 function fof_db_authenticate($user_name, $password)
 {
-    global $FOF_USER_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection, $fof_user_id, $fof_user_name, $fof_user_level;
+    global $FOF_USER_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
     
     $result = fof_safe_query("select * from $FOF_USER_TABLE where user_name = '%s'", $user_name);
     
@@ -803,9 +803,10 @@ function fof_db_authenticate($user_name, $password)
     $row = mysql_fetch_array($result);
     $computedHash = md5($password . $row['salt']);
     if ($computedHash == $row['user_password_hash']){
-    	$fof_user_name = $row['user_name'];
-    	$fof_user_id = $row['user_id'];
-    	$fof_user_level = $row['user_level'];
+    	$_SESSION['user_name'] = $row['user_name'];
+    	$_SESSION['user_id'] = $row['user_id'];
+    	$_SESSION['user_level'] = $row['user_level'];
+    	$_SESSION['authenticated'] = True;
     	return True;
     }
     return False;

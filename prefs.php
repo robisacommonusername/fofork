@@ -13,7 +13,6 @@
  */
 
 include_once("fof-main.php");
-
 $prefs =& FoF_Prefs::instance();
 $CSRF_hash = $_POST['CSRF_hash'];
 if(fof_is_admin() && isset($_POST['adminprefs']) && fof_authentice_CSRF_challenge($CSRF_hash))
