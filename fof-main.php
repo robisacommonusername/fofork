@@ -32,14 +32,12 @@ if(!$fof_installer)
     if(!$fof_no_login)
     {
         require_user();
-        $fof_prefs_obj =& FoF_Prefs::instance();
     }
     else
     {
         $_SESSION['user_id'] = 1;
-        $fof_prefs_obj =& FoF_Prefs::instance();
     }
-
+	$fof_prefs_obj =& FoF_Prefs::instance();
     ob_start();
     fof_init_plugins();
     ob_end_clean();

@@ -15,7 +15,7 @@ function fof_wordpress($item)
    $text = urlencode('<blockquote>' . $item['item_content'] . '</blockquote>');
 
    $link = "$wordpress/wp-admin/post-new.php?text=$text&popupurl=$url&popuptitle=$title";
-   
+   #XSS here
    return "<a href='$link'><img src='plugins/wordpress.png' height=12 width=12 border=0 /></a> <a href='$link'>blog it</a>";
 }
 ?>
