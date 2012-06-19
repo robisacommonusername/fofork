@@ -137,8 +137,7 @@ if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['p
     $username = $_POST['username'];
     if (preg_match('/^[a-zA-Z0-9]{1,32}$/',$username)){
     	$password = $_POST['password'];
-		fof_db_add_user($username, $password);
-		$message = "User '$username' added.";
+		$message = fof_db_add_user($username, $password) ? "User '$username' added." : "A user named '$username' already exists.  Please try again";
 	} else {
 		$message = 'Invalid username entered';
 	}

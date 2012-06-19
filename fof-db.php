@@ -730,10 +730,18 @@ function fof_db_get_users()
 function fof_db_add_user($username, $password)
 {
     global $FOF_USER_TABLE;
+	
+	#check if username already exists
+	$result = fof_safe_query("SELECT user_id from $FOF_USER_TABLE where user_name='%s'", $username);
+	if (mysql_num_rows($result) > 0){
+		return False;
+	} else {
+		$password_hash = md5($password . $username);
+		fof_safe_query("insert into $FOF_USER_TABLE (user_name, user_password_hash) values ('%s', '%s')", $username, $password_hash);
+		return True;
+	}
     
-	$password_hash = md5($password . $username);
-    
-	fof_safe_query("insert into $FOF_USER_TABLE (user_name, user_password_hash) values ('%s', '%s')", $username, $password_hash);
+	
 }
 
 function fof_db_change_password($username, $password)
