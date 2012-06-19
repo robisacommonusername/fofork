@@ -259,6 +259,7 @@ CREATE TABLE IF NOT EXISTS `$FOF_USER_TABLE` (
   `user_password_hash` varchar(32) NOT NULL default '',
   `user_level` enum('user','admin') NOT NULL default 'user',
   `user_prefs` text,
+  `salt` varchar(40) NOT NULL default '',
   PRIMARY KEY  (`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 EOQ;

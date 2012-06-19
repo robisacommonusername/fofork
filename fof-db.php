@@ -736,8 +736,12 @@ function fof_db_add_user($username, $password)
 	if (mysql_num_rows($result) > 0){
 		return False;
 	} else {
-		$password_hash = md5($password . $username);
-		fof_safe_query("insert into $FOF_USER_TABLE (user_name, user_password_hash) values ('%s', '%s')", $username, $password_hash);
+		#generate new salt
+    	$salt = '';
+    	for ($i=0; $i<5; $i++)
+    		$salt = sha1($salt . mt_rand());
+		$password_hash = md5($password . $salt);
+		fof_safe_query("insert into $FOF_USER_TABLE (user_name, user_password_hash, salt) values ('%s', '%s', '%s')", $username, $password_hash, $salt);
 		return True;
 	}
     
@@ -747,10 +751,14 @@ function fof_db_add_user($username, $password)
 function fof_db_change_password($username, $password)
 {
     global $FOF_USER_TABLE;
+    #generate new salt
+    $salt = '';
+    for ($i=0; $i<5; $i++)
+    	$salt = sha1($salt . mt_rand());
     
-	$password_hash = md5($password . $username);
+	$password_hash = md5($password . $salt);
     
-	fof_safe_query("update $FOF_USER_TABLE set user_password_hash = '%s' where user_name = '%s'", $password_hash, $username);
+	fof_safe_query("update $FOF_USER_TABLE set user_password_hash = '%s', salt='%s' where user_name = '%s'", $password_hash, $salt, $username);
 }
 
 function fof_db_get_user_id($username)
@@ -781,11 +789,11 @@ function fof_db_save_prefs($user_id, $prefs)
     fof_safe_query("update $FOF_USER_TABLE set user_prefs = '%s' where user_id = %d", $prefs, $user_id);
 }
 
-function fof_db_authenticate($user_name, $user_password_hash)
+function fof_db_authenticate($user_name, $password)
 {
     global $FOF_USER_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection, $fof_user_id, $fof_user_name, $fof_user_level;
     
-    $result = fof_safe_query("select * from $FOF_USER_TABLE where user_name = '%s' and user_password_hash = '%s'", $user_name, $user_password_hash);
+    $result = fof_safe_query("select * from $FOF_USER_TABLE where user_name = '%s'", $user_name);
     
     if(mysql_num_rows($result) == 0)
     {
@@ -793,12 +801,14 @@ function fof_db_authenticate($user_name, $user_password_hash)
     }
     
     $row = mysql_fetch_array($result);
-    
-    $fof_user_name = $row['user_name'];
-    $fof_user_id = $row['user_id'];
-    $fof_user_level = $row['user_level'];
-    
-    return true;
+    $computedHash = md5($password . $row['salt']);
+    if ($computedHash == $row['user_password_hash']){
+    	$fof_user_name = $row['user_name'];
+    	$fof_user_id = $row['user_id'];
+    	$fof_user_level = $row['user_level'];
+    	return True;
+    }
+    return False;
 }
 
 function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
