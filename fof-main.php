@@ -481,7 +481,7 @@ function fof_view_title($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit
     
     if(isset($search))
     {
-        $title .= " - <a href='javascript:toggle_highlight()'>matching <i class='highlight'>$search</i></a>";
+        $title .= " - <a href=\"javascript:toggle_highlight()\">matching <i class=\"highlight\">$search</i></a>";
     }
     
     return $title;
