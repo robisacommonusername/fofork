@@ -489,7 +489,6 @@ function fof_view_title($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit
     return $title;
 }
 
-#FUNCTION PARAMS HAVE NOT BEEN CHECKED, BUT GET PASSED THROUGH TO DB - SQL INJECTION!!!
 function fof_get_items($user_id, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
 {
    global $fof_item_filters;

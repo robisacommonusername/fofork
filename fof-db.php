@@ -304,7 +304,6 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
     return(mysql_insert_id($fof_connection));
 }
 
-###Security - SQL INJECTIONS HERE?? - $what, $when etc come from $_GET, but aren't properly checked
 function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
 {
     global $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;

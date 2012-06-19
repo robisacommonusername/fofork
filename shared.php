@@ -19,20 +19,20 @@ include_once("fof-render.php");
 $user = $_GET['user'];
 if(!isset($user)) die;
 
-$format = $_GET['format']; #untrusted
+$format = $_GET['format'];
 
-$prefs = new FoF_Prefs($user); #what if a bad name is entered?
+$prefs = new FoF_Prefs($user);
 $sharing = $prefs->get("sharing");
 if($sharing == "no") die;
 
-$name = htmlspecialchars($prefs->get("sharedname")); #untrusted
-$url = htmlspecialchars($prefs->get("sharedurl")); #untrusted
+$name = htmlspecialchars($prefs->get("sharedname"));
+$url = htmlspecialchars($prefs->get("sharedurl"));
 
 $which = ($sharing == "all") ? "all" : "shared";
 
 if(isset($_GET['which']))
 {
-    $which = ($sharing == "all") ? $_GET['which'] : "shared " . $_GET['which']; #untrusted
+    $which = ($sharing == "all") ? $_GET['which'] : "shared " . $_GET['which'];
     $extratitle = " items tagged " . $_GET['which'];
 }
 
@@ -47,8 +47,8 @@ if(isset($_GET['feed']))
 $result = fof_get_items($user, $feed, $which, NULL, 0, 100);
 
 
-$shared_feed = htmlspecialchars("http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user&format=atom");
-$shared_link = htmlspecialchars("http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user"); #user is untrusted
+$shared_feed = "http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user&format=atom";
+$shared_link = "http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user";
 
 if(isset($_GET['which']))
 {
@@ -61,6 +61,8 @@ if(isset($_GET['feed']))
     $shared_feed .= '&feed=' . $_GET['feed'];
     $shared_link .= '&feed=' . $_GET['feed'];
 }
+
+#escape output
 $shared_feed = strip_tags($shared_feed);
 $shared_link = strip_tags($shared_link);
 if ($extratitle){
@@ -93,7 +95,7 @@ foreach($result as $item)
 
 	$item_link = htmlspecialchars($item['item_link']);
     
-    $item_guid = $item['item_guid'];
+    $item_guid = intval($item['item_guid']);
     if(!ereg("^[a-z0-9\.\+\-]+:", $item_guid))
     {
         $item_guid = $feed_link . '#' . $item_guid;
@@ -101,12 +103,10 @@ foreach($result as $item)
     $item_guid = htmlspecialchars($item_guid);
     
 	$item_title = htmlspecialchars($item['item_title']);
-	$item_content = htmlspecialchars($item['item_content']);
+	$item_content = $item['item_content'];
 
 	$item_published = gmdate('Y-m-d\TH:i:s\Z', $item['item_published']);
-	$item_cached = gmdate('Y-m-d\TH:i:s\Z', $item['item_cached']);
-	$item_updated = gmdate('Y-m-d\TH:i:s\Z', $item['item_updated']);
-
+	
 	if(!$item_title) $item_title = "[no title]";
 	
 ?>
@@ -171,23 +171,20 @@ $first = true;
 
 foreach($result as $item)
 {
-	#hopefully parser has taken care of any nasties
-	$item_id = $item['item_id'];
+	$item_id = intval($item['item_id']);
 	print '<div class="item shown" id="i' . $item_id . '">';
     
-    $feed_link = $item['feed_link'];
-	$feed_title = $item['feed_title'];
-	$feed_image = $item['feed_image'];
-	$feed_description = $item['feed_description'];
+    $feed_link = htmlspecialchars($item['feed_link']);
+	$feed_title = htmlspecialchars($item['feed_title']);
+	$feed_image = htmlspecialchars($item['feed_image']);
+	$feed_description = htmlspecialchars($item['feed_description']);
 
-	$item_link = $item['item_link'];
-	$item_id = $item['item_id'];
-	$item_title = $item['item_title'];
+	$item_link = htmlspecialchars($item['item_link']);
+	$item_id = intval($item['item_id']);
+	$item_title = htmlspecialchars($item['item_title']);
 	$item_content = $item['item_content'];
-	$item_read = $item['item_read'];
 
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
-	$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);
 	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
 
 	if(!$item_title) $item_title = "[no title]";
@@ -207,8 +204,8 @@ foreach($result as $item)
     
     <h2>
 
-    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
-    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><?php echo $feed_title ?></a>
+    <a href="<?php echo $feed_link ?>" title="<?php echo $feed_description ?>"><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
+    <a href="<?php echo $feed_link ?>" title="<?php echo $feed_description ?>"><?php echo $feed_title ?></a>
 
     </h2>
 
