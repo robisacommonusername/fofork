@@ -120,7 +120,7 @@ if($n)
 <?php
 foreach($tags as $tag)
 {   
-   $tag_name = htmlspecialchars($tag['tag_name']);
+   $tag_name = htmlspecialchars($tag['tag_name'], ENT_QUOTES);
    $tag_id = $tag['tag_id'];
    $count = $tag['count'];
    $unread = $tag['unread'];
@@ -139,9 +139,9 @@ foreach($tags as $tag)
    print "<td>";
    $tagNameEncoded = urlencode($tag_name);
    $tagNameEscaped = addslashes($tag_name);
-   if($unread) print "<a class='unread' href='.?what=$tagNameEncoded+unread'>$unread</a>/";
-   print "<a href='.?what=$tagNameEncoded'>$count</a></td>";
-   print "<td><b><a href='.?what=$tagNameEncoded'>$tag_name</a></b></td>";
+   if($unread) print "<a class='unread' href=\".?what=$tagNameEncoded+unread\">$unread</a>/";
+   print "<a href=\".?what=$tagNameEncoded\">$count</a></td>";
+   print "<td><b><a href=\".?what=$tagNameEncoded\">$tag_name</a></b></td>";
    $CSRF_hash = fof_compute_CSRF_challenge();
    print "<td><a href=\"#\" title=\"untag all items\" onclick=\"if(confirm('Untag all [$tagNameEscaped] items --are you SURE?')) { delete_tag('$tagNameEscaped', '$CSRF_hash'); return false; }  else { return false; }\">[x]</a></td>";
 
