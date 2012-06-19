@@ -195,7 +195,7 @@ Share
 <option value=tagged <?php if($prefs->get('sharing') == "tagged") echo "selected";?>>tagged as "shared"</option>
 </select>
 items.
-<?php if($prefs->get('sharing') != "no") echo " <small><i>(your shared page is <a href='./shared.php?user=$fof_user_id'>here</a>)</i></small>";?><br><br>
+<?php if($prefs->get('sharing') != "no") echo " <small><i>(your shared page is <a href=\"./shared.php?user=$fof_user_id\">here</a>)</i></small>";?><br><br>
 Name to be shown on shared page: <input type=string name=sharedname value="<?php echo htmlspecialchars($prefs->get('sharedname'))?>"><br><br>
 URL to be linked on shared page: <input type=string name=sharedurl value="<?php echo htmlspecialchars($prefs->get('sharedurl'))?>">
 <br><br>
@@ -248,11 +248,11 @@ URL to be linked on shared page: <input type=string name=sharedurl value="<?php 
 foreach($feeds as $row)
 {
    $id = $row['feed_id'];
-   $url = htmlspecialchars($row['feed_url']);
+   $url = addslashes($row['feed_url']);
    $title = htmlspecialchars($row['feed_title']);
-   $link = htmlspecialchars($row['feed_link']);  
-   $tags = $row['tags'];
-   $feed_image = htmlspecialchars($row['feed_image']);
+   $link = addslashes($row['feed_link']);  
+   $tags = array_map(create_function('$x','return htmlspecialchars($x, ENT_QUOTES);'), $row['tags']);
+   $feed_image = addslashes($row['feed_image']);
    
    if(++$t % 2)
    {
@@ -282,7 +282,7 @@ foreach($feeds as $row)
        {
            $utag = urlencode($tag);
            $utitle = urlencode($title);
-           print "$tag <a href='prefs.php?untagfeed=$id&tag=$utag&title=$utitle&CSRF_hash=$challenge'>[x]</a> ";
+           print "$tag <a href=\"prefs.php?untagfeed=$id&tag=$utag&title=$utitle&CSRF_hash=$challenge\">[x]</a> ";
        }
    }
    
