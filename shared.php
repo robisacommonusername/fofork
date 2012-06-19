@@ -26,7 +26,7 @@ $sharing = $prefs->get("sharing");
 if($sharing == "no") die;
 
 $name = htmlspecialchars($prefs->get("sharedname"));
-$url = htmlspecialchars($prefs->get("sharedurl"));
+$url = addslashes($prefs->get("sharedurl"));
 
 $which = ($sharing == "all") ? "all" : "shared";
 
@@ -41,7 +41,7 @@ if(isset($_GET['feed']))
 {
     $feed = $_GET['feed'];
     $r = fof_db_get_feed_by_id($feed);
-    $extratitle .= " from <a href='" . $r['feed_link'] . "'>" . $r['feed_title'] . "</a>";
+    $extratitle .= " from <a href=\"" . $r['feed_link'] . "\">" . $r['feed_title'] . "</a>";
 }
 
 $result = fof_get_items($user, $feed, $which, NULL, 0, 100);
@@ -158,7 +158,7 @@ header("Content-Type: text/html; charset=utf-8");
 
   <h1 class="box"><a href="http://feedonfeeds.com/">Feed on Feeds</a> - Shared Items
   <?php if($name) echo " from ";
-  if($url) echo "<a href='$url'>";
+  if($url) echo "<a href=\"$url\">";
   if($name) echo "$name";
   if($url) echo "</a>";
   if($extratitle) echo "<br><i>$extratitle</i>" ?>
