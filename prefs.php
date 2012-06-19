@@ -16,10 +16,8 @@ include_once("fof-main.php");
 
 $prefs =& FoF_Prefs::instance();
 $CSRF_hash = $_POST['CSRF_hash'];
-
 if(fof_is_admin() && isset($_POST['adminprefs']) && fof_authentice_CSRF_challenge($CSRF_hash))
 {
-	#these all need to be checked before going in db
 	$prefs->set('purge', intval($_POST['purge']));
 	$prefs->set('manualtimeout', intval($_POST['manualtimeout']));
 	$prefs->set('autotimeout', intval($_POST['autotimeout']));
@@ -75,9 +73,12 @@ if(isset($_POST['prefs']) && fof_authenticate_CSRF_challenge($CSRF_hash))
     
     if($_POST['password'] && ($_POST['password'] == $_POST['password2']))
     {
-        fof_db_change_password($fof_user_name, $_POST['password']);
-        setcookie ( "user_password_hash",  md5($_POST['password'] . $fof_user_name), time()+60*60*24*365*10 );
-        $message = "Updated password.";
+    	if (fof_db_authenticate(fof_username(), $_POST['exist_pwd'])){
+        	fof_db_change_password(fof_username(), $_POST['password']);
+        	$message = 'Updated password.';
+        } else {
+        	$message = 'Current password was not entered correctly';
+        }
     }
     else if($_POST['password'] || $_POST['password2'])
     {
@@ -96,7 +97,7 @@ if(isset($_POST['plugins']) && fof_authenticate_CSRF_challenge($CSRF_hash))
     }
     
     $plugins = array();
-    $dirlist = opendir(FOF_DIR . "/plugins");
+    $dirlist = opendir(FOF_DIR . '/plugins');
     while($file=readdir($dirlist))
     {
         if(ereg('\.php$',$file))
@@ -119,27 +120,35 @@ if(isset($_POST['plugins']) && fof_authenticate_CSRF_challenge($CSRF_hash))
 
 if(fof_is_admin() && isset($_POST['changepassword']) && fof_authentiate_CSRF_challenge($CSRF_hash)) 
 {
-    if($_POST['password'] != $_POST['password2'])
-    {
-        $message = "Passwords do not match!";
-    }
-    else
-    {
-        $username = $_POST['username'];
-        $password = $_POST['password'];
-        fof_db_change_password($username, $password);
-        $message = htmlspecialchars("Changed password for $username.");
+	if (fof_db_authenticate(fof_username(), $_POST['admin_password'])){
+    	if($_POST['password'] != $_POST['password2'])
+    	{
+        	$message = "Passwords do not match!";
+    	}
+    	else
+    	{
+        	$username = $_POST['username'];
+        	$password = $_POST['password'];
+        	fof_db_change_password($username, $password);
+        	$message = htmlspecialchars("Changed password for $username.");
+    	}
+    } else {
+    	$message = 'Please enter a valid admin password';
     }
 }
 
 if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password'] && fof_authenticate_CSRF_challenge($CSRF_hash)) 
 {
-    $username = $_POST['username'];
-    if (preg_match('/^[a-zA-Z0-9]{1,32}$/',$username)){
-    	$password = $_POST['password'];
-		$message = fof_db_add_user($username, $password) ? "User '$username' added." : "A user named '$username' already exists.  Please try again";
+	if (fof_db_authenticate(fof_username(), $_POST['admin_password'])){
+    	$username = $_POST['username'];
+    	if (preg_match('/^[a-zA-Z0-9]{1,32}$/',$username)){
+    		$password = $_POST['password'];
+			$message = fof_db_add_user($username, $password) ? "User '$username' added." : "A user named '$username' already exists.  Please try again";
+		} else {
+			$message = 'Invalid username entered';
+		}
 	} else {
-		$message = 'Invalid username entered';
+		$message = 'Please enter a valid admin password';
 	}
 	
 }
@@ -147,9 +156,13 @@ if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['p
 
 if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'] && fof_authenticate_CSRF_challenge($CSRF_hash))
 {
-	$username = $_POST['username'];
-	fof_db_delete_user($username);
-	$message = htmlspecialchars("User '$username' deleted.");
+	if (fof_db_authenticate(fof_username(), $_POST['admin_password'])){
+		$username = $_POST['username'];
+		fof_db_delete_user($username);
+		$message = htmlspecialchars("User '$username' deleted.");
+	} else {
+		$message = 'Please enter a valid admin password';
+	}
 }
 
 include("header.php");
@@ -170,7 +183,7 @@ Number of items in paged displays: <input type="string" name="howmany" value="<?
 Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($prefs->get('favicons')) echo "checked=true";?> ><br><br>
 Use keyboard shortcuts? <input type="checkbox" name="keyboard" <?php if($prefs->get('keyboard')) echo "checked=true";?> ><br><br>
 Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo intval($prefs->get('tzoffset'))?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + intval($prefs->get("tzoffset"))*60*60) ?>)<br><br>
-<table border=0 cellspacing=0 cellpadding=2><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
+<table border=0 cellspacing=0 cellpadding=2><tr><td>Current password:</td><td><input type=password name=exist_pwd><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
 <tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
 <br>
 
@@ -236,16 +249,7 @@ foreach($feeds as $row)
    $id = $row['feed_id'];
    $url = htmlspecialchars($row['feed_url']);
    $title = htmlspecialchars($row['feed_title']);
-   $link = htmlspecialchars($row['feed_link']);
-   //$description = $row['feed_description'];
-   //$age = $row['feed_age'];
-   //$unread = $row['feed_unread'];
-   //$starred = $row['feed_starred'];
-   //$items = $row['feed_items'];
-   //$agestr = $row['agestr'];
-   //$agestrabbr = $row['agestrabbr'];
-   //$lateststr = $row['lateststr'];
-   //$lateststrabbr = $row['lateststrabbr'];   
+   $link = htmlspecialchars($row['feed_link']);  
    $tags = $row['tags'];
    $feed_image = htmlspecialchars($row['feed_image']);
    
@@ -304,7 +308,12 @@ Allow manual feed updates every <input size=4 type=string name=manualtimeout val
 <br><h1>Add User</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
 <input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
-Username: <input type=string name=username> Password: <input type=string name=password> <input type=submit name=adduser value="Add user">
+<table cellspacing=0 cellpadding=2>
+<tr><td>Admin password:</td><td><input type="password" name="admin_password"></td></tr>
+<tr><td>Username: </td><td><input type=string name=username></td></tr>
+<tr><td>Password: </td><td><input type=string name=password></td></tr>
+</table>
+<input type=submit name=adduser value="Add user">
 </form>
 
 <?php
@@ -323,8 +332,10 @@ Username: <input type=string name=username> Password: <input type=string name=pa
 <br><h1>Delete User</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Delete User - Are you sure?')">
 <input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
+<table border=0 cellspacing=0 cellpadding=10><tr><td>Enter Admin Password:</td><td>Select user to delete:</td></tr>
+<tr><td><input type=password name="admin_password"></td><td>
 <select name=username><?php echo $delete_options ?></select>
-<input type=submit name=deleteuser value="Delete user"><br>
+<input type=submit name=deleteuser value="Delete user"></td></tr></table>
 </form>
 
 <br><h1>Change User's Password</h1>
@@ -332,6 +343,7 @@ Username: <input type=string name=username> Password: <input type=string name=pa
 <input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
 <table border=0 cellspacing=0 cellpadding=2>
 <tr><td>Select user:</td><td><select name=username><?php echo $delete_options ?></select></td></tr>
+<tr><td>Admin password:</td><td><input type=password name="admin_password"></td></tr>
 <tr><td>New password:</td><td><input type=password name=password></td></tr>
 <tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
 <input type=submit name=changepassword value="Change"><br>

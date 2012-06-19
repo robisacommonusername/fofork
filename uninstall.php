@@ -35,6 +35,9 @@ fof_set_content_type();
 
 <?php
 if($_POST['confirmed'] == 'delete' && fof_authenticate_CSRF_challenge($_POST['CSRF_hash']) && fof_is_admin()){
+	if (!fof_db_authenticate(fof_username(), $_POST['admin_password'])){
+		die('Incorrect password.  Please enter an admin password to proceed');
+	}
 
 $query = <<<EOQ
 DROP TABLE `$FOF_FEED_TABLE`;
@@ -86,6 +89,7 @@ elseif (!isset($_POST['confirmed']))
 Please be aware the uninstalling will delete all of Feed on Feeds' database tables. <br />
 This is your absolute last chance.  Do you really want to uninstall Feed on Feeds? <br /><br />
 <form name="confirmation_form" method="post" action="uninstall.php">
+Administrator Password: <input type="password" name="admin_password" value=""><br />
 <input type="hidden" name="CSRF_hash" value="<?php echo fof_compute_CSRF_challenge();?>">
 <input type="radio" name="confirmed" value="delete"/> Uninstall <br />
 <input type="radio" name="confirmed" value="no_delete" CHECKED/> Don't uninstall <br />
