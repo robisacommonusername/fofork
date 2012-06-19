@@ -15,7 +15,7 @@
 include_once("fof-main.php");
 include_once("fof-render.php");
 
-$result = fof_get_items($fof_user_id, NULL, "unread", NULL, 0, 10);
+$result = fof_get_items(fof_current_user(), NULL, "unread", NULL, 0, 10);
 
 header("Content-Type: text/html; charset=utf-8");
 ?>
@@ -99,26 +99,25 @@ $first = true;
 
 foreach($result as $item)
 {
-	$item_id = $item['item_id'];
+	$item_id = intval($item['item_id']);
 	print '<div class="item shown" id="i' . $item_id . '">';
     
-    $feed_link = $item['feed_link'];
-	$feed_title = $item['feed_title'];
-	$feed_image = $item['feed_image'];
-	$feed_description = $item['feed_description'];
+    $feed_link = htmlspecialchars($item['feed_link']);
+	$feed_title = htmlspecialchars($item['feed_title']);
+	$feed_image = htmlspecialchars($item['feed_image']);
+	$feed_description = htmlspecialchars($item['feed_description']);
 
-	$item_link = $item['item_link'];
-	$item_id = $item['item_id'];
-	$item_title = $item['item_title'];
-	$item_content = $item['item_content'];
-	$item_read = $item['item_read'];
+	$item_link = htmlspecialchars($item['item_link']);
+	$item_id = intval($item['item_id']);
+	$item_title = htmlspecialchars($item['item_title']);
+	$item_content = $item['item_content']; #need to check if this is escaped properly by simplepie
 
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
-	$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);
-	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
+	//$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);
+	//$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
 
 	if(!$item_title) $item_title = "[no title]";
-    $tags = $item['tags'];
+    $tags = $item['tags']; #does not get sent to output, no escaping needed
 	$star = in_array("star", $tags) ? true : false;
 	$star_image = $star ? "image/star-on.gif" : "image/star-off.gif";
 
@@ -137,8 +136,8 @@ foreach($result as $item)
 		<script>
 			document.getElementById('fav<?php echo $item_id ?>').star = <?php if($star) echo 'true'; else echo 'false'; ?>;
 		</script>
-        <a href="<?php echo $item_link ?>">
-            <?php echo $item_title ?>
+        <a href="<?php echo $item_link?>">
+            <?php echo $item_title?>
 		</a>
 	</h1>
 	
@@ -147,17 +146,17 @@ foreach($result as $item)
     
     <h2>
 
-    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
-    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><?php echo $feed_title ?></a>
+    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><img src="<?php echo $feed_image?>" height="16" width="16" border="0" /></a>
+    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><?php echo $feed_title?></a>
 
     </h2>
 
-	<span class="meta">on <?php echo $item_published ?> GMT</span>
+	<span class="meta">on <?php echo $item_published?> GMT</span>
 
 </div>
 
 
-<div class="body"><?php echo $item_content ?></div>
+<div class="body"><?php echo $item_content #XSS?></div>
 
 <div class="clearer"></div>
 </div>
