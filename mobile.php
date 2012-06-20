@@ -103,18 +103,18 @@ foreach($result as $item)
 	print '<div class="item shown" id="i' . $item_id . '">';
     
     $feed_link = addslashes($item['feed_link']);
+    if (stripos($feed_link, 'javascript:') === 0) $feed_link = '';
 	$feed_title = htmlspecialchars($item['feed_title']);
 	$feed_image = addslashes($item['feed_image']);
 	$feed_description = htmlspecialchars($item['feed_description']);
 
 	$item_link = addslashes($item['item_link']);
+	if (stripos($item_link, 'javascript:') === 0) $item_link= '';
 	$item_id = intval($item['item_id']);
 	$item_title = htmlspecialchars($item['item_title']);
 	$item_content = $item['item_content']; #need to check if this is escaped properly by simplepie
 
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
-	//$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);
-	//$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
 
 	if(!$item_title) $item_title = "[no title]";
     $tags = $item['tags']; #does not get sent to output, no escaping needed
@@ -146,8 +146,8 @@ foreach($result as $item)
     
     <h2>
 
-    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><img src="<?php echo $feed_image?>" height="16" width="16" border="0" /></a>
-    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><?php echo $feed_title?></a>
+    <a href="<?php echo $feed_link ?>" title="<?php echo $feed_description ?>"><img src="<?php echo $feed_image?>" height="16" width="16" border="0" /></a>
+    <a href="<?php echo $feed_link ?>" title="<?php echo $feed_description ?>"><?php echo $feed_title?></a>
 
     </h2>
 

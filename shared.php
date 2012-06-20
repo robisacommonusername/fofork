@@ -90,10 +90,13 @@ echo '<?xml version="1.0"?>';
 foreach($result as $item)
 {
     $feed_link = addslashes($item['feed_link']);
+    if (stripos($feed_link, 'javascript:') === 0) $feed_link= '';
     $feed_url = addslashes($item['feed_url']);
+    if (stripos($feed_url, 'javascript:') === 0) $feed_url= '';
 	$feed_title = htmlspecialchars($item['feed_title']);
 
 	$item_link = addslashes($item['item_link']);
+	if (stripos($item_link, 'javascript:') === 0) $item_link= '';
     
     $item_guid = intval($item['item_guid']);
     if(!ereg("^[a-z0-9\.\+\-]+:", $item_guid))
@@ -175,11 +178,13 @@ foreach($result as $item)
 	print '<div class="item shown" id="i' . $item_id . '">';
     
     $feed_link = addslashes($item['feed_link']);
+    if (stripos($feed_link, 'javascript:') === 0) $feed_link= '';
 	$feed_title = addslashes($item['feed_title']);
 	$feed_image = addslashes($item['feed_image']);
 	$feed_description = htmlspecialchars($item['feed_description']);
 
-	$item_link =addslashes($item['item_link']);
+	$item_link = addslashes($item['item_link']);
+	if (stripos($item_link, 'javascript:') === 0) $item_link= '';
 	$item_id = intval($item['item_id']);
 	$item_title = htmlspecialchars($item['item_title']);
 	$item_content = $item['item_content'];

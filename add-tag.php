@@ -14,8 +14,8 @@
 
 include_once("fof-main.php");
 
-$tags = $_POST['tag'];
-$item = $_POST['item'];
+$tags = htmlspecialchars($_POST['tag'], ENT_QUOTES);
+$item = intval($_POST['item']);
 $remove = $_POST['remove'];
 $CSRF_hash = $_POST['CSRF_hash'];
 if (!fof_authenticate_CSRF_challenge($CSRF_hash)){
