@@ -18,6 +18,7 @@ $prefs =& FoF_Prefs::instance();
 $allowedFields = array(
 	'favicons' => True,
 	'keyboard' => True,
+	'newtabs' => True,
 	'direction' => '4',
 	'howmany' => 10000,
 	'sharing' => '3',

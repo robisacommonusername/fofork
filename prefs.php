@@ -34,9 +34,9 @@ if(fof_is_admin() && isset($_POST['adminprefs']) && fof_authentice_CSRF_challeng
 
 if(isset($_POST['tagfeed']) && fof_authenticate_CSRF_challenge($CSRF_hash))
 {
-    $tags = htmlspecialchars($_POST['tag']);
+    $tags = htmlspecialchars($_POST['tag'], ENT_QUOTES);
     $feed_id = intval($_POST['feed_id']);
-    $title = htmlspecialchars($_POST['title']);
+    $title = htmlspecialchars($_POST['title'], ENT_QUOTES);
     
     foreach(explode(" ", $tags) as $tag)
     {
@@ -48,8 +48,8 @@ if(isset($_POST['tagfeed']) && fof_authenticate_CSRF_challenge($CSRF_hash))
 if(isset($_GET['untagfeed']) && fof_authenticate_CSRF_challenge($_GET['CSRF_hash']))
 {
     $feed_id = intval($_GET['untagfeed']);
-    $tags = htmlspecialchars($_GET['tag']);
-    $title = htmlspecialchars($_GET['title']);
+    $tags = htmlspecialchars($_GET['tag'], ENT_QUOTES);
+    $title = htmlspecialchars($_GET['title'], ENT_QUOTES);
 	
     foreach(explode(" ", $tags) as $tag)
     {
@@ -62,6 +62,7 @@ if(isset($_POST['prefs']) && fof_authenticate_CSRF_challenge($CSRF_hash))
 {
 	$prefs->set('favicons', $_POST['favicons'] ? True : False);
 	$prefs->set('keyboard', $_POST['keyboard'] ? True : False);
+	$prefs->set('newtabs', $_POST['newtabs'] ? True : False);
 	$prefs->set('tzoffset', intval($_POST['tzoffset']));
 	$prefs->set('howmany', intval($_POST['howmany']));
 	$prefs->set('order', $_POST['order'] == 'asc' ? 'asc' : 'desc');
@@ -180,9 +181,10 @@ $challenge = fof_compute_CSRF_challenge();
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
 <input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
 Default display order: <select name="order"><option value=desc>new to old</option><option value=asc <?php if($prefs->get('order') == "asc") echo "selected";?>>old to new</option></select><br><br>
-Number of items in paged displays: <input type="string" name="howmany" value="<?php echo intval($prefs->get('howmany')) ?>"><br><br>
-Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($prefs->get('favicons')) echo "checked=true";?> ><br><br>
-Use keyboard shortcuts? <input type="checkbox" name="keyboard" <?php if($prefs->get('keyboard')) echo "checked=true";?> ><br><br>
+Number of items in paged displays: <input type="string" name="howmany" value="<?php echo intval($prefs->get('howmany')) ?>"><br /><br />
+Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($prefs->get('favicons')) echo "checked=true";?> ><br /><br />
+Use keyboard shortcuts? <input type="checkbox" name="keyboard" <?php if($prefs->get('keyboard')) echo "checked=true";?> ><br /><br />
+Open stories in new tab? <input type="checkbox" name="newtabs" <?php if($prefs->get('newtabs')) echo 'CHECKED';?> ><br /><br />
 Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo intval($prefs->get('tzoffset'))?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + intval($prefs->get("tzoffset"))*60*60) ?>)<br><br>
 <table border=0 cellspacing=0 cellpadding=2><tr><td>Current password:</td><td><input type=password name=exist_pwd><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
 <tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>

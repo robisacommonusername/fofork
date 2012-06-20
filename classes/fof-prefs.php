@@ -62,20 +62,21 @@ class FoF_Prefs
     function populate_defaults()
     {
         $defaults = array(
-            "favicons" => true,
-            "keyboard" => false,
-            "direction" => "desc",
-            "howmany" => 50,
-            "sharing" => "no",
-            "feed_order" => "feed_title",
-            "feed_direction" => "asc",
+            'favicons' => True,
+            'keyboard' => False,
+            'newtabs' => True,
+            'direction' => 'desc',
+            'howmany' => 50,
+            'sharing' => 'no',
+            'feed_order' => 'feed_title',
+            'feed_direction' => 'asc',
             );
         
         $admin_defaults = array(
-            "purge" => 30,
-            "autotimeout" => 30,
-            "manualtimeout" => 15,
-            "logging" => false,
+            'purge' => 30,
+            'autotimeout' => 30,
+            'manualtimeout' => 15,
+            'logging' => false,
              );
         
         $this->stuff_array($this->prefs, $defaults);
