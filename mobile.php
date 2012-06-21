@@ -111,7 +111,7 @@ foreach($result as $item)
 	$item_link = addslashes($item['item_link']);
 	if (stripos($item_link, 'javascript:') === 0) $item_link= '';
 	$item_id = intval($item['item_id']);
-	$item_title = htmlspecialchars($item['item_title']);
+	$item_title = $item['item_title']; #escaped by simplepie
 	$item_content = $item['item_content']; #need to check if this is escaped properly by simplepie
 
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
@@ -156,7 +156,7 @@ foreach($result as $item)
 </div>
 
 
-<div class="body"><?php echo $item_content #XSS?></div>
+<div class="body"><?php echo $item_content ?></div>
 
 <div class="clearer"></div>
 </div>

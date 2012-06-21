@@ -98,14 +98,14 @@ foreach($result as $item)
 	$item_link = addslashes($item['item_link']);
 	if (stripos($item_link, 'javascript:') === 0) $item_link= '';
     
-    $item_guid = intval($item['item_guid']);
+    $item_guid = $item['item_guid'];
     if(!ereg("^[a-z0-9\.\+\-]+:", $item_guid))
     {
         $item_guid = $feed_link . '#' . $item_guid;
     }
-    $item_guid = htmlspecialchars($item_guid);
+    $item_guid = addslashes($item_guid);
     
-	$item_title = htmlspecialchars($item['item_title']);
+	$item_title = $item['item_title'];
 	$item_content = $item['item_content'];
 
 	$item_published = gmdate('Y-m-d\TH:i:s\Z', $item['item_published']);
@@ -186,7 +186,7 @@ foreach($result as $item)
 	$item_link = addslashes($item['item_link']);
 	if (stripos($item_link, 'javascript:') === 0) $item_link= '';
 	$item_id = intval($item['item_id']);
-	$item_title = htmlspecialchars($item['item_title']);
+	$item_title = $item['item_title']; #escaped by simplepie
 	$item_content = $item['item_content'];
 
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
