@@ -26,7 +26,7 @@ if(isset($_POST["user_name"]) && isset($_POST["user_password"]))
     {
     	session_regenerate_id();
     	if ($_POST['persistent'] == 'True'){
-    		fof_place_cookie($fof_user_id);
+    		fof_place_cookie($_SESSION['user_id']);
     	}
         Header("Location: .");
         exit();

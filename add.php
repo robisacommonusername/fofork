@@ -30,7 +30,7 @@ if($opml && fof_authenticate_CSRF_challenge($CSRF_hash))
 	
 	if(!$sfile->success)
 	{
-		echo "Cannot open " . htmlentities($opml) . "<br>";
+		echo "Cannot open " . htmlentities($opml) . "<br />";
 		return false;
 	}
 
@@ -43,7 +43,7 @@ if($_FILES['opml_file']['tmp_name'] && fof_authenticate_CSRF_challenge($CSRF_has
 {
 	if(!$content_array = file($_FILES['opml_file']['tmp_name']))
 	{
-		echo "Cannot open uploaded file<br>";
+		echo "Cannot open uploaded file<br />";
 	}
     else
     {

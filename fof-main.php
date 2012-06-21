@@ -21,34 +21,6 @@ if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
 }
 
 session_start();
-#check user agent hasn't changed
-if (isset($_SESSION['user_agent_hash']) && isset($_SESSION['hash_salt'])){
-	$computed = sha1($_SERVER['HTTP_USER_AGENT'] . $_SESSION['hash_salt']);
-	if ($computed != $_SESSION['user_agent_hash']){
-		session_unset();
-		session_destroy();
-		setcookie('PHPSESSID', '');
-		header('Location: login.php');
-		exit();
-	}
-} else {
-	$_SESSION['hash_salt'] = mt_rand();
-	$_SESSION['user_agent_hash'] = sha1($_SERVER['HTTP_USER_AGENT'] . $_SESSION['hash_salt']);
-}
-#check for timeout
-if (isset($_SESSION['last_access'])){
-	if ((time() - $_SESSION['last_access']) > 30*60){
-		session_unset();
-		session_destroy();
-		setcookie('PHPSESSID','');
-		#redirect user back to page they were requesting in the event of a timeout
-		#if they have a persistent login token, this will work, otherwise they'll
-		#end up at the log-in page
-		header('Location: ' . $_SERVER['REQUEST_URI']);
-		exit();
-	}
-}
-$_SESSION['last_access'] = time();
 
 require_once("fof-config.php");
 require_once("fof-db.php");
@@ -117,6 +89,34 @@ function require_user()
         	exit();
         }
     }
+    #check user agent hasn't changed
+	if (isset($_SESSION['user_agent_hash']) && isset($_SESSION['hash_salt'])){
+		$computed = sha1($_SERVER['HTTP_USER_AGENT'] . $_SESSION['hash_salt']);
+		if ($computed != $_SESSION['user_agent_hash']){
+			session_unset();
+			session_destroy();
+			setcookie('PHPSESSID', '');
+			header('Location: login.php');
+			exit();
+		}
+	} else {
+		$_SESSION['hash_salt'] = mt_rand();
+		$_SESSION['user_agent_hash'] = sha1($_SERVER['HTTP_USER_AGENT'] . $_SESSION['hash_salt']);
+	}
+	#check for timeout
+	if (isset($_SESSION['last_access'])){
+		if ((time() - $_SESSION['last_access']) > 30*60){
+			session_unset();
+			session_destroy();
+			setcookie('PHPSESSID','');
+			#redirect user back to page they were requesting in the event of a timeout
+			#if they have a persistent login token, this will work, otherwise they'll
+			#end up at the log-in page
+			header('Location: ' . $_SERVER['REQUEST_URI']);
+			exit();
+		}
+	}
+	$_SESSION['last_access'] = time();
 }
 
 function fof_place_cookie($user_id){
