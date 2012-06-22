@@ -20,13 +20,19 @@ if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
     die();
 }
 
-session_start();
-
 require_once("fof-config.php");
 require_once("fof-db.php");
 require_once("classes/fof-prefs.php");
 
 fof_db_connect();
+
+session_set_save_handler('fof_db_open_session',
+                         'fof_db_close_session',
+                         'fof_db_read_session',
+                         'fof_db_write_session',
+                         'fof_db_destroy_session',
+                         'fof_db_clean_session');
+session_start();
 
 if(!$fof_installer)
 {

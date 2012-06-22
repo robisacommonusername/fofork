@@ -858,6 +858,7 @@ function fof_db_close_session(){
 }
 
 function fof_db_read_session($id){
+	global $FOF_SESSION_TABLE;
     $result = fof_safe_query("SELECT data from $FOF_SESSION_TABLE where id='%s'", $id);
     if (mysql_num_rows($result)){
     	$record = fof_db_get_row($result);
@@ -866,16 +867,19 @@ function fof_db_read_session($id){
     return '';
 }
 
-function fof_db_write_session($id, $data){   
+function fof_db_write_session($id, $data){
+	global $FOF_SESSION_TABLE;  
     $access = time();
 	return fof_safe_query("REPLACE into $FOF_SESSION_TABLE VALUES ('%s', '%d', '%s')", $id, $access, $data);
 }
 
 function fof_db_destroy_session($id){
+	global $FOF_SESSION_TABLE;
     return fof_safe_query("DELETE from $FOF_SESSION_TABLE where id='%s'", $id);
 }
 
 function fof_db_clean_session($max){
+	global $FOF_SESSION_TABLE;
     $old = time() - $max;
 	return fof_safe_query("DELETE from $FOF_SESSION_TABLE where access < '%d'", $old);
 }
