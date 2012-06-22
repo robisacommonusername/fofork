@@ -19,6 +19,7 @@ $FOF_SUBSCRIPTION_TABLE = FOF_SUBSCRIPTION_TABLE;
 $FOF_TAG_TABLE = FOF_TAG_TABLE;
 $FOF_USER_TABLE = FOF_USER_TABLE;
 $FOF_COOKIE_TABLE = FOF_COOKIE_TABLE;
+$FOF_SESSION_TABLE = FOF_SESSION_TABLE;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
@@ -38,9 +39,9 @@ function fof_db_connect()
 
 function fof_db_optimize()
 {
-	global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE;
+	global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE;
     
-	fof_db_query("optimize table $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE");
+	fof_db_query("optimize table $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE");
 }
 
 function fof_safe_query(/* $query, [$args...]*/)
@@ -842,6 +843,41 @@ function fof_db_validate_cookie($token, $userAgent){
 function fof_db_delete_cookie($token){
 	global $FOF_COOKIE_TABLE;
 	return (fof_safe_query("DELETE from $FOF_COOKIE_TABLE where token_hash='%s'",sha1($token)));
+}
+
+function fof_db_open_session(){
+    global $fof_connection;
+	if (!$fof_connection){
+		$fof_connection = fof_db_connect();
+	}
+	return $fof_connection;
+}
+
+function fof_db_close_session(){
+    return True;
+}
+
+function fof_db_read_session($id){
+    $result = fof_safe_query("SELECT data from $FOF_SESSION_TABLE where id='%s'", $id);
+    if (mysql_num_rows($result)){
+    	$record = fof_db_get_row($result);
+    	return $record['data'];
+    }
+    return '';
+}
+
+function fof_db_write_session($id, $data){   
+    $access = time();
+	return fof_safe_query("REPLACE into $FOF_SESSION_TABLE VALUES ('%s', '%d', '%s')", $id, $access, $data);
+}
+
+function fof_db_destroy_session($id){
+    return fof_safe_query("DELETE from $FOF_SESSION_TABLE where id='%s'", $id);
+}
+
+function fof_db_clean_session($max){
+    $old = time() - $max;
+	return fof_safe_query("DELETE from $FOF_SESSION_TABLE where access < '%d'", $old);
 }
 
 ?>

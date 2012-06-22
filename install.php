@@ -112,9 +112,9 @@ $iconv_ok = extension_loaded('iconv');
 <?php
 if($_GET['password'] && $_GET['password'] == $_GET['password2'] )
 {
-	$password_hash = md5($_GET['password'] . 'admin');
-	fof_safe_query("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level) values (1, 'admin', '%s', 'admin')", $password_hash);
-	
+	fof_safe_query("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level, salt) values (1, 'admin', 'ABCDEF', 'admin', 'ABCDEF')");
+	fof_db_change_password('admin',$_GET['password']);
+		
 	echo '<center><b>OK!  Setup complete! <a href=".">Login as admin</a>, and start subscribing!</center></b></div></body></html>';
 }
 else
@@ -270,6 +270,15 @@ CREATE TABLE IF NOT EXISTS `$FOF_COOKIE_TABLE` (
   `user_id` int(11) NOT NULL default '0',
   `user_agent_hash varchar(40) NOT NULL default '',
   PRIMARY KEY  (`token_hash`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+EOQ;
+
+$tables[] = <<<EOQ
+CREATE TABLE IF NOT EXISTS `$FOF_SESSION_TABLE` (
+  	`id` varchar(32) NOT NULL,
+    `access` int(11) unsigned,
+    `data` text,
+    PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 EOQ;
 

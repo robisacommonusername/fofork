@@ -28,7 +28,6 @@ require_once("classes/fof-prefs.php");
 
 fof_db_connect();
 
-
 if(!$fof_installer)
 {
     if(!$fof_no_login)

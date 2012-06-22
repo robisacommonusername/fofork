@@ -81,6 +81,12 @@ EOQ;
 
 fof_db_query($query);
 
+$query = <<<EOQ
+DROP TABLE `$FOF_SESSION_TABLE`;
+EOQ;
+
+fof_db_query($query);
+
 echo 'Done.  Now just delete this entire directory and we\'ll forget this ever happened.';
 }
 elseif (!isset($_POST['confirmed']))
