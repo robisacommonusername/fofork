@@ -19,6 +19,6 @@ if(file_exists("./cache/" . md5($_GET[i]) . ".spi"))
 }
 else
 {
-    header("Location: image/feed-icon.png");
+    header('Location: image/feed-icon.png');
 }
 ?>

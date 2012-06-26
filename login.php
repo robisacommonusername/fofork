@@ -16,11 +16,11 @@ ob_start();
 
 $fof_no_login = true;
 
-include_once("fof-main.php");
+include_once('fof-main.php');
 
 fof_set_content_type();
 
-if(isset($_POST["user_name"]) && isset($_POST["user_password"]))
+if(isset($_POST['user_name']) && isset($_POST['user_password']))
 {
     if(fof_db_authenticate($_POST['user_name'], $_POST['user_password']))
     {
@@ -28,7 +28,7 @@ if(isset($_POST["user_name"]) && isset($_POST["user_password"]))
     	if ($_POST['persistent'] == 'True'){
     		fof_place_cookie($_SESSION['user_id']);
     	}
-        Header("Location: .");
+        Header('Location: .');
         exit();
     }
     else

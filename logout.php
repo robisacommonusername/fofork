@@ -13,7 +13,7 @@
 
 ob_start();
 
-include_once("fof-main.php");
+include_once('fof-main.php');
 
 if ($_GET['everywhere'] == 'yes'){
 	fof_db_logout_everywhere();
@@ -21,6 +21,6 @@ if ($_GET['everywhere'] == 'yes'){
 
 fof_logout();
 
-header("Location: login.php");
+header('Location: login.php');
 
 ?>
