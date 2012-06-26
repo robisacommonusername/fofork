@@ -111,14 +111,30 @@ function require_user()
 	#check for timeout
 	if (isset($_SESSION['last_access'])){
 		if ((time() - $_SESSION['last_access']) > 30*60){
-			session_unset();
-			session_destroy();
-			setcookie('PHPSESSID','');
-			#redirect user back to page they were requesting in the event of a timeout
-			#if they have a persistent login token, this will work, otherwise they'll
-			#end up at the log-in page
-			header('Location: ' . $_SERVER['REQUEST_URI']);
-			exit();
+			//check if the user has a persistent login.  If they
+			//do, generate a new session id.  Otherwise, destroy session
+			//and redirect to login
+			if (fof_validate_cookie()){
+				$old_id = session_id();
+				session_regenerate_id();
+				//regenerating session id will upset all the csrf checks
+				//ie if user has left a form for more than half an hour, then
+				//submits it, application will falsely accuse her of trying to launch a CSRF.
+				
+				//to prevent this, we will transparently modify the CSRF_hash value in $_POST
+				//iff the CSRF check would have passed with the old session id.  This prevents the case
+				//where an attacker tricks the user into submitting a request, and she just happens
+				//to have an expired session (ie still won't be able to do CSRF)
+				if (sha1($_SESSION['user_name'] . $old_id) == $_POST['CSRF_hash']){
+					$_POST['CSRF_hash'] = sha1($_SESSION['user_name'] . session_id());
+				}
+			} else {
+				session_unset();
+				session_destroy();
+				setcookie('PHPSESSID','');
+				header('Location: login.php');
+				exit();
+			}
 		}
 	}
 	$_SESSION['last_access'] = time();
@@ -557,6 +573,24 @@ function fof_get_item($user_id, $item_id)
    }
    
    return $item;
+}
+
+function fof_escape_item_info($item){
+	$feed_link = addslashes($item['feed_link']);
+	if (stripos($feed_link, 'javascript:') === 0) $feed_link = '';
+	$feed_title = fof_htmlspecialchars($item['feed_title']);
+	$feed_image = addslashes($item['feed_image']);
+	if (stripos($feed_image, 'javascript:') === 0) $feed_image = '';
+	$feed_description = fof_htmlspecialchars($item['feed_description']);
+
+	$item_link = addslashes($item['item_link']);
+	if (stripos($item_link, 'javascript:') === 0) $item_link= '';
+	$item_id = intval($item['item_id']);
+	$item_title = fof_htmlspecialchars($item['item_title']);
+	$item_content = $item['item_content']; #gets escaped by simplepie
+	
+	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
+	return array($feed_link, $feed_title, $feed_image, $feed_description, $item_link, $item_id, $item_title, $item_content, $item_published);
 }
 
 function fof_mark_read($user_id, $items)
@@ -1111,6 +1145,16 @@ function fof_todays_date()
     $offset = $prefs['tzoffset'];
     
     return gmdate( "Y/m/d", time() + ($offset * 60 * 60) );
+}
+
+function fof_htmlspecialchars($str){
+	//essentially does the same thing as htmlspecialchars($string, ENT_QUOTES), except
+	//that if text has ALREADY been escaped, it won't stuff things up.
+	//ie & becomes &amp;
+	//but &quot; is NOT transformed to &amp;quot;
+	$new = preg_replace('/&(?!(lt|gt|quot|amp|#039);)/', '&amp;', $new);
+	$new = str_replace(array('<','>','"', "'"), array('&lt;','&gt;','&quot;','&#039;'), $str);
+	return $new;
 }
 
 function fof_repair_drain_bamage()

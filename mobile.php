@@ -102,19 +102,15 @@ foreach($result as $item)
 	$item_id = intval($item['item_id']);
 	print '<div class="item shown" id="i' . $item_id . '">';
     
-    $feed_link = addslashes($item['feed_link']);
-    if (stripos($feed_link, 'javascript:') === 0) $feed_link = '';
-	$feed_title = htmlspecialchars($item['feed_title']);
-	$feed_image = addslashes($item['feed_image']);
-	$feed_description = htmlspecialchars($item['feed_description']);
-
-	$item_link = addslashes($item['item_link']);
-	if (stripos($item_link, 'javascript:') === 0) $item_link= '';
-	$item_id = intval($item['item_id']);
-	$item_title = $item['item_title']; #escaped by simplepie
-	$item_content = $item['item_content']; #need to check if this is escaped properly by simplepie
-
-	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
+	list($feed_link,
+	 $feed_title,
+	  $feed_image,
+	   $feed_description,
+	    $item_link,
+	     $item_id,
+	      $item_title,
+	      $item_content,
+	       $item_published) = fof_escape_item_info($item);
 
 	if(!$item_title) $item_title = "[no title]";
     $tags = $item['tags']; #does not get sent to output, no escaping needed

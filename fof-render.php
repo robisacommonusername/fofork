@@ -48,22 +48,18 @@ function fof_render_item($item)
 {
     $items = true;
 
-	$feed_link = addslashes($item['feed_link']);
-	if (stripos($feed_link, 'javascript:') === 0) $feed_link= '';
-	$feed_title = htmlspecialchars($item['feed_title']);
-	$feed_image = addslashes($item['feed_image']);
-	$feed_description = htmlspecialchars($item['feed_description']);
-
-	$item_link = addslashes($item['item_link']);
-	if (stripos($item_link, 'javascript:') === 0) $item_link= '';
-	$item_id = intval($item['item_id']);
-	$item_title = $item['item_title']; #gets escaped by simplepie
-	$item_content = $item['item_content'];
+	list($feed_link,
+	 $feed_title,
+	  $feed_image,
+	   $feed_description,
+	    $item_link,
+	     $item_id,
+	      $item_title,
+	      $item_content,
+	       $item_published) = fof_escape_item_info($item);
 
 	$prefs = fof_prefs();
 	$offset = $prefs['tzoffset'];
-
-	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
 
 	if(!$item_title) $item_title = "[no title]";
 	
