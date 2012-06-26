@@ -48,7 +48,15 @@ else
 		}
 	}
     if (isset($_POST['return'])){
-    	header('Location: ' . urldecode($_POST['return'])); //should deal with this open redirect??
+    	//prevent open redirect by checking return address
+    	$regex = '/^https?:\/\/' . $_SERVER['SERVER_NAME'] . '\/.*$/';
+    	$url = urldecode($_POST['return']);
+    	printf('<script>alert("regex is %s\n and url is %s");</script>',$regex,$url);
+    	if (preg_match($regex, $url)){
+    		header("Location: $url");
+    	} else {
+    		header('Location: index.php');
+    	}
     } else {
     	header('Location: index.php');
     }
