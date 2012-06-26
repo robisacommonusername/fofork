@@ -833,6 +833,11 @@ function fof_db_validate_cookie($token, $userAgent){
 	return False;
 }
 
+function fof_db_logout_everywhere(){
+	global $FOF_COOKIE_TABLE;
+	fof_safe_query("DELETE from $FOF_COOKIE_TABLE where user_id=%d", $_SESSION['user_id']);
+}
+
 function fof_db_delete_cookie($token){
 	global $FOF_COOKIE_TABLE;
 	return (fof_safe_query("DELETE from $FOF_COOKIE_TABLE where token_hash='%s'",sha1($token)));
