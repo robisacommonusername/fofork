@@ -736,10 +736,7 @@ function fof_db_add_user($username, $password)
 	if (mysql_num_rows($result) > 0){
 		return False;
 	} else {
-		#generate new salt
-    	$salt = '';
-    	for ($i=0; $i<5; $i++)
-    		$salt = sha1($salt . mt_rand());
+		$salt = fof_make_salt();
 		$password_hash = md5($password . $salt);
 		fof_safe_query("insert into $FOF_USER_TABLE (user_name, user_password_hash, salt) values ('%s', '%s', '%s')", $username, $password_hash, $salt);
 		return True;
@@ -751,10 +748,7 @@ function fof_db_add_user($username, $password)
 function fof_db_change_password($username, $password)
 {
     global $FOF_USER_TABLE;
-    #generate new salt
-    $salt = '';
-    for ($i=0; $i<5; $i++)
-    	$salt = sha1($salt . mt_rand());
+    $salt = fof_make_salt();
     
 	$password_hash = md5($password . $salt);
     
@@ -789,9 +783,8 @@ function fof_db_save_prefs($user_id, $prefs)
     fof_safe_query("update $FOF_USER_TABLE set user_prefs = '%s' where user_id = %d", $prefs, $user_id);
 }
 
-function fof_db_authenticate($user_name, $password)
-{
-    global $FOF_USER_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
+function fof_db_authenticate($user_name, $password){
+    global $FOF_USER_TABLE;
     
     $result = fof_safe_query("select * from $FOF_USER_TABLE where user_name = '%s'", $user_name);
     
@@ -800,7 +793,7 @@ function fof_db_authenticate($user_name, $password)
         return false;
     }
     
-    $row = mysql_fetch_array($result);
+    $row = fof_db_get_row($result);
     $computedHash = md5($password . $row['salt']);
     if ($computedHash == $row['user_password_hash']){
     	$_SESSION['user_name'] = $row['user_name'];

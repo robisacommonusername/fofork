@@ -124,12 +124,17 @@ function require_user()
 	$_SESSION['last_access'] = time();
 }
 
-function fof_place_cookie($user_id){
+function fof_make_salt(){
 	#generate new random id.  mt_rand gives us ~31 bits of entropy, let's try and up things to 160
 	$new_id = '';
 	for ($i=0; $i<6; $i++){
 		$new_id = sha1($new_id . mt_rand());
 	}
+	return $new_id;
+}
+
+function fof_place_cookie($user_id){
+	$new_id = fof_make_salt();
 	$oldToken = isset($_COOKIE['token']) ? $_COOKIE['token'] : False;
 	#store to db and set cookie
 	fof_db_place_cookie($oldToken, $new_id, $user_id, $_SERVER['HTTP_USER_AGENT']);

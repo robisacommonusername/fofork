@@ -47,7 +47,10 @@ else
 			fof_db_mark_unread(fof_current_user(), $items);
 		}
 	}
-    
-    header("Location: " . urldecode($_POST['return']));
+    if (isset($_POST['return']){
+    	header('Location: ' . urldecode($_POST['return'])); //should deal with this open redirect??
+    } else {
+    	header('Location: index.php');
+    }
 }
 ?>
