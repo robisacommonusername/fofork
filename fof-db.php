@@ -835,7 +835,7 @@ function fof_db_validate_cookie($token, $userAgent){
 
 function fof_db_logout_everywhere(){
 	global $FOF_COOKIE_TABLE;
-	fof_safe_query("DELETE from $FOF_COOKIE_TABLE where user_id=%d", $_SESSION['user_id']);
+	fof_safe_query("DELETE from $FOF_COOKIE_TABLE where user_id=%d", fof_current_user());
 }
 
 function fof_db_delete_cookie($token){
