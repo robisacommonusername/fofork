@@ -55,11 +55,27 @@ function fof_safe_query(/* $query, [$args...]*/)
     return fof_db_query($query);
 }
 
-function fof_db_query($sql, $live=0)
-{   
+function fof_private_safe_query(/*$query, $substitutions,[$args]*/){
+	//essentially does the same thing as fof_safe_query, except that it replaces
+	//the substitutions with XXXX in the log (ie so we don't expose session ids, etc)
+	$args = func_get_args();
+	$query = array_shift($args);
+	$subs = array_shift($args);
+	if (is_array($args[0])) $args = $args[0];
+	$args = array_map('mysql_real_escape_string', $args);
+	$safeQuery = vsprintf($query, $args);
+	
+	$censored_args = array_replace($args, $subs);
+	$censored_query = vsprintf($query, $censored_args);
+	
+	return fof_db_query($safeQuery, 0, $censored_query);
+	
+}
+
+function fof_db_query($sql, $live=0, $query_private=''){   
     global $fof_connection;
     
-    list($usec, $sec) = explode(" ", microtime()); 
+    list($usec, $sec) = explode(' ', microtime()); 
     $t1 = (float)$sec + (float)$usec;
     
     $result = mysql_query($sql, $fof_connection);
@@ -67,11 +83,12 @@ function fof_db_query($sql, $live=0)
     if(is_resource($result)) $num = mysql_num_rows($result);
     if($result) $affected = mysql_affected_rows();
     
-    list($usec, $sec) = explode(" ", microtime()); 
+    list($usec, $sec) = explode(' ', microtime()); 
     $t2 = (float)$sec + (float)$usec;
     $elapsed = $t2 - $t1;
-    $logmessage = sprintf("%.3f: [%s] (%d / %d)", $elapsed, $sql, $num, $affected);
-    fof_log($logmessage, "query");
+    $query = $query_private ? $query_private : $sql;
+    $logmessage = sprintf('%.3f: [%s] (%d / %d)', $elapsed, $query, $num, $affected);
+    fof_log($logmessage, 'query');
     
     if($live)
     {
@@ -94,7 +111,6 @@ function fof_db_get_row($result)
 {
     return mysql_fetch_array($result);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Feed level stuff
@@ -813,7 +829,8 @@ function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 	# but will guarantee that 2nd user doesn't get access to first user's account.
 	if ($oldToken)
 		$result = fof_safe_query("DELETE from $FOF_COOKIE_TABLE where token_hash='%s'", sha1($oldToken));
-	$result = fof_safe_query("INSERT into $FOF_COOKIE_TABLE (token_hash, user_id, user_agent_hash) VALUES ('%s', %d, '%s')", sha1($newToken), $uid, sha1($user_agent));
+	$censors[] = 'XXX token_hash XXX';
+	$result = fof_private_safe_query("INSERT into $FOF_COOKIE_TABLE (token_hash, user_id, user_agent_hash) VALUES ('%s', %d, '%s')", $censors, sha1($newToken), $uid, sha1($user_agent));
 	return True;
 }
 
@@ -840,7 +857,7 @@ function fof_db_logout_everywhere(){
 
 function fof_db_delete_cookie($token){
 	global $FOF_COOKIE_TABLE;
-	return (fof_safe_query("DELETE from $FOF_COOKIE_TABLE where token_hash='%s'",sha1($token)));
+	return (fof_safe_query("DELETE from $FOF_COOKIE_TABLE where token_hash='%s'", sha1($token)));
 }
 
 function fof_db_open_session(){
@@ -857,7 +874,8 @@ function fof_db_close_session(){
 
 function fof_db_read_session($id){
 	global $FOF_SESSION_TABLE;
-    $result = fof_safe_query("SELECT data from $FOF_SESSION_TABLE where id='%s'", $id);
+	$censors[] = 'XXX session_id XXX';
+    $result = fof_private_safe_query("SELECT data from $FOF_SESSION_TABLE where id='%s'", $censors, $id);
     if (mysql_num_rows($result)){
     	$record = fof_db_get_row($result);
     	return $record['data'];
@@ -868,7 +886,8 @@ function fof_db_read_session($id){
 function fof_db_write_session($id, $data){
 	global $FOF_SESSION_TABLE;  
     $access = time();
-	return fof_safe_query("REPLACE into $FOF_SESSION_TABLE VALUES ('%s', '%d', '%s')", $id, $access, $data);
+    $censors = array(0 => 'XXX session_id XXX');
+	return fof_private_safe_query("REPLACE into $FOF_SESSION_TABLE VALUES ('%s', '%d', '%s')", $censors, $id, $access, $data);
 }
 
 function fof_db_destroy_session($id){

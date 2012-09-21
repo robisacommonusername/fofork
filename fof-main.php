@@ -20,9 +20,10 @@ if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
     die();
 }
 
-require_once("fof-config.php");
-require_once("fof-db.php");
-require_once("classes/fof-prefs.php");
+require_once('fof-config.php');
+require_once('fof-db.php');
+require_once('classes/fof-prefs.php');
+require_once('classes/AES.php');
 
 fof_db_connect();
 
@@ -77,9 +78,16 @@ function fof_log($message, $topic="debug")
     if(!$log) return;
     
     $message = str_replace ("\n", "\\n", $message); 
-    $message = str_replace ("\r", "\\r", $message); 
+    $message = str_replace ("\r", "\\r", $message);
+    $totalMessage = date('r') . " [$topic] $message";
     
-    fwrite($log, date('r') . " [$topic] $message\n");
+    $aes = new Crypt_AES();
+    $aes->setKey(FOF_DB_PASS); //just use the same password as database for now
+    $IV = fof_make_salt();
+    $aes->setIV($IV);
+    $cipherText = $IV . base64_encode($aes->encrypt($totalMessage)) . "\n";
+    
+    fwrite($log, $cipherText);
 }
 
 function require_user()
@@ -87,7 +95,7 @@ function require_user()
     if(!isset($_SESSION['authenticated']))
     {
     	if (fof_validate_cookie()){
-    		#prevent session fixation
+    		//prevent session fixation
     		session_regenerate_id();
     	} else {
         	Header("Location: login.php");
@@ -1152,8 +1160,17 @@ function fof_htmlspecialchars($str){
 	//that if text has ALREADY been escaped, it won't stuff things up.
 	//ie & becomes &amp;
 	//but &quot; is NOT transformed to &amp;quot;
-	$new = preg_replace('/&(?!(lt|gt|quot|amp|#039);)/', '&amp;', $new);
-	$new = str_replace(array('<','>','"', "'"), array('&lt;','&gt;','&quot;','&#039;'), $str);
+	$new = preg_replace('/&(?!(lt|gt|quot|amp|#039);)/', '&amp;', $str);
+	$new = str_replace(array('<','>','"', "'"), array('&lt;','&gt;','&quot;','&#039;'), $new);
+	
+	//allow some very basic tags, eg <em>
+	$allowedTags = array('em');
+	$toFind = array_map(function($tag){return "&lt;$tag&gt;";}, $allowedTags);
+	$toFind2 = array_map(function($tag){return "&lt;/$tag&gt;";}, $allowedTags);
+	$replace = array_map(function($tag){return "<$tag>";}, $allowedTags);
+	$replace2 = array_map(function($tag){return "</$tag>";}, $allowedTags);
+	$new = str_replace(array_merge($toFind,$toFind2), array_merge($replace,$replace2), $new);
+	
 	return $new;
 }
 
