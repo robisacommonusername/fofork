@@ -120,7 +120,7 @@ if(isset($_POST['plugins']) && fof_authenticate_CSRF_challenge($CSRF_hash))
 	$message .= ' Saved plugin prefs.';
 }
 
-if(fof_is_admin() && isset($_POST['changepassword']) && fof_authentiate_CSRF_challenge($CSRF_hash)) 
+if(fof_is_admin() && isset($_POST['changepassword']) && fof_authenticate_CSRF_challenge($CSRF_hash)) 
 {
 	if (fof_db_authenticate(fof_username(), $_POST['admin_password'])){
     	if($_POST['password'] != $_POST['password2'])
@@ -355,6 +355,7 @@ Allow manual feed updates every <input size=4 type=string name=manualtimeout val
 <?php } ?>
 
 <br>
+<center><b><a href="logs.php">View Feed on Feeds log file</a></b></center><br />
 <center><b><a href="uninstall.php">Uninstall Feed on Feeds</a></b></center><br />
 
 <?php } ?>

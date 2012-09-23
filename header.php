@@ -42,6 +42,7 @@ $unread_count = fof_get_unread_count(fof_current_user());
       
       <script src="fof.js" type="text/javascript"></script>
       
+      
       <script>
       	document.onmousemove = dragResize;
       	document.onmouseup = completeDrag;
