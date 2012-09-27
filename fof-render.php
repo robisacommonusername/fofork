@@ -69,7 +69,7 @@ function fof_render_item($item)
 		$item_title = do_highlight("<span>$item_title</span>", $_GET['search'], "highlight");
 	}
 	    
-    $tags = array_map(create_function('$x','return htmlspecialchars($x, ENT_QUOTES);'), $item['tags']);
+    $tags = array_map(function($x){return htmlspecialchars($x, ENT_QUOTES);}), $item['tags']);
 
 	$star = in_array('star', $tags);
 	$star_image = $star ? 'image/star-on.gif' : 'image/star-off.gif';
