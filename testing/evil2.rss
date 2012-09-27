@@ -3,7 +3,7 @@
   <id>tag:Evil RSS 2:/articles</id>
   <link rel="alternate" type="text/html" href="javascript:alert('xss');" />
   
-  <title>Evil RSS 2</title>
+  <title>Evil RSS 2 </title>
   <updated>2012-09-27T04:27:02Z</updated>
   <atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="self" type="application/atom+xml" href="http://fof/testing/evil2.rss" /><feedburner:info uri="conversationedu" /><atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="hub" href="http://pubsubhubbub.appspot.com/" /><entry>
     <id>tag:theconversation.edu.au,2011:article/9809</id>
@@ -16,19 +16,20 @@
     &lt;a href="javascript:alert('xss from javascript link w/ semicolon');"&gt;xss from javascript link w/ semicolon&lt;/a&gt;&lt;br /&gt;
     &lt;a href="javascript:alert('xss from javascript link w/out ;')"&gt; xss from javascript link w/out&lt;/a&gt;&lt;br /&gt;
     Fun with images: &lt;br /&gt;
-    &lt;img src=http://cvcl.mit.edu/hybrid/cat2.jpg&gt;&lt;br /&gt;
-    &lt;img src=java&#x09;script:alert('encoded tab break')&gt;&lt;br /&gt;
-    &lt;img src=java	script:alert('tab break')&gt;&lt;br /&gt;
-    &lt;img src=java&#x09;script:alert('encoded tab break')&gt;&lt;br /&gt;
-    &lt;img src=java
-    script:alert('new line')&gt;&lt;br /&gt;
+    &lt;img src="http://cvcl.mit.edu/hybrid/cat2.jpg" onload="javascript:alert('image onload')"&gt;&lt;br /&gt;
+    &lt;img src="java&#x09;script:alert('encoded tab break')"&gt;&lt;br /&gt;
+    &lt;img src="java	script:alert('tab break')"&gt;&lt;br /&gt;
+    &lt;img src="java&#x09;script:alert('encoded tab break')"&gt;&lt;br /&gt;
+    &lt;img src="java
+    script:alert('new line')&gt;"&lt;br /&gt;
     &lt;img src=JaVaScrIPT:alert('img tags can include scripts!')&gt;&lt;br /&gt;
     &lt;img src=`javascript:alert('"img" tags can include scripts.  beware grave accent')`&gt;&lt;br /&gt;
     Now let's get sneaky&lt;br /&gt;
     &lt;img src=&#x6A;&#x61;&#x76;&#x61;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x3A;&#x61;&#x6C;&#x65;&#x72;&#x74;&#x28;&#x27;&#x68;&#x65;&#x6C;&#x6C;&#x6F;&#x27;&#x29;&#x3B;&gt;&lt;br /&gt;
     &lt;img src=&#106;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;&#58;&#97;&#108;&#101;&#114;&#116;&#40;&#39;&#104;&#101;&#108;&#108;&#111;&#39;&#41;&#59;&gt;&lt;br /&gt;
     &lt;img src=&#0000106;&#000097;&#0000118;&#000097;&#0000115;&#000099;&#0000114;&#0000105;&#0000112;&#0000116;&#000058;&#000097;&#0000108;&#0000101;&#0000114;&#0000116;&#000040;&#000039;&#0000104;&#0000101;&#0000108;&#0000108;&#0000111;&#000039;&#000041;&#000059;&gt;&lt;br /&gt;
-	Now let's try frames and other exotic things &lt;br .&gt;
+	Now let's try frames and other exotic things &lt;br&gt;
+	&lt;script&gt;alert('oh dear')&lt;/script&gt;
 	
 
     </content>
@@ -42,8 +43,7 @@
     <id>tag:theconversation.edu.au,2011:article/9827</id>
     <published>2012-09-27T04:23:37Z</published>
     <updated>2012-09-27T04:23:37Z</updated>
-    <link rel="alternate" type="text/html" href="java
-    script:alert('line')" />
+    <link rel="alternate" type="text/html" href="%6A%61%76%61%73%63%72%69%70%74%3A%61%6C%65%72%74%28%27%75%72%6C%20%65%6E%63%6F%64%69%6E%67%27%29%3B" />
     <title>evil item</title>
     <content type="html">
     No content

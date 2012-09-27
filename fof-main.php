@@ -24,6 +24,7 @@ require_once('fof-config.php');
 require_once('fof-db.php');
 require_once('classes/fof-prefs.php');
 require_once('classes/AES.php');
+require_once('strippers.php');
 
 fof_db_connect();
 
@@ -584,21 +585,19 @@ function fof_get_item($user_id, $item_id)
 }
 
 function fof_escape_item_info($item){
+	$stripper = new FofItemSanitiser();
 	$feed_link = addslashes($item['feed_link']);
-	if (stripos($feed_link, 'javascript:') === 0) $feed_link = ''; //need to update for case insensitive case, and for added space/tab/newline
-	//also need to add escaping for utf-8 encoding
-	//also need check for vbscript
-	//https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#HTML_entities
+	$feed_link = $stripper->sanitiseLink($feed_link);
 	$feed_title = fof_htmlspecialchars($item['feed_title']);
 	$feed_image = addslashes($item['feed_image']);
-	if (stripos($feed_image, 'javascript:') === 0) $feed_image = '';
+	$feed_image = $stripper->sanitiseLink($feed_image);
 	$feed_description = fof_htmlspecialchars($item['feed_description']);
 
 	$item_link = addslashes($item['item_link']);
-	if (stripos($item_link, 'javascript:') === 0) $item_link= '';
+	$item_link = $stripper->sanitiseLink($item_link);
 	$item_id = intval($item['item_id']);
 	$item_title = fof_htmlspecialchars($item['item_title']);
-	$item_content = $item['item_content']; #gets escaped by simplepie - how good is it??
+	$item_content = $stripper->sanitise($item['item_content']);
 	
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
 	return array($feed_link, $feed_title, $feed_image, $feed_description, $item_link, $item_id, $item_title, $item_content, $item_published);
