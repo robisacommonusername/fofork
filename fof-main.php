@@ -716,7 +716,7 @@ function fof_subscribe($user_id, $url, $unread="today")
     
     if(fof_is_subscribed($user_id, $url))
     {
-        return "You are already subscribed to " . fof_render_feed_link($feed) . "<br>";
+        return "You are already subscribed to " . fof_render_feed_link($feed) . "<br />";
     }
     
     if(fof_feed_exists($url))
@@ -730,10 +730,10 @@ function fof_subscribe($user_id, $url, $unread="today")
     }
     
     $rss = fof_parse($url);
-       
+     $escapedUrl = addslashes($url);
     if (isset($rss->error))
     {
-        return "Error: <B>" . $rss->error . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a><br>";
+        return "Error: <B>" . $rss->error . "</b> <a href=\"http://feedvalidator.org/check?url=$escapedUrl\">try to validate it?</a><br />";
     }
     else
     {
@@ -747,13 +747,13 @@ function fof_subscribe($user_id, $url, $unread="today")
             
             if(fof_is_subscribed($user_id, $url))
             {
-                return "You are already subscribed to " . fof_render_feed_link($feed) . "<br>";
+                return "You are already subscribed to " . fof_render_feed_link($feed) . "<br />";
             }
             
             fof_db_add_subscription($user_id, $feed['feed_id']);
             if($unread != "no") fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
 
-            return '<font color="green"><b>Subscribed.</b></font><br>';
+            return '<font color="green"><b>Subscribed.</b></font><br />';
         }
         
         $id = fof_add_feed($url, $rss->get_title(), $rss->get_link(), $rss->get_description() );
@@ -764,7 +764,7 @@ function fof_subscribe($user_id, $url, $unread="today")
         
         fof_apply_plugin_tags($id, NULL, $user_id);
  
-       return '<font color="green"><b>Subscribed.</b></font><br>';
+       return '<font color="green"><b>Subscribed.</b></font><br />';
     }
 }
 
@@ -855,10 +855,11 @@ function fof_update_feed($id)
     
     $rss = fof_parse($feed['feed_url']);
     
+    $escapedUrl = addslashes($url);
     if ($rss->error())
     {
         fof_log("feed update failed: " . $rss->error(), "update");
-        return array(0, "Error: <b>" . $rss->error() . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a>");
+        return array(0, "Error: <b>" . $rss->error() . "</b> <a href=\"http://feedvalidator.org/check?url=$escapedUrl\">try to validate it?</a>");
     }
         
     $sub = html_entity_decode($rss->subscribe_url(), ENT_QUOTES);
