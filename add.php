@@ -87,19 +87,15 @@ OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo h
 <?php
 if(count($feeds))
 {
-$challenge = fof_compute_CSRF_challenge();
-//would really be better if feedslist wasn't a global
-print("<script>\nwindow.onload = function(){ajaxadd('$challenge');};\nfeedslist = [");
-    
-foreach($feeds as $feed)
-{
-    $feedjson[] = "{'url': '" . addslashes($feed) . "'}";
-}
+	$challenge = fof_compute_CSRF_challenge();
 
-print(join($feedjson, ", "));
-print("];\n</script>");
+	foreach($feeds as $feed)
+	{
+    	$feedjson[] = "{'url': '" . addslashes($feed) . "'}";
+	}
+	$feedListStr = join($feedjson, ', ');
+	print("<script> window.onload = function(){feedslist=[$feedListStr]; ajaxadd('$challenge');};</script>");
+	print("<br />");
 }
-print("<br />");
-
 include("footer.php");
 ?>
