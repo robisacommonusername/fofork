@@ -666,10 +666,11 @@ function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $li
 
 function fof_render_feed_link($row)
 {
-   $link = $row['feed_link'];
-   $description = $row['feed_description'];
-   $title = $row['feed_title'];
-   $url = $row['feed_url'];
+	$stripper = new FofFeedSanitiser();
+   $link = $stripper->sanitiseLink($row['feed_link']);
+   $description = htmlspecialchars($row['feed_description'], ENT_QUOTES);
+   $title = htmlspecialchars($row['feed_title'], ENT_QUOTES);
+   $url = $stripper->sanitiseLink($row['feed_url']);
 
    $s = "<b><a href=\"$link\" title=\"$description\">$title</a></b> ";
    $s .= "<a href=\"$url\">(rss)</a>";
