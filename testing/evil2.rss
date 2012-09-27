@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" media="screen" href="/~d/styles/atom10full.xsl"?><?xml-stylesheet type="text/css" media="screen" href="http://feeds.feedburner.com/~d/styles/itemcontent.css"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:feedburner="http://rssnamespace.org/feedburner/ext/1.0" xml:lang="en-US">
+  <id>tag:Evil RSS 2:/articles</id>
+  <link rel="alternate" type="text/html" href="http://theconversation.edu.au" />
+  
+  <title>Evil RSS 2</title>
+  <updated>2012-09-27T04:27:02Z</updated>
+  <atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="self" type="application/atom+xml" href="http://fof/testing/evil2.rss" /><feedburner:info uri="conversationedu" /><atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="hub" href="http://pubsubhubbub.appspot.com/" /><entry>
+    <id>tag:theconversation.edu.au,2011:article/9809</id>
+    <published>2012-09-27T04:27:02Z</published>
+    <updated>2012-09-27T04:27:02Z</updated>
+    <link rel="alternate" type="text/html" href="java	script:alert('tab break')" />
+    <title>Another evil item</title>
+    <content type="html">
+    this is some egregiously evil content, and it may contain html.  What can we do? &lt;br /&gt;
+    &lt;a href="javascript:alert('xss from javascript link w/ semicolon');"&gt;xss from javascript link w/ semicolon&lt;/a&gt;&lt;br /&gt;
+    &lt;a href="javascript:alert('xss from javascript link w/out ;')"&gt; xss from javascript link w/out&lt;/a&gt;&lt;br /&gt;
+    Fun with images: &lt;br /&gt;
+    &lt;img src=http://cvcl.mit.edu/hybrid/cat2.jpg&gt;&lt;br /&gt;
+    &lt;img src=java&#x09;script:alert('encoded tab break')&gt;&lt;br /&gt;
+    &lt;img src=java	script:alert('tab break')&gt;&lt;br /&gt;
+    &lt;img src=java&#x09;script:alert('encoded tab break')&gt;&lt;br /&gt;
+    &lt;img src=java
+    script:alert('new line')&gt;&lt;br /&gt;
+    &lt;img src=JaVaScrIPT:alert('img tags can include scripts!')&gt;&lt;br /&gt;
+    &lt;img src=`javascript:alert('"img" tags can include scripts.  beware grave accent')`&gt;&lt;br /&gt;
+    Now let's get sneaky&lt;br /&gt;
+    &lt;img src=&#x6A;&#x61;&#x76;&#x61;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x3A;&#x61;&#x6C;&#x65;&#x72;&#x74;&#x28;&#x27;&#x68;&#x65;&#x6C;&#x6C;&#x6F;&#x27;&#x29;&#x3B;&gt;&lt;br /&gt;
+    &lt;img src=&#106;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;&#58;&#97;&#108;&#101;&#114;&#116;&#40;&#39;&#104;&#101;&#108;&#108;&#111;&#39;&#41;&#59;&gt;&lt;br /&gt;
+    &lt;img src=&#0000106;&#000097;&#0000118;&#000097;&#0000115;&#000099;&#0000114;&#0000105;&#0000112;&#0000116;&#000058;&#000097;&#0000108;&#0000101;&#0000114;&#0000116;&#000040;&#000039;&#0000104;&#0000101;&#0000108;&#0000108;&#0000111;&#000039;&#000041;&#000059;&gt;&lt;br /&gt;
+	Now let's try frames and other exotic things &lt;br .&gt;
+	
+
+    </content>
+    <author>
+      <name>Kevin Davis, Research Director at Australian Centre for Financial Studies</name>
+      <foaf:homepage rdf:resource="http://theconversation.edu.au/profiles/3497" />
+    </author>
+    <rights>Licenced as Creative Commons - attribution, no derivatives.</rights>
+  <feedburner:origLink>http://theconversation.edu.au/tail-wags-dog-in-retail-government-bond-market-development-9809</feedburner:origLink></entry>
+  <entry>
+    <id>tag:theconversation.edu.au,2011:article/9827</id>
+    <published>2012-09-27T04:23:37Z</published>
+    <updated>2012-09-27T04:23:37Z</updated>
+    <link rel="alternate" type="text/html" href="java
+    script:alert('line')" />
+    <title>evil item</title>
+    <content type="html">
+    No content
+	</content>
+    <author>
+      <name>Inger Mewburn, Research Fellow in research education at RMIT University</name>
+      <foaf:homepage rdf:resource="http://theconversation.edu.au/profiles/9862" />
+    </author>
+    <rights>Licenced as Creative Commons - attribution, no derivatives.</rights>
+    <feedburner:origLink>http://theconversation.edu.au/tail-wags-dog-in-retail-government-bond-market-development-9809</feedburner:origLink></entry>
+  <entry>
+    <id>tag:theconversation.edu.au,2011:article/9827</id>
+    <published>2012-09-27T04:23:37Z</published>
+    <updated>2012-09-27T04:23:37Z</updated>
+    <link rel="alternate" type="text/html" href="JaVaScrIPT:alert('mixed case')" />
+    <title>evil item</title>
+    <content type="html">
+    No content
+	</content>
+    <author>
+      <name>Inger Mewburn, Research Fellow in research education at RMIT University</name>
+      <foaf:homepage rdf:resource="http://theconversation.edu.au/profiles/9862" />
+    </author>
+    <rights>Licenced as Creative Commons - attribution, no derivatives.</rights>
+</entry>
+</feed>

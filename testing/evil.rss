@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>
+        	<script>alert('welcome to evil.rss')</script>
+            <![CDATA[Evil RSS <script>alert('evil XSS from the cdata!')</script>]]>
+        </title>
+        <link>http://fof/testing/evil.rss</link>
+        <atom:link href="http://fof/testing/evil.rss" rel="self" type="application/rss+xml" />
+        <description>
+            <![CDATA[
+            "><script>alert('this is from the description field, closed alt tag');</script>]]>
+        </description>
+        <lastBuildDate>Wed, 26 Sep 2012 13:33:21 -0400</lastBuildDate>
+        <language>en-us</language>
+        <item>
+            <title>This is an evil item</title>           
+            <link>javascript:alert('XSS')</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">javascript:alert('XSS')</guid>
+            <pubDate>Wed, 26 Sep 2012 13:33:21 -0400</pubDate>
+            <description>This is an evil item description.  Don't click this &lt;a href="javascript:alert('hello')"&gt;link&lt;/a&gt;</description>
+            <content type="html">This is evil item content.  Don't click this &lt;a href="javascript:alert('xss');"&gt;link&lt;/a&gt;</content>
+ 
+        </item>
+        <item>
+            <title><![CDATA[Vampire squid no Gordon Gekko]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345382/title/Vampire_squid_no_Gordon_Gekko</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345382/title/Vampire_squid_no_Gordon_Gekko</guid>
+            <pubDate>Wed, 26 Sep 2012 10:10:14 -0400</pubDate>
+            <description><![CDATA[Vampyroteuthis infernalis not all that rapacious]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[FOR KIDS: Pathways to research: Connecting with scientists]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345375/title/FOR_KIDS_Pathways_to_research_Connecting_with_scientists</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345375/title/FOR_KIDS_Pathways_to_research_Connecting_with_scientists</guid>
+            <pubDate>Tue, 25 Sep 2012 16:48:55 -0400</pubDate>
+            <description><![CDATA[Budding researchers get ahead by spending their free time working side by side with real scientists]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[Breast cancer gets genetic profile]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345377/title/Breast_cancer_gets_genetic_profile</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345377/title/Breast_cancer_gets_genetic_profile</guid>
+            <pubDate>Tue, 25 Sep 2012 16:47:00 -0400</pubDate>
+            <description><![CDATA[Data may help improve treatment]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[FOR KIDS: Tiny fossil tells big tale]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345367/title/FOR_KIDS_Tiny_fossil_tells_big_tale</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345367/title/FOR_KIDS_Tiny_fossil_tells_big_tale</guid>
+            <pubDate>Tue, 25 Sep 2012 16:40:42 -0400</pubDate>
+            <description><![CDATA[Scientists use a single finger bone from ancient, humanlike Denisovans to study their connection to modern people and Neandertals ]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[Feather finds hint at Neandertal art]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345354/title/Feather_finds_hint_at_Neandertal_art</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345354/title/Feather_finds_hint_at_Neandertal_art</guid>
+            <pubDate>Mon, 24 Sep 2012 14:53:47 -0400</pubDate>
+            <description><![CDATA[Extinct human relatives may have gotten creative with plumage]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[Birds catching malaria in Alaska]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345337/title/Birds_catching_malaria_in_Alaska</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345337/title/Birds_catching_malaria_in_Alaska</guid>
+            <pubDate>Fri, 21 Sep 2012 17:38:38 -0400</pubDate>
+            <description><![CDATA[Disease may be transmitted north of Arctic Circle within decades]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[News in Brief: How the cheetah loses its spots]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345332/title/News_in_Brief_How_the_cheetah_loses_its_spots</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345332/title/News_in_Brief_How_the_cheetah_loses_its_spots</guid>
+            <pubDate>Fri, 21 Sep 2012 15:41:29 -0400</pubDate>
+            <description><![CDATA[Mutations in one gene alter felines’ coat coloring]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[2012 International Astronomical Union General Assembly]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345090/title/2012_International_Astronomical_Union_General_Assembly</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345090/title/2012_International_Astronomical_Union_General_Assembly</guid>
+            <pubDate>Fri, 21 Sep 2012 12:46:53 -0400</pubDate>
+            <description><![CDATA[Science News’ coverage of the IAU meeting held August 20-21 in Beijing]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[Nonstick trick in the brain]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345326/title/Nonstick_trick_in_the_brain</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345326/title/Nonstick_trick_in_the_brain</guid>
+            <pubDate>Fri, 21 Sep 2012 11:56:55 -0400</pubDate>
+            <description><![CDATA[Coated particles can slip past brain’s barriers]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[Africans’ genes mute on human birthplace]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345306/title/Africans%E2%80%99_genes_mute_on_human_birthplace</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345306/title/Africans%E2%80%99_genes_mute_on_human_birthplace</guid>
+            <pubDate>Thu, 20 Sep 2012 14:10:46 -0400</pubDate>
+            <description><![CDATA[DNA studies fail to locate root of the species]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[A moving lift for poor families]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345232/title/A_moving_lift_for_poor_families</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345232/title/A_moving_lift_for_poor_families</guid>
+            <pubDate>Thu, 20 Sep 2012 14:10:17 -0400</pubDate>
+            <description><![CDATA[Housing vouchers gave impoverished single mothers emotional but not economic benefits]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[Bumblebees navigate new turf without a map]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345298/title/Bumblebees_navigate_new_turf_without_a_map</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345298/title/Bumblebees_navigate_new_turf_without_a_map</guid>
+            <pubDate>Thu, 20 Sep 2012 13:25:51 -0400</pubDate>
+            <description><![CDATA[The insects can quickly calculate the best route between flowers]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[FOR KIDS: Fooling the mind’s eye]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345252/title/FOR_KIDS_Fooling_the_mind%E2%80%99s_eye</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345252/title/FOR_KIDS_Fooling_the_mind%E2%80%99s_eye</guid>
+            <pubDate>Thu, 20 Sep 2012 10:45:31 -0400</pubDate>
+            <description><![CDATA[Brain scientists find they have much to learn from magicians and their tricks]]></description>
+ 
+        </item>
+        <item>
+            <title><![CDATA[E. coli caught in the act of evolving]]></title>           
+            <link>http://www.sciencenews.org/view/generic/id/345247/title/E._coli_caught_in_the_act_of_evolving</link>
+        <author>scinews@sciencenews.org (Science News)</author>
+            <guid isPermaLink="true">http://www.sciencenews.org/view/generic/id/345247/title/E._coli_caught_in_the_act_of_evolving</guid>
+            <pubDate>Wed, 19 Sep 2012 18:21:50 -0400</pubDate>
+            <description><![CDATA[Long-term lab experiment traces a trait's reappearance]]></description>
+ 
+        </item>
+    </channel>
+</rss>

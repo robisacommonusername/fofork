@@ -88,6 +88,7 @@ OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo h
 if(count($feeds))
 {
 $challenge = fof_compute_CSRF_challenge();
+//would really be better if feedslist wasn't a global
 print("<script>\nwindow.onload = function(){ajaxadd('$challenge');};\nfeedslist = [");
     
 foreach($feeds as $feed)
