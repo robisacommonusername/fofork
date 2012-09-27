@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" media="screen" href="/~d/styles/atom10full.xsl"?><?xml-stylesheet type="text/css" media="screen" href="http://feeds.feedburner.com/~d/styles/itemcontent.css"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:feedburner="http://rssnamespace.org/feedburner/ext/1.0" xml:lang="en-US">
   <id>tag:Evil RSS 2:/articles</id>
-  <link rel="alternate" type="text/html" href="http://theconversation.edu.au" />
+  <link rel="alternate" type="text/html" href="javascript:alert('xss');" />
   
   <title>Evil RSS 2</title>
   <updated>2012-09-27T04:27:02Z</updated>

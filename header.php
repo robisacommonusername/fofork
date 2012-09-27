@@ -18,7 +18,7 @@ fof_set_content_type();
 
 if(isset($_COOKIE['fof_sidebar_width']))
 {
-	$width = $_COOKIE['fof_sidebar_width'];
+	$width = intval($_COOKIE['fof_sidebar_width']);
 }
 else
 {
