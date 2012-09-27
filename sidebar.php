@@ -298,22 +298,3 @@ foreach($feeds as $row)
 
 </div>
 
-
-<?php
-
-$order = $_GET['order']; //should add checks for allowed orderings
-
-if(!isset($order))
-{
-   $order = 'title';
-}
-
-if(!isset($_GET['direction']))
-{
-   $direction = 'asc';
-} else {
-	$direction = $_GET['direction'] == 'asc' ? 'asc' :'desc';
-}
-
-?>
-
