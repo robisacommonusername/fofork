@@ -1,5 +1,16 @@
 <?php
 
+/*
+ * This file is part of FEED ON FEEDS - http://feedonfeeds.com/
+ *
+ * strippers.php - used for performing some complex escaping and preventing XSS
+ *
+ * Copyright (C) 2012 Robert Palmer
+ *
+ * Distributed under the GPL - see LICENSE
+ *
+ */
+
 class WhitelistSanitiser{
 	var $allowedTags = array();
 	var $handlers = array();
@@ -78,6 +89,8 @@ class FofItemSanitiser extends WhitelistSanitiser{
 
 }
 
+class FofFeedSanitiser extends WhitelistSanitiser{
+}
 //testing code
 //$a = new FofItemSanitiser();
 //echo $a->sanitise('<a href="http://www.google.com">hello</a><a href="%4A%61%56%41%73%63%72%69%70%74%3A%20%61%6C%65%72%74%28%27%68%65%6C%6C%6F%27%29%3B">evil</a><img src="legit.jpg" onload="javascript:more_evil();">

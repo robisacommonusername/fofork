@@ -222,10 +222,11 @@ foreach ($allowedOrders as $col)
 
 foreach($feeds as $row)
 {
+	$stripper = new FofFeedSanitiser();
    $id = $row['feed_id'];
-   $url = $row['feed_url'];
+   $url = $stripper->sanitiseLink($row['feed_url']);
    $title = $row['feed_title'];
-   $link = $row['feed_link'];
+   $link = $stripper->sanitiseLink($row['feed_link']);
    $description = $row['feed_description'];
    $age = $row['feed_age'];
    $unread = $row['feed_unread'];
