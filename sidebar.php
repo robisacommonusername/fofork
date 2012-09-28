@@ -49,7 +49,7 @@ $whatEscaped = addslashes($what);
 $whenEscaped = addslashes($when);
 $searchEscaped = addslashes($search);
 
-echo "<script>what='$whatEscaped'; when='$whenEscaped';</script>";
+//echo "<script>what='$whatEscaped'; when='$whenEscaped';</script>";
 
 $feeds = fof_get_feeds(fof_current_user(), $order, $direction);
 

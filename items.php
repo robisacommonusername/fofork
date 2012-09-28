@@ -43,7 +43,6 @@ if (!$howmany){
 $search = isset($_GET['search']) ? htmlspecialchars($_GET['search']) : "";
 
 $title = fof_view_title($feed, $what, $when, $which, $howmany, $search);
-//$noedit = $_GET['noedit'];
 
 ?>
 
@@ -95,7 +94,7 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search);
 		<input type="hidden" name="return" />
 
 <?php
-	$links = fof_get_nav_links($feed, $what, $when, $which, $howmany); #XSS
+	$links = fof_get_nav_links($feed, $what, $when, $which, $howmany);
 
 	if($links)
 	{
