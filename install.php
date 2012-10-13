@@ -17,23 +17,6 @@ $fof_installer = true;
 
 include_once("fof-main.php");
 
-//test if there's already an installation or a conflicting table name
-$tables = fof_db_query('SHOW TABLES',1);
-$tableNames = array($FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_FEED_TABLE, 
-				$FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, 
-				$FOF_SUBSCRIPTION_TABLE);
-$conflict = False;
-while ($line = fof_db_get_row($tables)){
-	if (in_array($line[0], $tableNames)){
-		$conflict = True;
-		$conflictName = $line[0];
-		break;
-	}
-}
-if ($conflict){
-	die("Cannot install, there already exists a table named $conflictName in the database");
-}
-
 fof_set_content_type();
 
 // compatibility testing code lifted from SimplePie
@@ -110,18 +93,20 @@ $iconv_ok = extension_loaded('iconv');
 
 
 <?php
-if($_GET['password'] && $_GET['password'] == $_GET['password2'] )
+if($_POST['password'] && $_POST['password'] == $_POST['password2'] )
 {
 	fof_safe_query("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level, salt) values (1, 'admin', 'ABCDEF', 'admin', 'ABCDEF')");
-	fof_db_change_password('admin',$_GET['password']);
+	fof_db_change_password('admin',$_POST['password']);
 		
 	echo '<center><b>OK!  Setup complete! <a href=".">Login as admin</a>, and start subscribing!</center></b></div></body></html>';
 }
 else
 {
-    if($_GET['password'] != $_GET['password2'] )
+    if($_POST['password'] != $_POST['password2'] )
     {
         echo '<center><font color="red">Passwords do not match!</font></center><br><br>';
+    } else {
+    	echo '<center><font color="red">You must enter a password!</font></center><br><br>';
     }
 
 ?>
@@ -190,7 +175,23 @@ else
 
 Creating tables...
 <?php
-
+//test if there's already an installation or a conflicting table name
+$tables = fof_db_query('SHOW TABLES',1);
+$tableNames = array($FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_FEED_TABLE, 
+				$FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, 
+				$FOF_SUBSCRIPTION_TABLE);
+$conflict = False;
+while ($line = fof_db_get_row($tables)){
+	if (in_array($line[0], $tableNames)){
+		$conflict = True;
+		$conflictName = $line[0];
+		break;
+	}
+}
+if ($conflict){
+	die("Cannot install, there already exists a table named $conflictName in the database");
+}
+$tables = array();
 $tables[] = <<<EOQ
 CREATE TABLE IF NOT EXISTS `$FOF_FEED_TABLE` (
   `feed_id` int(11) NOT NULL auto_increment,
@@ -268,7 +269,7 @@ $tables[] = <<<EOQ
 CREATE TABLE IF NOT EXISTS `$FOF_COOKIE_TABLE` (
   `token_hash` varchar(40) NOT NULL default '',
   `user_id` int(11) NOT NULL default '0',
-  `user_agent_hash varchar(40) NOT NULL default '',
+  `user_agent_hash` varchar(40) NOT NULL default '',
   PRIMARY KEY  (`token_hash`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 EOQ;
@@ -380,7 +381,7 @@ Cache directory exists and is writable.<hr>
 
 You now need to choose an initial password for the 'admin' account:<br>
 
-<form>
+<form method="post" action="install.php">
 <table>
 <tr><td>Password:</td><td><input type=password name=password></td></tr>
 <tr><td>Password again:</td><td><input type=password name=password2></td></tr>
