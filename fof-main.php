@@ -34,10 +34,10 @@ session_set_save_handler('fof_db_open_session',
                          'fof_db_write_session',
                          'fof_db_destroy_session',
                          'fof_db_clean_session');
-session_start();
 
 if(!$fof_installer)
 {
+	session_start();
     if(!$fof_no_login)
     {
         require_user();
@@ -163,7 +163,10 @@ function fof_place_cookie($user_id){
 	$oldToken = isset($_COOKIE['token']) ? $_COOKIE['token'] : False;
 	#store to db and set cookie
 	fof_db_place_cookie($oldToken, $new_id, $user_id, $_SERVER['HTTP_USER_AGENT']);
-	setcookie('token',$new_id, time()+60*60*24*30, $httponly = True); #30 day expiry
+	//bool setcookie ( string $name [, string $value [, int $expire = 0 [, string $path [, string $domain [, bool $secure = false [, bool $httponly = false ]]]]]] )
+	//set httponly true, but https only to false (allow non-https logins, etc)
+	//possible dns rebinding problem here, as domain is not set
+	setcookie('token',$new_id, time()+60*60*24*30, '','',False,True); #30 day expiry
 }
 
 function fof_validate_cookie(){
