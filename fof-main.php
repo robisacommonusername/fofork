@@ -655,7 +655,6 @@ function fof_delete_subscription($user_id, $feed_id)
 function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL)
 {
     $prefs = fof_prefs();
-    $string = "";
     
     if(!is_null($when) && $when != "")
     {
@@ -673,7 +672,7 @@ function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $li
         $tomorrow = date( "Y/m/d", $begin + (24 * 60 * 60) );
         $yesterday = date( "Y/m/d", $begin - (24 * 60 * 60) );
         
-        $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$yesterday&amp;how=$how&amp;howmany=$howmany\">[&laquo; $yesterday]</a> ";
+        $string = "<a href=\".?feed=$feed&amp;what=$what&amp;when=$yesterday&amp;how=$how&amp;howmany=$howmany\">[&laquo; $yesterday]</a> ";
         if($when != "today") $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=today&amp;how=$how&amp;howmany=$howmany\">[today]</a> ";
         if($when != "today") $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$tomorrow&amp;how=$how&amp;howmany=$howmany\">[$tomorrow &raquo;]</a> ";
     }
@@ -709,7 +708,7 @@ function fof_render_feed_link($row)
 
 function fof_opml_to_array($opml)
 {
-   $rx = '/xmlurl\s*=\s*"([^"]*)"/mi';
+   $rx = '/xmlurl\s*=\s*"([^"]*)"/mi'; //get whatever's between the quotes
 
    if (preg_match_all($rx, $opml, $m))
    {
@@ -1171,19 +1170,19 @@ function fof_multi_sort($tab,$key,$rev)
                         'feed_cache_attempt_date','item_updated','item_cached','item_id','item_title');
     if (in_array($key, $allowedKeys)) {
         if($rev)
-            $compare = function ($a,$b){
-            	if (strtolower($a["'.$key.'"]) == strtolower($b["'.$key.'"])) {
+            $compare = function ($a,$b) use($key){
+            	if (strtolower($a[$key]) == strtolower($b[$key])) {
             		return 0;
             	} else {
-            		return (strtolower($a["'.$key.'"]) > strtolower($b["'.$key.'"])) ? -1 : 1;
+            		return (strtolower($a[$key]) > strtolower($b[$key])) ? -1 : 1;
             	}
             };
         else
-            $compare = function ($a,$b) {
-            	if (strtolower($a["'.$key.'"]) == strtolower($b["'.$key.'"])) {
+            $compare = function ($a,$b) use($key){
+            	if (strtolower($a[$key]) == strtolower($b[$key])) {
             		return 0;
             	} else {
-            		return (strtolower($a["'.$key.'"]) < strtolower($b["'.$key.'"])) ? -1 : 1;
+            		return (strtolower($a[$key]) < strtolower($b[$key])) ? -1 : 1;
             	}
             };
             

@@ -12,8 +12,8 @@
  *
  */
 
-include_once("fof-main.php");
-include_once("fof-render.php");
+include_once('fof-main.php');
+include_once('fof-render.php');
 
 if($_GET['how'] == 'paged' && !isset($_GET['which'])){
 	$which = 0;
