@@ -13,8 +13,8 @@
  */
 
 $fof_no_login = true;
-include_once("fof-main.php");
-include_once("fof-render.php");
+include_once('fof-main.php');
+include_once('fof-render.php');
 
 $user = $_GET['user'];
 if(!isset($user)) die;
@@ -26,14 +26,14 @@ $sharing = $prefs->get("sharing");
 if($sharing == "no") die;
 
 $name = htmlspecialchars($prefs->get("sharedname"));
-$url = addslashes($prefs->get("sharedurl"));
+$url = htmlspecialchars($prefs->get("sharedurl"), ENT_QUOTE);
 
 $which = ($sharing == "all") ? "all" : "shared";
 
 if(isset($_GET['which']))
 {
-    $which = ($sharing == "all") ? $_GET['which'] : "shared " . $_GET['which'];
-    $extratitle = " items tagged " . $_GET['which'];
+    $which = ($sharing == "all") ? $_GET['which'] : "shared " . $_GET['which']; //beware, $which tainted
+    $extratitle = strip_tags(' items tagged ' . $_GET['which']);
 }
 
 $feed = NULL;
@@ -41,14 +41,20 @@ if(isset($_GET['feed']))
 {
     $feed = $_GET['feed'];
     $r = fof_db_get_feed_by_id($feed);
-    $extratitle .= " from <a href=\"" . $r['feed_link'] . "\">" . $r['feed_title'] . "</a>";
+
+    $sanitiser = new FofFeedSanitiser();
+    $feed_link = $sanitiser->sanitiseLink($r['feed_link']);
+    $feed_title = htmlspecialchars($r['feed_title']);
+    $extratitle .= ' from <a href="' . $feed_link . '">' . $feed_title . '</a>';
 }
 
 $result = fof_get_items($user, $feed, $which, NULL, 0, 100);
 
-
-$shared_feed = "http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user&format=atom";
-$shared_link = "http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user";
+//DO not do this, use fof_base_url, and hardcode in the shared.php part
+//should also allow for https if it's turned on
+$protocol = $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
+$shared_feed = $protocol . $FOF_BASE_URL . "shared.php?user=$user&format=atom";
+$shared_link = $protocol . $FOF_BASE_URL . "shared.php?user=$user";
 
 if(isset($_GET['which']))
 {
@@ -62,11 +68,12 @@ if(isset($_GET['feed']))
     $shared_link .= '&feed=' . $_GET['feed'];
 }
 
-#escape output
-$shared_feed = strip_tags($shared_feed);
-$shared_link = strip_tags($shared_link);
+#escape output - strip tags is not sufficient, need to ensure can't escape from href=""
+$sanitiser = new FofFeedSanitiser();
+$shared_feed = $sanitiser->sanitiseLink($shared_feed);
+$shared_link = $sanitiser->sanitiseLink($shared_link);
 if ($extratitle){
-	$extratitle = strip_tags($extratitle);
+	$extratitle = fof_htmlspecialchars($extratitle);
 }
 
 //Begin output to browser
@@ -104,7 +111,7 @@ foreach($result as $item)
     {
         $item_guid = $feed_link . '#' . $item_guid;
     }
-    $item_guid = addslashes($item_guid);
+    $item_guid = strip_tags($item_guid);
     
 	if(!$item_title) $item_title = "[no title]";
 	

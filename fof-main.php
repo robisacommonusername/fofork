@@ -599,15 +599,12 @@ function fof_get_item($user_id, $item_id)
 
 function fof_escape_item_info($item){
 	$stripper = new FofItemSanitiser();
-	$feed_link = addslashes($item['feed_link']);
-	$feed_link = $stripper->sanitiseLink($feed_link);
+	$feed_link = $stripper->sanitiseLink($item['feed_link']);
 	$feed_title = fof_htmlspecialchars($item['feed_title']);
-	$feed_image = addslashes($item['feed_image']);
-	$feed_image = $stripper->sanitiseLink($feed_image);
+	$feed_image = $stripper->sanitiseLink($item['feed_image']);
 	$feed_description = fof_htmlspecialchars($item['feed_description']);
 
-	$item_link = addslashes($item['item_link']);
-	$item_link = $stripper->sanitiseLink($item_link);
+	$item_link = $stripper->sanitiseLink($item['item_link']);
 	$item_id = intval($item['item_id']);
 	$item_title = fof_htmlspecialchars($item['item_title']);
 	$item_content = $stripper->sanitise($item['item_content']);

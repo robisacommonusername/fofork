@@ -63,7 +63,9 @@ class WhitelistSanitiser{
 		//look for attempted path traversals (www.example.com/../../../systemfile)
 		$ret = preg_replace('/([.]{2}\/?)+/', '', $ret);
 		
-		return htmlspecialchars($ret);
+		//remove any html tags
+		$ret = strip_tags($ret);
+		return $ret;
 	}
 }
 
