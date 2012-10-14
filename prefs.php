@@ -301,20 +301,20 @@ foreach($feeds as $feed)
 <br><h1>Feed on Feeds - Admin Options</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
 <input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
-Enable logging? <input type=checkbox name=logging <?php if($prefs->get('logging')) echo "checked" ?>><br><br>
-Purge read items after <input size=4 type=string name=purge value="<?php echo intval($prefs->get('purge'))?>"> days (leave blank to never purge)<br><br>
-Allow automatic feed updates every <input size=4 type=string name=autotimeout value="<?php echo intval($prefs->get('autotimeout'))?>"> minutes<br><br>
-Allow manual feed updates every <input size=4 type=string name=manualtimeout value="<?php echo intval($prefs->get('manualtimeout'))?>"> minutes<br><br>
-<input type=submit name=adminprefs value="Save Options">
+Enable logging? <input type="checkbox" name="logging" <?php if($prefs->get('logging')) echo "checked" ?>><br><br>
+Purge read items after <input size="4" type="string" name="purge" value="<?php echo intval($prefs->get('purge'))?>"> days (leave blank to never purge)<br><br>
+Allow automatic feed updates every <input size="4" type="string" name="autotimeout" value="<?php echo intval($prefs->get('autotimeout'))?>"> minutes<br><br>
+Allow manual feed updates every <input size="4" type="string" name="manualtimeout" value="<?php echo intval($prefs->get('manualtimeout'))?>"> minutes<br><br>
+<input type="submit" name="adminprefs" value="Save Options">
 </form>
 
 <br><h1>Add User</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
 <input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
-<table cellspacing=0 cellpadding=2>
+<table cellspacing="0" cellpadding="2">
 <tr><td>Admin password:</td><td><input type="password" name="admin_password"></td></tr>
-<tr><td>Username: </td><td><input type=string name=username></td></tr>
-<tr><td>Password: </td><td><input type=string name=password></td></tr>
+<tr><td>Username: </td><td><input type="string" name="username"></td></tr>
+<tr><td>Password: </td><td><input type="string" name="password"></td></tr>
 </table>
 <input type=submit name=adduser value="Add user">
 </form>
@@ -336,20 +336,20 @@ Allow manual feed updates every <input size=4 type=string name=manualtimeout val
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Delete User - Are you sure?')">
 <input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
 <table border=0 cellspacing=0 cellpadding=10><tr><td>Enter Admin Password:</td><td>Select user to delete:</td></tr>
-<tr><td><input type=password name="admin_password"></td><td>
-<select name=username><?php echo $delete_options ?></select>
-<input type=submit name=deleteuser value="Delete user"></td></tr></table>
+<tr><td><input type="password" name="admin_password"></td><td>
+<select name="username"><?php echo $delete_options ?></select>
+<input type="submit" name="deleteuser" value="Delete user"></td></tr></table>
 </form>
 
 <br><h1>Change User's Password</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Change Password - Are you sure?')">
 <input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
 <table border=0 cellspacing=0 cellpadding=2>
-<tr><td>Select user:</td><td><select name=username><?php echo $delete_options ?></select></td></tr>
-<tr><td>Admin password:</td><td><input type=password name="admin_password"></td></tr>
-<tr><td>New password:</td><td><input type=password name=password></td></tr>
-<tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
-<input type=submit name=changepassword value="Change"><br>
+<tr><td>Select user:</td><td><select name="username"><?php echo $delete_options ?></select></td></tr>
+<tr><td>Admin password:</td><td><input type="password" name="admin_password"></td></tr>
+<tr><td>New password:</td><td><input type="password" name="password"></td></tr>
+<tr><td>Repeat new password:</td><td><input type="password" name="password2"></td></tr></table>
+<input type="submit" name="changepassword" value="Change"><br>
 </form>
 
 <?php } ?>
