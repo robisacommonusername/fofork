@@ -709,7 +709,7 @@ function fof_render_feed_link($row)
 
 function fof_opml_to_array($opml)
 {
-   $rx = "/xmlurl=\"(.*?)\"/mi";
+   $rx = '/xmlurl\s*=\s*"([^"]*)"/mi';
 
    if (preg_match_all($rx, $opml, $m))
    {
