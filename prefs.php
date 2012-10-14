@@ -142,7 +142,7 @@ if(fof_is_admin() && isset($_POST['changepassword']) && fof_authenticate_CSRF_ch
 if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password'] && fof_authenticate_CSRF_challenge($CSRF_hash)) 
 {
 	if (fof_db_authenticate(fof_username(), $_POST['admin_password'])){
-    	$username = $_POST['username'];
+    	$username = htmplspecialchars($_POST['username']);
     	if (preg_match('/^[a-zA-Z0-9]{1,32}$/',$username)){
     		$password = $_POST['password'];
 			$message = fof_db_add_user($username, $password) ? "User '$username' added." : "A user named '$username' already exists.  Please try again";
