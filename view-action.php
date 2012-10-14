@@ -49,7 +49,7 @@ else
 	}
     if (isset($_POST['return'])){
     	//prevent open redirect by checking return address
-    	$regex = '/^https?:\/\/' . $FOF_BASE_URL . '.*$/';
+    	$regex = '/^https?:\/\/' . preg_replace('/\//','\\/',$FOF_BASE_URL) . '.*$/';
     	$url = urldecode($_POST['return']);
     	if (preg_match($regex, $url)){
     		header("Location: $url");
