@@ -19,6 +19,7 @@ define('FOF_DB_HOST', "host.example.com");
 define('FOF_DB_USER', "username");
 define('FOF_DB_PASS', "password");
 define('FOF_DB_DBNAME', "database");
+define('FOF_BASE_URL','http://www.my.domain.com/');
 
 
 // The rest you should not need to change

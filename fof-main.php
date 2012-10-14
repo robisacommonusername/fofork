@@ -21,6 +21,13 @@ if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
 }
 
 require_once('fof-config.php');
+//set the base url
+$FOF_BASE_URL = FOF_BASE_URL;
+if (substr($FOF_BASE_URL,-1,1) != '/'){
+	$FOF_BASE_URL .= '/';
+}
+$FOF_BASE_URL = preg_replace('/^https?:\/\//','',$FOF_BASE_URL);
+
 require_once('fof-db.php');
 require_once('classes/fof-prefs.php');
 require_once('classes/AES.php');
