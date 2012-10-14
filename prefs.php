@@ -142,7 +142,7 @@ if(fof_is_admin() && isset($_POST['changepassword']) && fof_authenticate_CSRF_ch
 if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password'] && fof_authenticate_CSRF_challenge($CSRF_hash)) 
 {
 	if (fof_db_authenticate(fof_username(), $_POST['admin_password'])){
-    	$username = htmplspecialchars($_POST['username']);
+    	$username = htmlspecialchars($_POST['username']);
     	if (preg_match('/^[a-zA-Z0-9]{1,32}$/',$username)){
     		$password = $_POST['password'];
 			$message = fof_db_add_user($username, $password) ? "User '$username' added." : "A user named '$username' already exists.  Please try again";
@@ -247,14 +247,14 @@ URL to be linked on shared page: <input type=string name=sharedurl value="<?php 
 <div style="border: 1px solid black; margin: 10px; padding: 10px; font-size: 12px; font-family: verdana, arial;">
 <table cellpadding=3 cellspacing=0>
 <?php
-foreach($feeds as $row)
+foreach($feeds as $feed)
 {
-   $id = $row['feed_id'];
-   $url = addslashes($row['feed_url']);
-   $title = htmlspecialchars($row['feed_title']);
-   $link = addslashes($row['feed_link']);  
-   $tags = array_map(create_function('$x','return htmlspecialchars($x, ENT_QUOTES);'), $row['tags']);
-   $feed_image = addslashes($row['feed_image']);
+	list($id,
+		$url,
+		$title,
+		$link,
+		$tags,
+		$feed_image) = fof_escape_feed_info($feed);
    
    if(++$t % 2)
    {

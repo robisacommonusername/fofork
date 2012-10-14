@@ -220,22 +220,23 @@ foreach ($allowedOrders as $col)
 
 <?php
 
-foreach($feeds as $row)
+foreach($feeds as $feed)
 {
-	$stripper = new FofFeedSanitiser();
-   $id = $row['feed_id'];
-   $url = $stripper->sanitiseLink($row['feed_url']);
-   $title = $row['feed_title'];
-   $link = $stripper->sanitiseLink($row['feed_link']);
-   $description = $row['feed_description'];
-   $age = $row['feed_age'];
-   $unread = $row['feed_unread'];
-   $starred = $row['feed_starred'];
-   $items = $row['feed_items'];
-   $agestr = $row['agestr'];
-   $agestrabbr = $row['agestrabbr'];
-   $lateststr = $row['lateststr'];
-   $lateststrabbr = $row['lateststrabbr'];
+	list($id,
+		$url,
+		$title,
+		$link,
+		$tags,
+		$feed_image,
+		$description,
+		$age,
+		$unread,
+		$starred,
+		$items) = fof_escape_feed_info($feed);
+   $agestr = $feed['agestr'];
+   $agestrabbr = $feed['agestrabbr'];
+   $lateststr = $feed['lateststr'];
+   $lateststrabbr = $feed['lateststrabbr'];
 
 
    if(++$t % 2)
@@ -266,9 +267,9 @@ foreach($feeds as $row)
    print "</td>";
 
 	print "<td align='center'>";
-	if($row['feed_image'] && $fof_prefs_obj->get('favicons'))
+	if($feed_image && $fof_prefs_obj->get('favicons'))
 	{
-	   print "<a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a>";
+	   print "<a href=\"$url\" title=\"feed\"><img src='" . $feed_image . "' width='16' height='16' border='0' /></a>";
 	}
 	else
 	{
@@ -277,7 +278,7 @@ foreach($feeds as $row)
 	print "</td>";
 
    print "<td>";
-   $stitle = htmlspecialchars(addslashes($title));
+   $stitle = fof_htmlspecialchars($title);
    print "<a href=\"$link\" title=\"home page\"><b>$stitle</b></a></td>";
 
    print "<td><nobr>";

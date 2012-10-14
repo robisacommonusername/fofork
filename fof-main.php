@@ -597,6 +597,25 @@ function fof_get_item($user_id, $item_id)
    return $item;
 }
 
+function fof_escape_feed_info($feed){
+	$stripper = new FofFeedSanitiser();
+	$id = intval($feed['feed_id']);
+   	$url = $stripper->sanitiseLink($feed['feed_url']);
+   	$title = fof_htmlspecialchars($feed['feed_title']);
+   	$link = $stripper->sanitiseLink($feed['feed_link']);  
+   	$tags = array_map('fof_htmlspecialchars', $feed['tags']);
+   	$feed_image = $stripper->sanitiseLink($feed['feed_image']);
+   	
+   	$description = fof_htmlspecialchars($feed['feed_description']);
+   	$age = intval($feed['feed_age']);
+   	$unread = intval($feed['feed_unread']);
+   	$starred = intval($feed['feed_starred']);
+   	$items = intval($feed['feed_items']);
+
+   	return array($id,$url,$title,$link,$tags,$feed_image,$description,$age,$unread,$starred,$items);
+	
+}
+
 function fof_escape_item_info($item){
 	$stripper = new FofItemSanitiser();
 	$feed_link = $stripper->sanitiseLink($item['feed_link']);
