@@ -1171,9 +1171,21 @@ function fof_multi_sort($tab,$key,$rev)
                         'feed_cache_attempt_date','item_updated','item_cached','item_id','item_title');
     if (in_array($key, $allowedKeys)) {
         if($rev)
-            $compare = create_function('$a,$b','if (strtolower($a["'.$key.'"]) == strtolower($b["'.$key.'"])) {return 0;}else {return (strtolower($a["'.$key.'"]) > strtolower($b["'.$key.'"])) ? -1 : 1;}');
+            $compare = function ($a,$b){
+            	if (strtolower($a["'.$key.'"]) == strtolower($b["'.$key.'"])) {
+            		return 0;
+            	} else {
+            		return (strtolower($a["'.$key.'"]) > strtolower($b["'.$key.'"])) ? -1 : 1;
+            	}
+            };
         else
-            $compare = create_function('$a,$b','if (strtolower($a["'.$key.'"]) == strtolower($b["'.$key.'"])) {return 0;}else {return (strtolower($a["'.$key.'"]) < strtolower($b["'.$key.'"])) ? -1 : 1;}');
+            $compare = function ($a,$b) {
+            	if (strtolower($a["'.$key.'"]) == strtolower($b["'.$key.'"])) {
+            		return 0;
+            	} else {
+            		return (strtolower($a["'.$key.'"]) < strtolower($b["'.$key.'"])) ? -1 : 1;
+            	}
+            };
             
         usort($tab,$compare) ;
     }

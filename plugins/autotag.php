@@ -1,7 +1,7 @@
 <?php 
 
 fof_add_tag_prefilter('fof_autotag', 'fof_autotag');
-fof_add_pref('Automatically tag these keywords', 'plugin_autotag_tags', 'string', create_function('$x','return (is_string($x) && (strlen($x) < 200) && (htmlspecialchars($x, ENT_QUOTES) == $x))'));
+fof_add_pref('Automatically tag these keywords', 'plugin_autotag_tags', 'string', function ($x){return (is_string($x) && (strlen($x) < 200) && (htmlspecialchars($x, ENT_QUOTES) == $x));});
 
 function fof_autotag($link, $title, $content)
 {
