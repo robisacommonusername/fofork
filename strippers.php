@@ -42,6 +42,10 @@ class WhitelistSanitiser{
 		$this->allowedTags[] = $tag;
 	}
 	static function sanitiseLink($url){
+		//output of this function should always be safe to place between
+		//<a href="<?php echo $output">
+		//note that this function is for injecting into html context,
+		//NOT javascript context
 		$url = html_entity_decode($url);
 		$url = urldecode($url);
 		//kill off javascript:, vbscript:, etc
@@ -51,9 +55,15 @@ class WhitelistSanitiser{
 		} else {
 			$ret = '';
 		}
+		//look for ' or ".  These are commonly used to try and escape href="" and thus inject scripts
+		//kill anything to the right
+		$ret = preg_replace('/".*$/','',$ret);
+		$ret = preg_replace("/'.*$/",'',$ret);
 		
-		//TODO - kill relative links as well, and strip all get parameters
-		return $ret;
+		//look for attempted path traversals (www.example.com/../../../systemfile)
+		$ret = preg_replace('/([.]{2}\/?)+/', '', $ret);
+		
+		return htmlspecialchars($ret);
 	}
 }
 
