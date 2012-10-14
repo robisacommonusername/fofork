@@ -12,7 +12,7 @@
  *
  */
 
-include_once("fof-main.php");
+include_once('fof-main.php');
 
 while (list ($key, $val) = each ($_POST))
 {
@@ -49,7 +49,7 @@ else
 	}
     if (isset($_POST['return'])){
     	//prevent open redirect by checking return address
-    	$regex = '/^https?:\/\/' . $_SERVER['SERVER_NAME'] . '\/.*$/';
+    	$regex = '/^https?:\/\/' . $FOF_BASE_URL . '.*$/';
     	$url = urldecode($_POST['return']);
     	if (preg_match($regex, $url)){
     		header("Location: $url");
