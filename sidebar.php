@@ -43,11 +43,10 @@ else
 
 $when = htmlspecialchars($_GET['when']);
 
-$search = htmlspecialchars($_GET['search']);
+$searchEscaped = htmlspecialchars($_GET['search'], ENT_QUOTES);
 
-$whatEscaped = addslashes($what);
-$whenEscaped = addslashes($when);
-$searchEscaped = addslashes($search);
+$whatEscaped = htmlspecialchars($what, ENT_QUOTES);
+$whenEscaped = htmlspecialchars($when, ENT_QUOTES);
 
 //echo "<script>what='$whatEscaped'; when='$whenEscaped';</script>";
 
@@ -78,14 +77,14 @@ echo "<script>starred = $starred;</script>";
 <li <?php if($what == "star") echo "style='background: #ddd'" ?> ><a href=".?what=star"><img src="image/star-on.gif" border="0" height="10" width="10"> Starred <span id="starredcount"><?php if($starred) echo "($starred)" ?></span></a></li>
 <li <?php if($what == "all" && isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&when=today">&lt; Today</a></li>
 <li <?php if($what == "all" && !isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&how=paged">All Items <?php if($total) echo "($total)" ?></a></li>
-<li <?php if(isset($search)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
-<form action="." id="search" <?php if(!isset($search)) echo 'style="display: none"' ?>>
+<li <?php if(isset($searchEscaped)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
+<form action="." id="search" <?php if(!isset($searchEscaped)) echo 'style="display: none"' ?>>
 <input id="searchfield" name="search" value="<?php echo $searchEscaped ?>">
 <?php
 	if($what == "unread")
-		echo "<input type='hidden' name='what' value='all'>";
+		echo '<input type="hidden" name="what" value="all">';
 	else
-		echo "<input type='hidden' name='what' value='$whatEscaped'>";
+		echo '<input type="hidden" name="what" value="'.$whatEscaped.'">';
 ?>
 <?php if(isset($_GET['when'])) echo "<input type='hidden' name='what' value='$whenEscaped'>" ?>
 </form>
