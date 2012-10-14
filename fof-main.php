@@ -759,7 +759,7 @@ function fof_subscribe($user_id, $url, $unread="today")
     }
     
     $rss = fof_parse($url);
-     $escapedUrl = addslashes($url);
+     $escapedUrl = htmlspecialchars($url, ENT_QUOTES);
     if (isset($rss->error))
     {
         return "Error: <B>" . $rss->error . "</b> <a href=\"http://feedvalidator.org/check?url=$escapedUrl\">try to validate it?</a><br />";
@@ -884,7 +884,7 @@ function fof_update_feed($id)
     
     $rss = fof_parse($feed['feed_url']);
     
-    $escapedUrl = addslashes($url);
+    $escapedUrl = htmlspecialchars($url,ENT_QUOTES);
     if ($rss->error())
     {
         fof_log("feed update failed: " . $rss->error(), "update");
