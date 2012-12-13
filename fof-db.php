@@ -811,7 +811,7 @@ function fof_db_authenticate($user_name, $password){
     
     $row = fof_db_get_row($result);
     $computedHash = md5($password . $row['salt']);
-    if ($computedHash == $row['user_password_hash']){
+    if ($computedHash === $row['user_password_hash']){
     	$_SESSION['user_name'] = $row['user_name'];
     	$_SESSION['user_id'] = $row['user_id'];
     	$_SESSION['user_level'] = $row['user_level'];
@@ -839,7 +839,7 @@ function fof_db_validate_cookie($token, $userAgent){
 	$result = fof_safe_query("SELECT * from $FOF_COOKIE_TABLE where token_hash='%s'",sha1($token));
 	if (mysql_num_rows($result) > 0){
 		$row = fof_db_get_row($result);
-		if (sha1($userAgent) == $row['user_agent_hash']){
+		if (sha1($userAgent) === $row['user_agent_hash']){
 			$uid = $row['user_id'];
 			$result = fof_safe_query("SELECT * from $FOF_USER_TABLE where user_id=%d", $uid);
 			if (mysql_num_rows($result) > 0){
