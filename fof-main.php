@@ -225,7 +225,7 @@ function fof_compute_CSRF_challenge(){
 function fof_authenticate_CSRF_challenge($response){
 	$user_name = $_SESSION['user_name'];
     $challenge = sha1($user_name . session_id());
-    return ($challenge == $response);
+    return ($challenge === $response);
 }
 
 function fof_get_users()
