@@ -38,7 +38,7 @@ function get_curl_version()
         return $curl;
 }
 
-$php_ok = (function_exists('version_compare') && version_compare(phpversion(), '4.3.2', '>='));
+$php_ok = (function_exists('version_compare') && version_compare(phpversion(), '5.3', '>='));
 $xml_ok = extension_loaded('xml');
 $pcre_ok = extension_loaded('pcre');
 $mysql_ok = extension_loaded('mysql');
