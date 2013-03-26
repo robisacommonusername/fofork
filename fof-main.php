@@ -1204,7 +1204,7 @@ function fof_htmlspecialchars($str){
 	//that if text has ALREADY been escaped, it won't stuff things up.
 	//ie & becomes &amp;
 	//but &quot; is NOT transformed to &amp;quot;
-	$new = preg_replace('/&(?!(lt|gt|quot|amp|#039);)/', '&amp;', $str);
+	$new = preg_replace('/&(?!(lt|gt|quot|amp|#039|pound|#163|mdash|#151);)/', '&amp;', $str);
 	$new = str_replace(array('<','>','"', "'"), array('&lt;','&gt;','&quot;','&#039;'), $new);
 	
 	//allow some very basic tags, eg <em>
