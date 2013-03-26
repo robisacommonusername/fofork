@@ -1,2 +1,17 @@
 This is fofork, a GPL RSS aggregator forked from "Feed on Feeds" by Steven
-Minutillo (steve@minutillo.com - http://minutillo.com/steve/) 
+Minutillo (steve@minutillo.com - http://minutillo.com/steve/).
+
+Minimum Requirements for Installing fofork:
+PHP >= 5.3, with xml, pcre, mysql, curl, zlib, mbstring and iconv extensions
+mysql/mariaDB 5
+curl >= 7.10.5
+
+Installation instructions:
+1. Extract contents of archive to web host root directory
+2. Create a direcytory 'cache', and ensure it is writeable
+	by the web server
+3. Copy the file fof-config-sample.php to fof-config.php
+4. Edit the contents of fof-config.php to reflect your database
+	name, login, etc
+5. Run install.php
+
