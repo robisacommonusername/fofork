@@ -24,16 +24,19 @@ $FOF_SESSION_TABLE = FOF_SESSION_TABLE;
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
 ////////////////////////////////////////////////////////////////////////////////
+function fof_prepare_connection_string(){
+	//hard code for mysql for now - extend this later
+	return 'mysql:host='.FOF_DB_HOST.';dbname='.FOF_DB_DBNAME;
+}
 
-function fof_db_connect()
-{
+function fof_db_connect(){
     global $fof_connection;
-    
-    $fof_connection = mysql_connect(FOF_DB_HOST, FOF_DB_USER, FOF_DB_PASS) or die("<br><br>Cannot connect to database.  Please update configuration in <b>fof-config.php</b>.  Mysql says: <i>" . mysql_error() . "</i>");
-    if(!mysql_select_db(FOF_DB_DBNAME, $fof_connection))
-	{
-		fof_safe_query("create database " . FOF_DB_DBNAME) or die("Cannot create database.  Please create it manually. Mysql says:<i>" . mysql_error() . "</i>");
-		mysql_select_db(FOF_DB_DBNAME, $fof_connection) or die("<br><br>Cannot select database.  Please update configuration in <b>fof-config.php</b>.  Mysql says: <i>" . mysql_error() . "</i>");
+
+	try {
+		$fof_connection = new PDO(fof_prepare_connection_string(), FOF_DB_USER, FOF_DB_PASS);
+		//check if database exists, try to create it if not
+	} catch (PDOException e) {
+		die('<br><br>Cannot connect to database.  Please update configuration in <b>fof-config.php</b>.  PDO says: <i>' . e->getMessage() . '</i>');
 	}
 }
 
@@ -44,72 +47,85 @@ function fof_db_optimize()
 	fof_db_query("optimize table $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE");
 }
 
-function fof_safe_query(/* $query, [$args...]*/)
-{
+//provided for compatability
+function fof_safe_query(/* $query, [$args...]*/){
+	global $fof_connection;
     $args  = func_get_args();
     $query = array_shift($args);
     if(is_array($args[0])) $args = $args[0];
-    $args  = array_map('mysql_real_escape_string', $args);
-    $query = vsprintf($query, $args);
-    
-    return fof_db_query($query);
+	//transform the sprintf % syntax into PDO placeholders.
+	$query = preg_replace('/%[sdfg]/', '?', $query);
+	
+	$result = null;
+	$t1 = microtime(true);
+	try {
+		$stmnt = $fof_connection->prepare($query);
+		$result = $stmnt->execute($args);
+		$t2 = microtime(true);
+		$elapsed = $t2 - $t1;
+		if ($result) $num = $result->rowCount();
+		$log_msg = sprintf('%.3f: [%s] (%d affected)', $elapsed, $query, $num);
+		fof_log($log_msg, 'query');
+	} catch (PDOException e) {}
+    return $result;
 }
 
 function fof_private_safe_query(/*$query, $substitutions,[$args]*/){
 	//essentially does the same thing as fof_safe_query, except that it replaces
 	//the substitutions with XXXX in the log (ie so we don't expose session ids, etc)
+	global $fof_connection;
 	$args = func_get_args();
 	$query = array_shift($args);
 	$subs = array_shift($args);
 	if (is_array($args[0])) $args = $args[0];
-	$args = array_map('mysql_real_escape_string', $args);
-	$safeQuery = vsprintf($query, $args);
-	
+	//convert placeholder syntax
+	$pdo_query = preg_replace('/%[sdfg]/', '?', $query);
 	$censored_args = array_replace($args, $subs);
 	$censored_query = vsprintf($query, $censored_args);
 	
-	return fof_db_query($safeQuery, 0, $censored_query);
+	$result = null;
+	$t1 = microtime(true);
+	try {	
+		$stmnt = $fof_connection->prepare($pdo_query);
+		$result = stmnt->execute($args);
+		$t2 = microtime(true);
+		if ($result) $num = $result->rowCount();
+		$elapsed = $t2 - $t1;
+		$log_message = sprintf('%.3f: [%s] (%d affected)', $elapsed, $censored_query, $num);
+    	fof_log($logmessage, 'query');
+	} catch (PDOException e) {}
+	
+	return $result;
 	
 }
 
-function fof_db_query($sql, $live=0, $query_private=''){   
+function fof_db_query($sql, $live=0){   
     global $fof_connection;
     
-    list($usec, $sec) = explode(' ', microtime()); 
-    $t1 = (float)$sec + (float)$usec;
+    $t1 = microtime(true);
+	$result = null;
+	try {
+		$result = $fof_connection->query($sql);   
+
+    	if (is_resource($result)) {
+			$num = $result->rowCount();
+   		}
     
-    $result = mysql_query($sql, $fof_connection);
-    
-    if(is_resource($result)) $num = mysql_num_rows($result);
-    if($result) $affected = mysql_affected_rows();
-    
-    list($usec, $sec) = explode(' ', microtime()); 
-    $t2 = (float)$sec + (float)$usec;
-    $elapsed = $t2 - $t1;
-    $query = $query_private ? $query_private : $sql;
-    $logmessage = sprintf('%.3f: [%s] (%d / %d)', $elapsed, $query, $num, $affected);
-    fof_log($logmessage, 'query');
-    
-    if($live)
-    {
-        return $result;
-    }
-    else
-    {
-        if(mysql_errno()) 
-        {
-            //echo "<pre>";
-            //print_r(debug_backtrace());
-            //echo "</pre>";
-            die("Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? MySQL says: <b>". mysql_error() . "</b>");
-        }
-        return $result;
-    }
+    	$t2 = microtime(true);
+    	$elapsed = $t2 - $t1;
+    	$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $query, $num);
+    	fof_log($logmessage, 'query');
+	} catch (PDOException e) {
+		if (!$live) {
+			die('Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? MySQL says: <b>'. e->getMessage() . '</b>');
+		}
+	}
+	return $result;
 }
 
 function fof_db_get_row($result)
 {
-    return mysql_fetch_array($result);
+    return $result->fetch(PDO::FETCH_ASSOC);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,7 +228,7 @@ function fof_db_is_subscribed($user_id, $feed_url)
     
     $result = fof_safe_query("select $FOF_SUBSCRIPTION_TABLE.feed_id from $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE where feed_url='%s' and $FOF_SUBSCRIPTION_TABLE.feed_id = $FOF_FEED_TABLE.feed_id and $FOF_SUBSCRIPTION_TABLE.user_id = %d", $feed_url, $user_id);
     
-    if(mysql_num_rows($result) == 0)
+    if($result->rowCount() == 0)
     {
         return false;
     }
@@ -226,12 +242,12 @@ function fof_db_get_feed_by_url($feed_url)
     
     $result = fof_safe_query("select * from $FOF_FEED_TABLE where feed_url='%s'", $feed_url);
     
-    if(mysql_num_rows($result) == 0)
+    if($result->rowCount() == 0)
     {
         return NULL;
     }
     
-    $row = mysql_fetch_array($result);
+    $row = fof_db_get_row($result);
     
     return $row;
 }
@@ -242,7 +258,7 @@ function fof_db_get_feed_by_id($feed_id)
     
     $result = fof_safe_query("select * from $FOF_FEED_TABLE where feed_id=%d", $feed_id);
     
-    $row = mysql_fetch_array($result);
+    $row = fof_db_get_row($result);
     
     return $row;
 }
@@ -253,7 +269,7 @@ function fof_db_add_feed($url, $title, $link, $description)
     
     fof_safe_query("insert into $FOF_FEED_TABLE (feed_url,feed_title,feed_link,feed_description) values ('%s', '%s', '%s', '%s')", $url, $title, $link, $description);
     
-    return(mysql_insert_id($fof_connection));
+    return($fof_connection->lastInsertId());
 }
 
 function fof_db_add_subscription($user_id, $feed_id)
@@ -299,9 +315,9 @@ function fof_db_find_item($feed_id, $item_guid)
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $fof_connection;
     
     $result = fof_safe_query("select item_id from $FOF_ITEM_TABLE where feed_id=%d and item_guid='%s'", $feed_id, $item_guid);
-    $row = mysql_fetch_array($result);
+    $row = fof_db_get_row($result);
     
-    if(mysql_num_rows($result) == 0)
+    if($result->rowCount() == 0)
     {
         return NULL;
     }
@@ -318,7 +334,7 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
     fof_safe_query("insert into $FOF_ITEM_TABLE (feed_id, item_link, item_guid, item_title, item_content, item_cached, item_published, item_updated) values (%d, '%s', '%s' ,'%s', '%s', %d, %d, %d)",
     $feed_id, $link, $guid, $title, $content, $cached, $published, $updated);
     
-    return(mysql_insert_id($fof_connection));
+    return($fof_connection->lastInsertId());
 }
 
 function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
@@ -393,12 +409,12 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
     
     $result = fof_safe_query($query, $args);
     
-    if(mysql_num_rows($result) == 0)
+    if($result->rowCount() == 0)
     {
         return array();
     }
     	
-    while($row = mysql_fetch_assoc($result))
+    while($row = fof_db_get_row($result))
     {
         $array[] = $row;
     }
@@ -438,7 +454,7 @@ function fof_db_get_item($user_id, $item_id)
     
     $result = fof_safe_query($query, $item_id);
     
-    $item = mysql_fetch_assoc($result);
+    $item = fof_db_get_row($result);
     
     $item['tags'] = array();
     
@@ -518,9 +534,9 @@ function fof_db_item_has_tags($item_id)
     global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
     
     $result = fof_safe_query("select count(*) as \"count\" from $FOF_ITEM_TAG_TABLE where item_id=%d and tag_id <= 2", $item_id);
-    $row = mysql_fetch_array($result);
+    $row = fof_db_get_row($result);
     
-    return $row["count"];
+    return $row['count'];
 }
 
 function fof_db_get_unread_count($user_id)
@@ -528,9 +544,9 @@ function fof_db_get_unread_count($user_id)
     global $FOF_ITEM_TAG_TABLE;
     
     $result = fof_safe_query("select count(*) as \"count\" from $FOF_ITEM_TAG_TABLE where tag_id = 1 and user_id = %d", $user_id); 
-    $row = mysql_fetch_array($result);
+    $row = fof_db_get_row($result);
     
-    return $row["count"];
+    return $row['count'];
 }
 
 function fof_db_get_tag_unread($user_id)
@@ -587,7 +603,7 @@ function fof_db_create_tag($user_id, $tag)
     
     fof_safe_query("insert into $FOF_TAG_TABLE (tag_name) values ('%s')", $tag);
     
-    return(mysql_insert_id($fof_connection));
+    return($fof_connection->lastInsertId());
 }
 
 function fof_db_get_tag_by_name($user_id, $tag)
@@ -596,12 +612,12 @@ function fof_db_get_tag_by_name($user_id, $tag)
     
     $result = fof_safe_query("select $FOF_TAG_TABLE.tag_id from $FOF_TAG_TABLE where $FOF_TAG_TABLE.tag_name = '%s'", $tag);
     
-    if(mysql_num_rows($result) == 0)
+    if($result->rowCount() == 0)
     {
         return NULL;
     }
     
-    $row = mysql_fetch_array($result);
+    $row = fof_db_get_row($result);
     
     return $row['tag_id'];
 }
@@ -668,12 +684,7 @@ function fof_db_mark_item_unread($users, $id)
     
 	$sql = "insert into $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) values " . $values;
 	
-	$result = fof_db_query($sql, 1);
-
-    if(!$result && (mysql_errno() != 1062))
-    {
-        die("Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? MySQL says: <b>". mysql_error() . "</b>");
-    }
+	$result = fof_db_query($sql, 0);
 }
 
 function fof_db_tag_items($user_id, $tag_id, $items)
@@ -693,12 +704,7 @@ function fof_db_tag_items($user_id, $tag_id, $items)
     
 	$sql = "insert into $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) values " . $values;
 	
-	$result = fof_db_query($sql, 1);
-    
-    if(!$result && (mysql_errno() != 1062))
-    {
-        die("Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? MySQL says: <b>". mysql_error() . "</b>");
-    }
+	$result = fof_db_query($sql, 0);
 }
 
 function fof_db_untag_items($user_id, $tag_id, $items)
@@ -749,7 +755,7 @@ function fof_db_add_user($username, $password)
 	
 	#check if username already exists
 	$result = fof_safe_query("SELECT user_id from $FOF_USER_TABLE where user_name='%s'", $username);
-	if (mysql_num_rows($result) > 0){
+	if ($result->rowCount() > 0){
 		return False;
 	} else {
 		$salt = fof_make_salt();
@@ -775,7 +781,7 @@ function fof_db_get_user_id($username)
 {
     global $FOF_USER_TABLE;
     $result = fof_safe_query("select user_id from $FOF_USER_TABLE where user_name = '%s'", $username);
-    $row = mysql_fetch_array($result);
+    $row = fof_db_get_row($result);
     
     return $row['user_id'];
 }
@@ -804,7 +810,7 @@ function fof_db_authenticate($user_name, $password){
     
     $result = fof_safe_query("select * from $FOF_USER_TABLE where user_name = '%s'", $user_name);
     
-    if(mysql_num_rows($result) == 0)
+    if($result->rowCount() == 0)
     {
         return false;
     }
@@ -837,12 +843,12 @@ function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 function fof_db_validate_cookie($token, $userAgent){
 	global $FOF_COOKIE_TABLE, $FOF_USER_TABLE;
 	$result = fof_safe_query("SELECT * from $FOF_COOKIE_TABLE where token_hash='%s'",sha1($token));
-	if (mysql_num_rows($result) > 0){
+	if ($result->rowCount() > 0){
 		$row = fof_db_get_row($result);
 		if (sha1($userAgent) === $row['user_agent_hash']){
 			$uid = $row['user_id'];
 			$result = fof_safe_query("SELECT * from $FOF_USER_TABLE where user_id=%d", $uid);
-			if (mysql_num_rows($result) > 0){
+			if ($result->rowCount() > 0){
 				return fof_db_get_row($result);
 			}
 		}
@@ -876,7 +882,7 @@ function fof_db_read_session($id){
 	global $FOF_SESSION_TABLE;
 	$censors[] = 'XXX session_id XXX';
     $result = fof_private_safe_query("SELECT data from $FOF_SESSION_TABLE where id='%s'", $censors, $id);
-    if (mysql_num_rows($result)){
+    if ($result->rowCount()){
     	$record = fof_db_get_row($result);
     	return $record['data'];
     }
