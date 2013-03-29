@@ -1,7 +1,7 @@
 <?php 
 
 fof_add_item_widget('fof_wordpress');
-fof_add_pref('WordPress URL', 'plugin_wordpressurl', 'string', function($x {return (is_string($x) && strlen($x) < 200);});
+fof_add_pref('WordPress URL', 'plugin_wordpressurl', 'string', function($x) {return (is_string($x) && strlen($x) < 200);});
 
 function fof_wordpress($item)
 {

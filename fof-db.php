@@ -21,6 +21,8 @@ $FOF_USER_TABLE = FOF_USER_TABLE;
 $FOF_COOKIE_TABLE = FOF_COOKIE_TABLE;
 $FOF_SESSION_TABLE = FOF_SESSION_TABLE;
 
+$fof_connection = 3;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,6 +40,7 @@ function fof_db_connect(){
 	} catch (PDOException $e) {
 		die('<br><br>Cannot connect to database.  Please update configuration in <b>fof-config.php</b>.  PDO says: <i>' . $e->getMessage() . '</i>');
 	}
+	return $fof_connection;
 }
 
 function fof_db_optimize()
@@ -54,20 +57,20 @@ function fof_safe_query(/* $query, [$args...]*/){
     $query = array_shift($args);
     if(is_array($args[0])) $args = $args[0];
 	//transform the sprintf % syntax into PDO placeholders.
-	$query = preg_replace('/%[sdfg]/', '?', $query);
+	$query = preg_replace("/'?%[sdfg]'?/", '?', $query);
 	
-	$result = null;
+	$stmnt = null;
 	$t1 = microtime(true);
 	try {
 		$stmnt = $fof_connection->prepare($query);
-		$result = $stmnt->execute($args);
+		$stmnt->execute($args);
 		$t2 = microtime(true);
 		$elapsed = $t2 - $t1;
-		if (is_resource($result)) $num = $result->rowCount();
+		if ($result instanceof PDOStatement) $num = $result->rowCount();
 		$log_msg = sprintf('%.3f: [%s] (%d affected)', $elapsed, $query, $num);
 		fof_log($log_msg, 'query');
 	} catch (PDOException $e) {}
-    return $result;
+    return $stmnt;
 }
 
 function fof_private_safe_query(/*$query, $substitutions,[$args]*/){
@@ -79,23 +82,23 @@ function fof_private_safe_query(/*$query, $substitutions,[$args]*/){
 	$subs = array_shift($args);
 	if (is_array($args[0])) $args = $args[0];
 	//convert placeholder syntax
-	$pdo_query = preg_replace('/%[sdfg]/', '?', $query);
+	$pdo_query = preg_replace("/'?%[sdfg]'?/", '?', $query);
 	$censored_args = array_replace($args, $subs);
 	$censored_query = vsprintf($query, $censored_args);
 	
-	$result = null;
+	$stmnt = null;
 	$t1 = microtime(true);
-	try {	
+	try {
 		$stmnt = $fof_connection->prepare($pdo_query);
-		$result = $stmnt->execute($args);
+		$stmnt->execute($args);
 		$t2 = microtime(true);
-		if (is_resource($result)) $num = $result->rowCount();
+		if ($result instanceof PDOStatement) $num = $result->rowCount();
 		$elapsed = $t2 - $t1;
 		$log_message = sprintf('%.3f: [%s] (%d affected)', $elapsed, $censored_query, $num);
     	fof_log($logmessage, 'query');
 	} catch (PDOException $e) {}
 	
-	return $result;
+	return $stmnt;
 	
 }
 
@@ -107,7 +110,7 @@ function fof_db_query($sql, $live=0){
 	try {
 		$result = $fof_connection->query($sql);   
 
-    	if (is_resource($result)) {
+    	if ($result instanceof PDOStatement) {
 			$num = $result->rowCount();
    		}
     
@@ -123,9 +126,12 @@ function fof_db_query($sql, $live=0){
 	return $result;
 }
 
-function fof_db_get_row($result)
-{
-    return $result->fetch(PDO::FETCH_ASSOC);
+function fof_db_get_row($result) {
+	$ret = array();
+    if ($result instanceof PDOStatement){
+    	$ret = $result->fetch(PDO::FETCH_ASSOC);
+    }
+    return $ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -522,7 +528,7 @@ function fof_db_untag_feed($user_id, $feed_id, $tag_id)
 
 function fof_db_get_item_tags($user_id, $item_id)
 {
-    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
+    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
     
     $result = fof_safe_query("select $FOF_TAG_TABLE.tag_name from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = %d and $FOF_ITEM_TAG_TABLE.user_id = %d", $item_id, $user_id);
     
@@ -531,7 +537,7 @@ function fof_db_get_item_tags($user_id, $item_id)
 
 function fof_db_item_has_tags($item_id)
 {
-    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
+    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
     
     $result = fof_safe_query("select count(*) as \"count\" from $FOF_ITEM_TAG_TABLE where item_id=%d and tag_id <= 2", $item_id);
     $row = fof_db_get_row($result);
@@ -566,7 +572,7 @@ function fof_db_get_tag_unread($user_id)
 
 function fof_db_get_tags($user_id)
 {
-    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
+    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
     
     $sql = "SELECT $FOF_TAG_TABLE.tag_id, $FOF_TAG_TABLE.tag_name, count( $FOF_ITEM_TAG_TABLE.item_id ) as count
         FROM $FOF_TAG_TABLE
@@ -608,7 +614,7 @@ function fof_db_create_tag($user_id, $tag)
 
 function fof_db_get_tag_by_name($user_id, $tag)
 {
-    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
+    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
     
     $result = fof_safe_query("select $FOF_TAG_TABLE.tag_id from $FOF_TAG_TABLE where $FOF_TAG_TABLE.tag_name = '%s'", $tag);
     
@@ -809,21 +815,22 @@ function fof_db_authenticate($user_name, $password){
     global $FOF_USER_TABLE;
     
     $result = fof_safe_query("select * from $FOF_USER_TABLE where user_name = '%s'", $user_name);
+    if ($result instanceof PDOStatement){
+    	if($result->rowCount() == 0)
+    	{
+        	return false;
+    	}
     
-    if($result->rowCount() == 0)
-    {
-        return false;
-    }
-    
-    $row = fof_db_get_row($result);
-    $computedHash = md5($password . $row['salt']);
-    if ($computedHash === $row['user_password_hash']){
-    	$_SESSION['user_name'] = $row['user_name'];
-    	$_SESSION['user_id'] = $row['user_id'];
-    	$_SESSION['user_level'] = $row['user_level'];
-    	$_SESSION['authenticated'] = True;
-    	return True;
-    }
+    	$row = fof_db_get_row($result);
+    	$computedHash = md5($password . $row['salt']);
+    	if ($computedHash === $row['user_password_hash']){
+    		$_SESSION['user_name'] = $row['user_name'];
+    		$_SESSION['user_id'] = $row['user_id'];
+    		$_SESSION['user_level'] = $row['user_level'];
+    		$_SESSION['authenticated'] = True;
+    		return True;
+   		}
+   	}
     return False;
 }
 
@@ -843,7 +850,7 @@ function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 function fof_db_validate_cookie($token, $userAgent){
 	global $FOF_COOKIE_TABLE, $FOF_USER_TABLE;
 	$result = fof_safe_query("SELECT * from $FOF_COOKIE_TABLE where token_hash='%s'",sha1($token));
-	if (is_resource($result)){
+	if ($result instanceof PDOStatement){
 		if ($result->rowCount() > 0){
 			$row = fof_db_get_row($result);
 			if (sha1($userAgent) === $row['user_agent_hash']){
@@ -869,11 +876,13 @@ function fof_db_delete_cookie($token){
 }
 
 function fof_db_open_session(){
-    global $fof_connection;
+	global $fof_connection;
 	if (!$fof_connection){
-		$fof_connection = fof_db_connect();
+		fof_db_connect();
+		//$fof_connection = fof_db_connect();
 	}
 	return $fof_connection;
+	
 }
 
 function fof_db_close_session(){
@@ -881,10 +890,9 @@ function fof_db_close_session(){
 }
 
 function fof_db_read_session($id){
-	global $FOF_SESSION_TABLE;
 	$censors[] = 'XXX session_id XXX';
     $result = fof_private_safe_query("SELECT data from $FOF_SESSION_TABLE where id='%s'", $censors, $id);
-	if (is_resource($result)){
+	if ($result instanceof PDOStatement){
     	if ($result->rowCount()){
     		$record = fof_db_get_row($result);
     		return $record['data'];
@@ -894,6 +902,8 @@ function fof_db_read_session($id){
 }
 
 function fof_db_write_session($id, $data){
+	fof_db_connect(); //I DO NOT UNDERSTAND WHY THIS IS NECESSARY
+	//SEEMS LIKE $fof_connection is getting garbage collected awyay
 	global $FOF_SESSION_TABLE;  
     $access = time();
     $censors = array(0 => 'XXX session_id XXX');
