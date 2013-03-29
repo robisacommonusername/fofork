@@ -35,8 +35,8 @@ function fof_db_connect(){
 	try {
 		$fof_connection = new PDO(fof_prepare_connection_string(), FOF_DB_USER, FOF_DB_PASS);
 		//check if database exists, try to create it if not
-	} catch (PDOException e) {
-		die('<br><br>Cannot connect to database.  Please update configuration in <b>fof-config.php</b>.  PDO says: <i>' . e->getMessage() . '</i>');
+	} catch (PDOException $e) {
+		die('<br><br>Cannot connect to database.  Please update configuration in <b>fof-config.php</b>.  PDO says: <i>' . $e->getMessage() . '</i>');
 	}
 }
 
@@ -63,10 +63,10 @@ function fof_safe_query(/* $query, [$args...]*/){
 		$result = $stmnt->execute($args);
 		$t2 = microtime(true);
 		$elapsed = $t2 - $t1;
-		if ($result) $num = $result->rowCount();
+		if (is_resource($result)) $num = $result->rowCount();
 		$log_msg = sprintf('%.3f: [%s] (%d affected)', $elapsed, $query, $num);
 		fof_log($log_msg, 'query');
-	} catch (PDOException e) {}
+	} catch (PDOException $e) {}
     return $result;
 }
 
@@ -87,13 +87,13 @@ function fof_private_safe_query(/*$query, $substitutions,[$args]*/){
 	$t1 = microtime(true);
 	try {	
 		$stmnt = $fof_connection->prepare($pdo_query);
-		$result = stmnt->execute($args);
+		$result = $stmnt->execute($args);
 		$t2 = microtime(true);
-		if ($result) $num = $result->rowCount();
+		if (is_resource($result)) $num = $result->rowCount();
 		$elapsed = $t2 - $t1;
 		$log_message = sprintf('%.3f: [%s] (%d affected)', $elapsed, $censored_query, $num);
     	fof_log($logmessage, 'query');
-	} catch (PDOException e) {}
+	} catch (PDOException $e) {}
 	
 	return $result;
 	
@@ -115,9 +115,9 @@ function fof_db_query($sql, $live=0){
     	$elapsed = $t2 - $t1;
     	$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $query, $num);
     	fof_log($logmessage, 'query');
-	} catch (PDOException e) {
+	} catch (PDOException $e) {
 		if (!$live) {
-			die('Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? MySQL says: <b>'. e->getMessage() . '</b>');
+			die('Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? MySQL says: <b>'. $e->getMessage() . '</b>');
 		}
 	}
 	return $result;
@@ -843,13 +843,15 @@ function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 function fof_db_validate_cookie($token, $userAgent){
 	global $FOF_COOKIE_TABLE, $FOF_USER_TABLE;
 	$result = fof_safe_query("SELECT * from $FOF_COOKIE_TABLE where token_hash='%s'",sha1($token));
-	if ($result->rowCount() > 0){
-		$row = fof_db_get_row($result);
-		if (sha1($userAgent) === $row['user_agent_hash']){
-			$uid = $row['user_id'];
-			$result = fof_safe_query("SELECT * from $FOF_USER_TABLE where user_id=%d", $uid);
-			if ($result->rowCount() > 0){
-				return fof_db_get_row($result);
+	if (is_resource($result)){
+		if ($result->rowCount() > 0){
+			$row = fof_db_get_row($result);
+			if (sha1($userAgent) === $row['user_agent_hash']){
+				$uid = $row['user_id'];
+				$result = fof_safe_query("SELECT * from $FOF_USER_TABLE where user_id=%d", $uid);
+				if ($result->rowCount() > 0){
+					return fof_db_get_row($result);
+				}
 			}
 		}
 	}
@@ -882,10 +884,12 @@ function fof_db_read_session($id){
 	global $FOF_SESSION_TABLE;
 	$censors[] = 'XXX session_id XXX';
     $result = fof_private_safe_query("SELECT data from $FOF_SESSION_TABLE where id='%s'", $censors, $id);
-    if ($result->rowCount()){
-    	$record = fof_db_get_row($result);
-    	return $record['data'];
-    }
+	if (is_resource($result)){
+    	if ($result->rowCount()){
+    		$record = fof_db_get_row($result);
+    		return $record['data'];
+    	}
+	}
     return '';
 }
 
