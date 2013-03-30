@@ -44,8 +44,7 @@ function do_highlight($full_body, $q, $class){
 }
 
 
-function fof_render_item($item)
-{
+function fof_render_item($item){
     $items = true;
 
 	list($feed_link,
@@ -70,7 +69,6 @@ function fof_render_item($item)
 	}
 	    
     $tags = array_map(function($x){return htmlspecialchars($x, ENT_QUOTES);}, $item['tags']);
-
 	$star = in_array('star', $tags);
 	$star_image = $star ? 'image/star-on.gif' : 'image/star-off.gif';
 		

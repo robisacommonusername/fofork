@@ -437,16 +437,18 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
         $i++;
     }
     
-    $items = join($ids, ", ");
+    global $fof_connection;
+    $stmnt = $fof_connection->prepare("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = :id and $FOF_ITEM_TAG_TABLE.user_id = :userid");
     
-    $result = fof_safe_query("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id in (%s) and $FOF_ITEM_TAG_TABLE.user_id = %d", $items, $user_id);
-    
-    while($row = fof_db_get_row($result))
-    {
-        $item_id = $row['item_id'];
-        $tag = $row['tag_name'];
-        
-        $array[$lookup[$item_id]]['tags'][] = $tag;
+    $stmnt->bindParam(':userid', $user_id, PDO::PARAM_INT);
+    foreach ($ids as $id){
+    	$stmnt->bindParam(':id', $id, PDO::PARAM_INT);
+    	$stmnt->execute();
+    	while ($row = fof_db_get_row($stmnt)){
+    		$item_id = $row['item_id'];
+        	$tag = $row['tag_name'];
+        	$array[$lookup[$item_id]]['tags'][] = $tag;
+    	}
     }
 
     return $array;
