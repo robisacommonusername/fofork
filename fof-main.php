@@ -79,10 +79,9 @@ function fof_log($message, $topic="debug")
     
     $p = $fof_prefs_obj->admin_prefs;
     if(!$p['logging']) return;
-    
+
     static $log;
-    if(!isset($log)) $log = @fopen("fof.log", 'a');
-    
+    $log = @fopen("fof.log", 'a');
     if(!$log) return;
     
     $message = str_replace ("\n", "\\n", $message); 
@@ -225,6 +224,7 @@ function fof_compute_CSRF_challenge(){
 function fof_authenticate_CSRF_challenge($response){
 	$user_name = $_SESSION['user_name'];
     $challenge = sha1($user_name . session_id());
+    die("challenge = $challenge, resp= $response, un = $user_name, sessid = ".session_id());
     return ($challenge === $response);
 }
 

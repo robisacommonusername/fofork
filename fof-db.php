@@ -50,7 +50,7 @@ function fof_db_optimize()
 	fof_db_query("optimize table $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE");
 }
 
-//provided for compatability
+//DEPRECTATED - provided for compatability - aim to eliminate these.
 function fof_safe_query(/* $query, [$args...]*/){
 	global $fof_connection;
     $args  = func_get_args();
@@ -66,13 +66,14 @@ function fof_safe_query(/* $query, [$args...]*/){
 		$stmnt->execute($args);
 		$t2 = microtime(true);
 		$elapsed = $t2 - $t1;
-		if ($result instanceof PDOStatement) $num = $result->rowCount();
+		$num = $stmnt->rowCount();
 		$log_msg = sprintf('%.3f: [%s] (%d affected)', $elapsed, $query, $num);
 		fof_log($log_msg, 'query');
 	} catch (PDOException $e) {}
     return $stmnt;
 }
 
+//DEPRECATED
 function fof_private_safe_query(/*$query, $substitutions,[$args]*/){
 	//essentially does the same thing as fof_safe_query, except that it replaces
 	//the substitutions with XXXX in the log (ie so we don't expose session ids, etc)
@@ -92,16 +93,16 @@ function fof_private_safe_query(/*$query, $substitutions,[$args]*/){
 		$stmnt = $fof_connection->prepare($pdo_query);
 		$stmnt->execute($args);
 		$t2 = microtime(true);
-		if ($result instanceof PDOStatement) $num = $result->rowCount();
+		$num = $stmnt->rowCount();
 		$elapsed = $t2 - $t1;
-		$log_message = sprintf('%.3f: [%s] (%d affected)', $elapsed, $censored_query, $num);
+		$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $censored_query, $num);
     	fof_log($logmessage, 'query');
 	} catch (PDOException $e) {}
 	
 	return $stmnt;
 	
 }
-
+//DEPRECATED
 function fof_db_query($sql, $live=0){   
     global $fof_connection;
     
@@ -124,6 +125,33 @@ function fof_db_query($sql, $live=0){
 		}
 	}
 	return $result;
+}
+
+function fof_query_log($sql, $params){
+	global $fof_connection;
+	$t1 = microtime(true);
+	$result = $fof_connection->prepare($sql);
+	$result->execute($params);
+	$t2 = microtime(true);
+	$elapsed = $t2 - $t1;
+	$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $result->queryString, $result->rowCount());
+	fof_log($logmessage, 'pdo query');
+	return $result;
+}
+
+function fof_prepare_query_log($sql){
+	global $fof_connection;
+	$stmnt = $fof_connection->prepare($sql);
+	$retf = function($params) use($stmnt){
+		$t1 = microtime(true);
+		$stmnt->execute($params);
+		$t2 = microtime(true);
+		$elapsed = $t2 - $t1;
+		$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $stmnt->queryString, $stmnt->rowCount());
+		fof_log($logmessage, 'pdo query');
+		return $stmnt;
+	};
+	return $retf;
 }
 
 function fof_db_get_row($result) {
@@ -343,8 +371,7 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
     return($fof_connection->lastInsertId());
 }
 
-function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
-{
+function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL) {
     global $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
     
     $prefs = fof_prefs();
@@ -437,6 +464,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
         $i++;
     }
     
+    //can't do implode($ids, ', '), because PDO will escape most of the arguments (except the first)
     global $fof_connection;
     $stmnt = $fof_connection->prepare("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = :id and $FOF_ITEM_TAG_TABLE.user_id = :userid");
     

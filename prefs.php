@@ -21,7 +21,7 @@ if(fof_is_admin() && isset($_POST['adminprefs']) && fof_authenticate_CSRF_challe
 	$prefs->set('manualtimeout', intval($_POST['manualtimeout']));
 	$prefs->set('autotimeout', intval($_POST['autotimeout']));
 	$prefs->set('logging', $_POST['logging'] ? True : False);
-
+	die('logging is '.$_POST['logging']);
 	$prefs->save();
     	
 	$message .= ' Saved admin prefs.';
@@ -176,7 +176,6 @@ $challenge = fof_compute_CSRF_challenge();
 <br><font color="red"><?php echo $message ?></font><br>
 
 <?php } ?>
-
 <br><h1>Feed on Feeds - Preferences</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
 <input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
