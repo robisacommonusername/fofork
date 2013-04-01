@@ -462,14 +462,13 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
     }
     
     //can't do implode($ids, ', '), because PDO will escape most of the arguments (except the first)
-    global $fof_connection;
-    $stmnt = $fof_connection->prepare("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = :id and $FOF_ITEM_TAG_TABLE.user_id = :userid");
+    $retf = fof_prepare_query_log("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = :id and $FOF_ITEM_TAG_TABLE.user_id = :userid");
     
-    $stmnt->bindParam(':userid', $user_id, PDO::PARAM_INT);
+    $params = array('userid' => $user_id);
     foreach ($ids as $id){
-    	$stmnt->bindParam(':id', $id, PDO::PARAM_INT);
-    	$stmnt->execute();
-    	while ($row = fof_db_get_row($stmnt)){
+    	$params['id'] = $id;
+    	$result = $retf($params);
+    	while ($row = fof_db_get_row($result)){
     		$item_id = $row['item_id'];
         	$tag = $row['tag_name'];
         	$array[$lookup[$item_id]]['tags'][] = $tag;
