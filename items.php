@@ -46,19 +46,6 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search);
 
 ?>
 
-<ul id="item-display-controls-spacer" class="inline-list">
-	<li class="orderby">[new to old]</li>
-	<li class="orderby">[old to new]</li>
-	<li><a href="javascript:flag_all();mark_read()"><strong>Mark all read</strong></a></li>
-	<li><a href="javascript:flag_all()">Flag all</a></li>
-	<li><a href="javascript:unflag_all()">Unflag all</a></li>
-	<li><a href="javascript:toggle_all()">Toggle all</a></li>
-	<li><a href="javascript:mark_read()">Mark flagged read</a></li>
-	<li><a href="javascript:mark_unread()">Mark flagged unread</a></li>
-	<li><a href="javascript:show_all()">Show all</a></li>
-	<li><a href="javascript:hide_all()">Hide all</a></li>
-</ul>
-
 <br style="clear: both"><br />
 
 <p><?php echo $title ?></p> 
