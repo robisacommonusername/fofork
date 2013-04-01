@@ -26,16 +26,13 @@ $fof_connection = 3;
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
 ////////////////////////////////////////////////////////////////////////////////
-function fof_prepare_connection_string(){
-	//hard code for mysql for now - extend this later
-	return 'mysql:host='.FOF_DB_HOST.';dbname='.FOF_DB_DBNAME;
-}
 
 function fof_db_connect(){
     global $fof_connection;
 
 	try {
-		$fof_connection = new PDO(fof_prepare_connection_string(), FOF_DB_USER, FOF_DB_PASS);
+		$connString = FOF_DB_TYPE.':host='.FOF_DB_HOST.';dbname='.FOF_DB_DBNAME;
+		$fof_connection = new PDO($connString, FOF_DB_USER, FOF_DB_PASS);
 		//check if database exists, try to create it if not
 	} catch (PDOException $e) {
 		die('<br><br>Cannot connect to database.  Please update configuration in <b>fof-config.php</b>.  PDO says: <i>' . $e->getMessage() . '</i>');
