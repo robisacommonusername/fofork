@@ -866,10 +866,10 @@ function fof_db_authenticate($user_name, $password){
 
 function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 	global $FOF_COOKIE_TABLE;
-	# clear previous cookie if there is one.  It is possible, though unlikely, that another user may have the same
-	# token value.  Thus we must delete ALL the records with the old token value, then insert the new record
-	# and NOT simply do an update.  This will slightly inconvenience the second user, who will have to (re) log in,
-	# but will guarantee that 2nd user doesn't get access to first user's account.
+	// clear previous cookie if there is one.  It is possible, though unlikely, that another user may have the same
+	// token value.  Thus we must delete ALL the records with the old token value, then insert the new record
+	// and NOT simply do an update.  This will slightly inconvenience the second user, who will have to (re) log in,
+	// but will guarantee that 2nd user doesn't get access to first user's account.
 	if ($oldToken)
 		$result = fof_safe_query("DELETE from $FOF_COOKIE_TABLE where token_hash='%s'", sha1($oldToken));
 	$censors[] = 'XXX token_hash XXX';
@@ -920,14 +920,13 @@ function fof_db_close_session(){
 }
 
 function fof_db_read_session($id){
+	global $FOF_SESSION_TABLE;
 	$censors[] = 'XXX session_id XXX';
     $result = fof_private_safe_query("SELECT data from $FOF_SESSION_TABLE where id='%s'", $censors, $id);
-	if ($result instanceof PDOStatement){
-    	if ($result->rowCount()){
-    		$record = fof_db_get_row($result);
-    		return $record['data'];
-    	}
-	}
+    if ($result->rowCount()){
+    	$record = fof_db_get_row($result);
+    	return $record['data'];
+    }
     return '';
 }
 
@@ -936,7 +935,7 @@ function fof_db_write_session($id, $data){
 	//SEEMS LIKE $fof_connection is getting garbage collected awyay
 	global $FOF_SESSION_TABLE;  
     $access = time();
-    $censors = array(0 => 'XXX session_id XXX');
+    $censors = array('XXX session_id XXX');
 	return fof_private_safe_query("REPLACE into $FOF_SESSION_TABLE VALUES ('%s', '%d', '%s')", $censors, $id, $access, $data);
 }
 

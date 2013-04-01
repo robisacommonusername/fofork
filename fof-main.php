@@ -109,7 +109,7 @@ function require_user()
         	exit();
         }
     }
-    #check user agent hasn't changed
+    //check user agent hasn't changed
 	if (isset($_SESSION['user_agent_hash']) && isset($_SESSION['hash_salt'])){
 		$computed = sha1($_SERVER['HTTP_USER_AGENT'] . $_SESSION['hash_salt']);
 		if ($computed != $_SESSION['user_agent_hash']){
@@ -123,7 +123,7 @@ function require_user()
 		$_SESSION['hash_salt'] = mt_rand();
 		$_SESSION['user_agent_hash'] = sha1($_SERVER['HTTP_USER_AGENT'] . $_SESSION['hash_salt']);
 	}
-	#check for timeout
+	//check for timeout
 	if (isset($_SESSION['last_access'])){
 		if ((time() - $_SESSION['last_access']) > 30*60){
 			//check if the user has a persistent login.  If they
@@ -224,7 +224,6 @@ function fof_compute_CSRF_challenge(){
 function fof_authenticate_CSRF_challenge($response){
 	$user_name = $_SESSION['user_name'];
     $challenge = sha1($user_name . session_id());
-    die("challenge = $challenge, resp= $response, un = $user_name, sessid = ".session_id());
     return ($challenge === $response);
 }
 

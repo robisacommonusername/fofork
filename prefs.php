@@ -21,7 +21,6 @@ if(fof_is_admin() && isset($_POST['adminprefs']) && fof_authenticate_CSRF_challe
 	$prefs->set('manualtimeout', intval($_POST['manualtimeout']));
 	$prefs->set('autotimeout', intval($_POST['autotimeout']));
 	$prefs->set('logging', $_POST['logging'] ? True : False);
-	die('logging is '.$_POST['logging']);
 	$prefs->save();
     	
 	$message .= ' Saved admin prefs.';
