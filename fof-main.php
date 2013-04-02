@@ -505,7 +505,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
      }
    }
    
-   $result = fof_db_get_latest_item_age($user_id);
+   $result = fof_db_get_latest_item_age();
 
    while($row = fof_db_get_row($result))
    {
