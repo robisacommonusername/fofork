@@ -823,12 +823,18 @@ function fof_db_authenticate($user_name, $password){
 
 function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 	global $FOF_COOKIE_TABLE;
-	# clear previous cookie if there is one.  It is possible, though unlikely, that another user may have the same
-	# token value.  Thus we must delete ALL the records with the old token value, then insert the new record
-	# and NOT simply do an update.  This will slightly inconvenience the second user, who will have to (re) log in,
-	# but will guarantee that 2nd user doesn't get access to first user's account.
-	if ($oldToken)
-		$result = fof_safe_query("DELETE from $FOF_COOKIE_TABLE where token_hash='%s'", sha1($oldToken));
+	// clear previous cookie if there is one.  It is possible, though unlikely, that another user may have the same
+	// token value.  Thus we must delete ALL the records with the old token value and all existing records with the
+	// new value, then insert the new record, cannot simply do an update.  
+	//This will slightly inconvenience the second user, who will have to (re) log in,
+	// but will guarantee that 2nd user doesn't get access to first user's account and vice-versa.
+	$query = "DELETE from $FOF_COOKIE_TABLE where token_hash='%s'";
+	$args[] = sha1($newToken);
+	if ($oldToken) {
+		$query .= " or token_hash='%s'";
+		$args[] = sha1($oldToken);
+	}
+	$result = fof_safe_query($query, $args);
 	$censors[] = 'XXX token_hash XXX';
 	$result = fof_private_safe_query("INSERT into $FOF_COOKIE_TABLE (token_hash, user_id, user_agent_hash) VALUES ('%s', %d, '%s')", $censors, sha1($newToken), $uid, sha1($user_agent));
 	return True;
