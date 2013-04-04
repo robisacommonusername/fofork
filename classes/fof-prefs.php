@@ -24,7 +24,7 @@ class FoF_Prefs
         
 		$this->user_id = $user_id;
 
-        $result = fof_safe_query("select user_prefs from $FOF_USER_TABLE where user_id = %d", $user_id);
+        $result = fof_query_log("select user_prefs from $FOF_USER_TABLE where user_id = ?", array($user_id));
         $row = fof_db_get_row($result);
         $prefs = unserialize($row['user_prefs']);
         if(!is_array($prefs)) $prefs = array();
@@ -32,7 +32,7 @@ class FoF_Prefs
         
         if($user_id != 1)
         {
-            $result = fof_safe_query("select user_prefs from $FOF_USER_TABLE where user_id = 1");
+            $result = fof_query_log("select user_prefs from $FOF_USER_TABLE where user_id = 1", null);
             $row = fof_db_get_row($result);
             $admin_prefs = unserialize($row['user_prefs']);
             if(!is_array($admin_prefs)) $admin_prefs = array();
