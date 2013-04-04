@@ -41,7 +41,6 @@ function get_curl_version()
 $php_ok = (function_exists('version_compare') && version_compare(phpversion(), '5.3', '>='));
 $xml_ok = extension_loaded('xml');
 $pcre_ok = extension_loaded('pcre');
-$mysql_ok = extension_loaded('mysql');
 
 $curl_ok = (extension_loaded('curl') && version_compare(get_curl_version(), '7.10.5', '>='));
 $zlib_ok = extension_loaded('zlib');
@@ -95,7 +94,7 @@ $iconv_ok = extension_loaded('iconv');
 <?php
 if($_POST['password'] && $_POST['password'] == $_POST['password2'] )
 {
-	fof_safe_query("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level, salt) values (1, 'admin', 'ABCDEF', 'admin', 'ABCDEF')");
+	fof_query_log("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level, salt) values (1, 'admin', 'ABCDEF', 'admin', 'ABCDEF')", null);
 	fof_db_change_password('admin',$_POST['password']);
 		
 	echo '<center><b>OK!  Setup complete! <a href=".">Login as admin</a>, and start subscribing!</center></b></div></body></html>';
@@ -116,7 +115,7 @@ Checking compatibility...
 if($php_ok) echo "<span class='pass'>PHP ok...</span> ";
 else
 {
-    echo "<br><span class='fail'>Your PHP version is too old!</span>  Feed on Feeds requires at least PHP 4.3.2.  Sorry!";
+    echo "<br><span class='fail'>Your PHP version is too old!</span>  Feed on Feeds requires at least PHP 5.3.  Sorry!";
     echo "</div></body></html>";
     exit;
 }
@@ -133,14 +132,6 @@ if($pcre_ok) echo "<span class='pass'>PCRE ok...</span> ";
 else
 {
     echo "<br><span class='fail'>Your PHP installation is missing the PCRE extension!</span>  This is required by Feed on Feeds.  Sorry!";
-    echo "</div></body></html>";
-    exit;
-}
-
-if($mysql_ok) echo "<span class='pass'>MySQL ok...</span> ";
-else
-{
-    echo "<br><span class='fail'>Your PHP installation is missing the MySQL extension!</span>  This is required by Feed on Feeds.  Sorry!";
     echo "</div></body></html>";
     exit;
 }
@@ -176,7 +167,7 @@ else
 Creating tables...
 <?php
 //test if there's already an installation or a conflicting table name
-$tables = fof_db_query('SHOW TABLES',1);
+$tables = fof_query_log('SHOW TABLES',null);
 $tableNames = array($FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_FEED_TABLE, 
 				$FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, 
 				$FOF_SUBSCRIPTION_TABLE);
@@ -285,65 +276,19 @@ EOQ;
 
 foreach($tables as $table)
 {
-	if(!fof_db_query($table, 1))
+	if(fof_query_log($table, 1, False) === False)
 	{
-		exit ("Can't create table.  MySQL says: <b>" . mysql_error() . "</b><br>" );
+		exit ("Database error: Can't create table $table. <br />" );
 	}
 }
 
-?>
-Tables exist.<hr>
-
-<?php
-$result = fof_db_query("show columns from $FOF_FEED_TABLE like 'feed_image_cache_date'");
-
-if($result->rowCount() == 0)
-{
-
-print "Upgrading schema...";
-
-fof_db_query("ALTER TABLE $FOF_FEED_TABLE ADD `feed_image_cache_date` INT( 11 ) DEFAULT '0' AFTER `feed_image` ;");
-
-print "Done.<hr>";
-}
-?>
-
-
-<?php
-$result = fof_db_query("show columns from $FOF_USER_TABLE like 'user_password_hash'");
-
-if($result->rowCount() == 0)
-{
-
-print "Upgrading schema...";
-
-fof_db_query("ALTER TABLE $FOF_USER_TABLE CHANGE `user_password` `user_password_hash` VARCHAR( 32 ) NOT NULL");
-fof_db_query("update $FOF_USER_TABLE set user_password_hash = md5(concat(user_password_hash, user_name))");
-
-print "Done.<hr>";
-}
-?>
-
-
-<?php
-$result = fof_db_query("show columns from $FOF_FEED_TABLE like 'feed_cache_attempt_date'");
-
-if($result->rowCount() == 0)
-{
-
-print "Upgrading schema...";
-
-fof_db_query("ALTER TABLE $FOF_FEED_TABLE ADD `feed_cache_attempt_date` INT( 11 ) DEFAULT '0' AFTER `feed_cache_date` ;");
-
-print "Done.<hr>";
-}
 ?>
 
 Inserting initial data...
 
 <?php
-fof_db_query("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (1, 'unread')", 1);
-fof_db_query("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (2, 'star')", 1);
+fof_query_log("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (1, 'unread'), (2, 'star')", null, False);
+//fof_query_log("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (2, 'star')", null, False);
 ?>
 
 Done.<hr>
@@ -375,7 +320,7 @@ if(!is_writable( "cache" ))
 Cache directory exists and is writable.<hr>
 
 <?php
-	$result = fof_db_query("select * from $FOF_USER_TABLE where user_name = 'admin'");
+	$result = fof_query_log("select * from $FOF_USER_TABLE where user_name = 'admin'", null);
 	if($result->rowCount() == 0) {
 ?>
 

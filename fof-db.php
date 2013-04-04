@@ -118,17 +118,23 @@ function fof_db_query($sql, $live=0){
     	fof_log($logmessage, 'query (deprecated)');
 	} catch (PDOException $e) {
 		if (!$live) {
-			die('Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? MySQL says: <b>'. $e->getMessage() . '</b>');
+			die('Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? Database says: <b>'. $e->getMessage() . '</b>');
 		}
 	}
 	return $result;
 }
 
-function fof_query_log($sql, $params){
+function fof_query_log($sql, $params, $dieOnErrors=True){
 	global $fof_connection;
 	$t1 = microtime(true);
-	$result = $fof_connection->prepare($sql);
-	$result->execute($params);
+	try {
+		$result = $fof_connection->prepare($sql);
+		$result->execute($params);
+	} catch (PDOException $e) {
+		if ($dieOnErrors){
+			die('Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? Database says: <b>'. $e->getMessage() . '</b>');
+		}
+	}
 	$t2 = microtime(true);
 	$elapsed = $t2 - $t1;
 	$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $result->queryString, $result->rowCount());

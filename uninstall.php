@@ -39,59 +39,13 @@ if($_POST['confirmed'] == 'delete' && fof_authenticate_CSRF_challenge($_POST['CS
 		die('Incorrect password.  Please enter an admin password to proceed');
 	}
 
-$query = <<<EOQ
-DROP TABLE `$FOF_FEED_TABLE`;
-EOQ;
+	$tables = array($FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE,
+				$FOF_SUBSCRIPTION_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE);
+	$allTables = implode(', ', $tables);
+	fof_query_log("DROP TABLE $allTables", null);
 
-fof_db_query($query);
-
-$query = <<<EOQ
-DROP TABLE `$FOF_ITEM_TABLE`;
-EOQ;
-
-fof_db_query($query);
-
-$query = <<<EOQ
-DROP TABLE `$FOF_TAG_TABLE`;
-EOQ;
-
-fof_db_query($query);
-
-$query = <<<EOQ
-DROP TABLE `$FOF_ITEM_TAG_TABLE`;
-EOQ;
-
-fof_db_query($query);
-
-$query = <<<EOQ
-DROP TABLE `$FOF_SUBSCRIPTION_TABLE`;
-EOQ;
-
-fof_db_query($query);
-
-$query = <<<EOQ
-DROP TABLE `$FOF_USER_TABLE`;
-EOQ;
-
-fof_db_query($query);
-
-$query = <<<EOQ
-DROP TABLE `$FOF_COOKIE_TABLE`;
-EOQ;
-
-fof_db_query($query);
-
-$query = <<<EOQ
-DROP TABLE `$FOF_SESSION_TABLE`;
-EOQ;
-
-fof_db_query($query);
-
-
-echo 'Done.  Now just delete this entire directory and we\'ll forget this ever happened.';
-}
-elseif (!isset($_POST['confirmed']))
-{
+	echo 'Done.  Now just delete this entire directory and we\'ll forget this ever happened.';
+} elseif (!isset($_POST['confirmed'])) {
 ?>
 Please be aware the uninstalling will delete all of Feed on Feeds' database tables. <br />
 This is your absolute last chance.  Do you really want to uninstall Feed on Feeds? <br /><br />

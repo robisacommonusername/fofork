@@ -970,13 +970,13 @@ function fof_update_feed($id)
         $count = count($ids);
         fof_log('items in feed: ' . $count);
 
-        if(count($ids) != 0)
-        {
-            $in = implode ( ", ", $ids );
+        if($count) {
+            $in_placeholders = implode(', ', array_fill(0,$count,'?'));
+           	array_unshift($ids, $feed_id);
             
             global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
-            $sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = $feed_id and item_id not in ($in) order by item_cached desc limit $count, 1000000000";
-            $result = fof_db_query($sql);
+            $sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = ? and item_id not in ($in_placeholders) order by item_cached desc limit $count, 1000000000"; 
+            $result = fof_query_log($sql, $ids);
             
             while($row = fof_db_get_row($result))
             {
@@ -990,11 +990,10 @@ function fof_update_feed($id)
             }
             
             $ndelete = count($delete);
-            if(count($delete) != 0)
-            {
-                $in = implode(", ", $delete); 
-                fof_db_query( "delete from $FOF_ITEM_TABLE where item_id in ($in)" );
-                fof_db_query( "delete from $FOF_ITEM_TAG_TABLE where item_id in ($in)" );
+            if($ndelete) {
+            	$in_placeholders = implode(', ', array_fill(0,$ndelete,'?'));
+                fof_query_log("DELETE from $FOF_ITEM_TABLE where item_id in ($in_placeholders)", $delete);
+                fof_query_log("DELETE from $FOF_ITEM_TAG_TABLE where item_id in ($in_placeholders)", $delete);
             }
         }
     }
