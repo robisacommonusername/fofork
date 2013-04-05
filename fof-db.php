@@ -21,8 +21,6 @@ $FOF_USER_TABLE = FOF_USER_TABLE;
 $FOF_COOKIE_TABLE = FOF_COOKIE_TABLE;
 $FOF_SESSION_TABLE = FOF_SESSION_TABLE;
 
-$fof_connection = 3;
-
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +42,7 @@ function fof_db_optimize()
 {
 	global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE;
     
-	fof_db_query("optimize table $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE");
+	fof_query_log("optimize table $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE", null);
 }
 
 //DEPRECTATED - provided for compatability - aim to eliminate these.
@@ -124,9 +122,8 @@ function fof_db_query($sql, $live=0){
 	return $result;
 }
 
-function fof_query_log($sql, $params, $dieOnErrors=True){
+function fof_query($sql, $params, $dieOnErrors=True){
 	global $fof_connection;
-	$t1 = microtime(true);
 	try {
 		$result = $fof_connection->prepare($sql);
 		$result->execute($params);
@@ -135,13 +132,36 @@ function fof_query_log($sql, $params, $dieOnErrors=True){
 			die('Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? Database says: <b>'. $e->getMessage() . '</b>');
 		}
 	}
+	return $result;
+}
+
+function fof_query_log($sql, $params, $dieOnErrors=True){
+	$t1 = microtime(true);
+	$result = fof_query($sql, $params, $dieOnErrors);
 	$t2 = microtime(true);
 	$elapsed = $t2 - $t1;
-	$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $result->queryString, $result->rowCount());
+	$query = fof_fix_query_string($sql, $params);
+	$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $query, $result->rowCount());
 	fof_log($logmessage, 'pdo query');
 	return $result;
 }
 
+function fof_query_log_private($sql, $params, $censors){
+	$t1 = microtime(true);
+	$result = fof_query($sql, $params);
+	$t2 = microtime(true);
+	$elapsed = $t2 - $t1;
+	foreach ($censors as $field => $censorText){
+		$params[$field] = $censorText;
+	}
+	$query = fof_fix_query_string($sql, $params);
+	$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $query, $result->rowCount());
+	fof_log($logmessage, 'private pdo query');
+	return $result;
+	
+}
+
+//consider deleting
 function fof_prepare_query_log($sql){
 	global $fof_connection;
 	$stmnt = $fof_connection->prepare($sql);
@@ -192,7 +212,8 @@ function fof_query_log_get_id($sql, $params, $table, $id_param){
 	}
 	$t2 = microtime(true);
 	$elapsed = $t2 - $t1;
-	$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $result->queryString, $result->rowCount());
+	$queryString = fof_fix_query_string($sql, $params);
+	$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $queryString, $result->rowCount());
 	fof_log($logmessage, 'pdo query');
 	return array($result, $id);
 }
@@ -203,6 +224,24 @@ function fof_db_get_row($result) {
     	$ret = $result->fetch(PDO::FETCH_ASSOC);
     }
     return $ret;
+}
+
+function fof_fix_query_string($query, $subs){
+	//turn pdo placeholders into the full query string with params
+	//substituted (used for logging)
+	return preg_replace_callback('/(:\\w*)|[?]/',function($matches) use($subs){
+		static $i = 0;
+		if ($matches[0] === '?'){
+			return $subs[$i++];
+		} else {
+			$paramName = substr($matches[0], 1);
+			if (array_key_exists($paramName, $subs)){
+				return $subs[$paramName];
+			} else {
+				return '?';
+			}
+		}
+	}, $query);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -859,8 +898,9 @@ function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 		$query .= " or token_hash=?";
 	}
 	$result = fof_query_log($query, $args);
-	$censors[] = 'XXX token_hash XXX';
-	$result = fof_private_safe_query("INSERT into $FOF_COOKIE_TABLE (token_hash, user_id, user_agent_hash) VALUES ('%s', %d, '%s')", $censors, sha1($newToken), $uid, sha1($user_agent));
+	$result = fof_query_log_private("INSERT into $FOF_COOKIE_TABLE (token_hash, user_id, user_agent_hash) VALUES (:tokenhash, :userid, :useragenthash)",
+									array('tokenhash' => sha1($newToken), 'userid' => $uid, 'useragenthash' => sha1($user_agent)),
+									array('tokenhash' => 'XXX token hash XXX'));
 	return True;
 }
 
@@ -909,8 +949,9 @@ function fof_db_close_session(){
 
 function fof_db_read_session($id){
 	global $FOF_SESSION_TABLE;
-	$censors[] = 'XXX session_id XXX';
-    $result = fof_private_safe_query("SELECT data from $FOF_SESSION_TABLE where id='%s'", $censors, $id);
+    $result = fof_query_log_private("SELECT data from $FOF_SESSION_TABLE where id = :sessid",
+    								array('sessid' => $id),
+    								array('sessid' => 'XXX session id XXX'));
     if ($result->rowCount()){
     	$record = fof_db_get_row($result);
     	return $record['data'];
@@ -920,16 +961,17 @@ function fof_db_read_session($id){
 
 function fof_db_write_session($id, $data){
 	fof_db_connect(); //I DO NOT UNDERSTAND WHY THIS IS NECESSARY
-	//SEEMS LIKE $fof_connection is getting garbage collected awyay
+	//SEEMS LIKE $fof_connection is getting garbage collected away
 	global $FOF_SESSION_TABLE;  
     $access = time();
-    $censors = array('XXX session_id XXX');
-	return fof_private_safe_query("REPLACE into $FOF_SESSION_TABLE VALUES ('%s', '%d', '%s')", $censors, $id, $access, $data);
+    return fof_query_log_private("REPLACE into $FOF_SESSION_TABLE VALUES (:sessid, :access, :data)",
+    							array('sessid' => $id, 'access' => $access, 'data' => $data),
+    							array('sessid' => 'XXX session id XXX'));
 }
 
 function fof_db_destroy_session($id){
 	global $FOF_SESSION_TABLE;
-    return fof_query_log("DELETE from $FOF_SESSION_TABLE where id=?", array($id));
+    return fof_query_log_private("DELETE from $FOF_SESSION_TABLE where id=?", array($id), array('XXX session id XXX'));
 }
 
 function fof_db_clean_session($max){
