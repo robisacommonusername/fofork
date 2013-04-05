@@ -38,90 +38,6 @@ function fof_db_connect(){
 	return $fof_connection;
 }
 
-function fof_db_optimize()
-{
-	global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE;
-    
-	fof_query_log("optimize table $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE", null);
-}
-
-//DEPRECTATED - provided for compatability - aim to eliminate these.
-function fof_safe_query(/* $query, [$args...]*/){
-	global $fof_connection;
-    $args  = func_get_args();
-    $query = array_shift($args);
-    if(is_array($args[0])) $args = $args[0];
-	//transform the sprintf % syntax into PDO placeholders.
-	$query = preg_replace("/'?%[sdfg]'?/", '?', $query);
-	
-	$stmnt = null;
-	$t1 = microtime(true);
-	try {
-		$stmnt = $fof_connection->prepare($query);
-		$stmnt->execute($args);
-		$t2 = microtime(true);
-		$elapsed = $t2 - $t1;
-		$num = $stmnt->rowCount();
-		$log_msg = sprintf('%.3f: [%s] (%d affected)', $elapsed, $query, $num);
-		fof_log($log_msg, 'safe query (deprecated)');
-	} catch (PDOException $e) {}
-    return $stmnt;
-}
-
-//DEPRECATED
-function fof_private_safe_query(/*$query, $substitutions,[$args]*/){
-	//essentially does the same thing as fof_safe_query, except that it replaces
-	//the substitutions with XXXX in the log (ie so we don't expose session ids, etc)
-	global $fof_connection;
-	$args = func_get_args();
-	$query = array_shift($args);
-	$subs = array_shift($args);
-	if (is_array($args[0])) $args = $args[0];
-	//convert placeholder syntax
-	$pdo_query = preg_replace("/'?%[sdfg]'?/", '?', $query);
-	$censored_args = array_replace($args, $subs);
-	$censored_query = vsprintf($query, $censored_args);
-	
-	$stmnt = null;
-	$t1 = microtime(true);
-	try {
-		$stmnt = $fof_connection->prepare($pdo_query);
-		$stmnt->execute($args);
-		$t2 = microtime(true);
-		$num = $stmnt->rowCount();
-		$elapsed = $t2 - $t1;
-		$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $censored_query, $num);
-    	fof_log($logmessage, 'private query (deprecated)');
-	} catch (PDOException $e) {}
-	
-	return $stmnt;
-	
-}
-//DEPRECATED
-function fof_db_query($sql, $live=0){   
-    global $fof_connection;
-    
-    $t1 = microtime(true);
-	$result = null;
-	try {
-		$result = $fof_connection->query($sql);   
-
-    	if ($result instanceof PDOStatement) {
-			$num = $result->rowCount();
-   		}
-    
-    	$t2 = microtime(true);
-    	$elapsed = $t2 - $t1;
-    	$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $sql, $num);
-    	fof_log($logmessage, 'query (deprecated)');
-	} catch (PDOException $e) {
-		if (!$live) {
-			die('Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? Database says: <b>'. $e->getMessage() . '</b>');
-		}
-	}
-	return $result;
-}
-
 function fof_query($sql, $params, $dieOnErrors=True){
 	global $fof_connection;
 	try {
@@ -159,22 +75,6 @@ function fof_query_log_private($sql, $params, $censors){
 	fof_log($logmessage, 'private pdo query');
 	return $result;
 	
-}
-
-//consider deleting
-function fof_prepare_query_log($sql){
-	global $fof_connection;
-	$stmnt = $fof_connection->prepare($sql);
-	$retf = function($params) use($stmnt){
-		$t1 = microtime(true);
-		$stmnt->execute($params);
-		$t2 = microtime(true);
-		$elapsed = $t2 - $t1;
-		$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $stmnt->queryString, $stmnt->rowCount());
-		fof_log($logmessage, 'pdo query');
-		return $stmnt;
-	};
-	return $retf;
 }
 
 function fof_query_log_get_id($sql, $params, $table, $id_param){
@@ -218,14 +118,6 @@ function fof_query_log_get_id($sql, $params, $table, $id_param){
 	return array($result, $id);
 }
 
-function fof_db_get_row($result) {
-	$ret = array();
-    if ($result instanceof PDOStatement){
-    	$ret = $result->fetch(PDO::FETCH_ASSOC);
-    }
-    return $ret;
-}
-
 function fof_fix_query_string($query, $subs){
 	//turn pdo placeholders into the full query string with params
 	//substituted (used for logging)
@@ -242,6 +134,20 @@ function fof_fix_query_string($query, $subs){
 			}
 		}
 	}, $query);
+}
+
+function fof_db_get_row($result) {
+	$ret = array();
+    if ($result instanceof PDOStatement){
+    	$ret = $result->fetch(PDO::FETCH_ASSOC);
+    }
+    return $ret;
+}
+
+function fof_db_optimize() {
+	global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE;
+    
+	fof_query_log("optimize table $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE", null);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -385,9 +291,10 @@ function fof_db_delete_subscription($user_id, $feed_id) {
         $items[] = $r['item_id'];
     }
     
-    $itemclause = join(", ", $items); //no sql inj, these are trusted
+    $placeholders = implode(', ', array_fill(0,count($items),'?'));
+    array_unshift($items, $user_id);
     fof_query_log("delete from $FOF_SUBSCRIPTION_TABLE where feed_id = ? and user_id = ?", array($feed_id, $user_id));
-    fof_query_log("delete from $FOF_ITEM_TAG_TABLE where user_id = ? and item_id in ($itemclause)", array($user_id));
+    fof_query_log("delete from $FOF_ITEM_TAG_TABLE where user_id = ? and item_id in ($placeholders)", $items);
 }
 
 function fof_db_delete_feed($feed_id) {
@@ -519,19 +426,16 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
     }
     
     //can't do implode($ids, ', '), because PDO will escape most of the arguments (except the first)
-    $retf = fof_prepare_query_log("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = :id and $FOF_ITEM_TAG_TABLE.user_id = :userid");
+    $placeholders = implode(', ', array_fill(0,$i,'?'));
+    $ids[] = $user_id;
     
-    $params = array('userid' => $user_id);
-    foreach ($ids as $id){
-    	$params['id'] = $id;
-    	$result = $retf($params);
-    	while ($row = fof_db_get_row($result)){
-    		$item_id = $row['item_id'];
-        	$tag = $row['tag_name'];
-        	$array[$lookup[$item_id]]['tags'][] = $tag;
-    	}
+    $result = fof_query_log("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id in ($placeholders) and $FOF_ITEM_TAG_TABLE.user_id = ?", $ids);
+    
+    while ($row = fof_db_get_row($result)){
+    	$item_id = $row['item_id'];
+    	$tag = $row['tag_name'];
+    	$array[$lookup[$item_id]]['tags'][] = $tag;
     }
-
     return $array;
 }
 
