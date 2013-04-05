@@ -864,8 +864,6 @@ function fof_db_read_session($id){
 }
 
 function fof_db_write_session($id, $data){
-	fof_db_connect(); //I DO NOT UNDERSTAND WHY THIS IS NECESSARY
-	//SEEMS LIKE $fof_connection is getting garbage collected away
 	global $FOF_SESSION_TABLE;  
     $access = time();
     return fof_query_log_private("REPLACE into $FOF_SESSION_TABLE VALUES (:sessid, :access, :data)",

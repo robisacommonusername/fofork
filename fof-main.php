@@ -45,6 +45,9 @@ session_set_save_handler('fof_db_open_session',
 if(!$fof_installer)
 {
 	session_start();
+	//have to call session_write_close on shutdown, otherwise
+	//the database connection gets garbage collected away
+	register_shutdown_function('session_write_close');
     if(!$fof_no_login)
     {
         require_user();
