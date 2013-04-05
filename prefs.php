@@ -318,7 +318,7 @@ Allow manual feed updates every <input size="4" type="string" name="manualtimeou
 </form>
 
 <?php
-	$result = fof_db_query("select user_name from $FOF_USER_TABLE where user_id > 1");
+	$result = fof_query_log("select user_name from $FOF_USER_TABLE where user_id > 1", null);
 	
 	while($row = fof_db_get_row($result))
 	{

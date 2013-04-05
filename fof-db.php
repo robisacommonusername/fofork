@@ -157,6 +157,46 @@ function fof_prepare_query_log($sql){
 	return $retf;
 }
 
+function fof_query_log_get_id($sql, $params, $table, $id_param){
+	//performs a query, returning the result and the last insert id
+	//while trying to prevent race conditions
+	global $fof_connection;
+	$t1 = microtime(true);
+	try {
+		$fof_connection->beginTransaction();
+		$result = $fof_connection->prepare($sql);
+		$result->execute($params);
+		//get the id of the last insert
+		$id = null;
+		switch (FOF_DB_TYPE){
+			case 'mysql':
+			$id = $fof_connection->lastInsertId();
+			break;
+			
+			case 'pgsql':
+			$id = $fof_connection->lastInsertId("{$table}_{$id_param}_seq");
+			break;
+			
+			default:
+			$temp_res = $fof_connection->prepare("SELECT :id_param FROM :table ORDER BY :id_param DESC limit 0,1");
+			$temp_res->execute(array('table' => $table,
+									'id_param' => $id_param));
+			$arr = $temp_res->fetch(PDO::FETCH_ASSOC);
+			$id = $arr[$id_param];
+		}
+		$fof_connection->commit();
+		
+	} catch (PDOException $e) {
+		$fof_connection->rollBack();
+		die('Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? Database says: <b>'. $e->getMessage() . '</b>');
+	}
+	$t2 = microtime(true);
+	$elapsed = $t2 - $t1;
+	$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $result->queryString, $result->rowCount());
+	fof_log($logmessage, 'pdo query');
+	return array($result, $id);
+}
+
 function fof_db_get_row($result) {
 	$ret = array();
     if ($result instanceof PDOStatement){
@@ -283,9 +323,12 @@ function fof_db_get_feed_by_id($feed_id) {
 function fof_db_add_feed($url, $title, $link, $description) {
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $fof_connection;
     
-    fof_query_log("INSERT into $FOF_FEED_TABLE (feed_url,feed_title,feed_link,feed_description) values (?, ?, ?, ?)", array($url, $title, $link, $description));
+    list($res,$id) =fof_query_log_get_id("INSERT into $FOF_FEED_TABLE (feed_url,feed_title,feed_link,feed_description) values (?, ?, ?, ?)", 
+    									array($url, $title, $link, $description),
+    									$FOF_FEED_TABLE,
+    									'feed_id');
     
-    return($fof_connection->lastInsertId());
+    return $id;
 }
 
 function fof_db_add_subscription($user_id, $feed_id) {
@@ -333,24 +376,16 @@ function fof_db_find_item($feed_id, $item_guid) {
     }
 }
 
+//this function gets called a lot.  Would be nice to optimise it
 function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $published, $updated) {
-	//this function tends to get called inside a loop, so is a good target for optimisation
     global $FOF_ITEM_TABLE, $fof_connection;
     
-    //save prepared query, and reuse
-    static $prepared = false;
-    static $query_and_log = null;
-    if (!$prepared) {
-    	$query_and_log = fof_prepare_query_log("insert into $FOF_ITEM_TABLE (feed_id, item_link, item_guid, item_title, item_content, item_cached, item_published, item_updated) values (?, ?, ? ,?, ?, ?, ?, ?)");
-    	$prepared = true;
-    }
+    list($res,$id) = fof_query_log_get_id("insert into $FOF_ITEM_TABLE (feed_id, item_link, item_guid, item_title, item_content, item_cached, 	item_published, item_updated) values (?, ?, ? ,?, ?, ?, ?, ?)",
+    										array($feed_id, $link, $guid, $title, $content, $cached, $published, $updated),
+    										$FOF_ITEM_TABLE,
+    										'item_id');
     
-    $query_and_log(array($feed_id, $link, $guid, $title, $content, $cached, $published, $updated));
-    
-    //fof_query_log("insert into $FOF_ITEM_TABLE (feed_id, item_link, item_guid, item_title, item_content, item_cached, item_published, item_updated) values (?, ?, ? ,?, ?, ?, ?, ?)",
-    //array($feed_id, $link, $guid, $title, $content, $cached, $published, $updated));
-    
-    return($fof_connection->lastInsertId());
+    return $id;
 }
 
 function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL) {
@@ -596,9 +631,12 @@ function fof_db_get_tag_id_map() {
 function fof_db_create_tag($user_id, $tag) {
     global $FOF_TAG_TABLE, $fof_connection;
     
-    fof_query_log("insert into $FOF_TAG_TABLE (tag_name) values (?)", array($tag));
+    list($res,$id) =fof_query_log_get_id("insert into $FOF_TAG_TABLE (tag_name) values (?)", 
+    									array($tag),
+    									$FOF_TAG_TABLE,
+    									'tag_id');
     
-    return($fof_connection->lastInsertId());
+    return $id;
 }
 
 function fof_db_get_tag_by_name($user_id, $tag) {
