@@ -967,38 +967,12 @@ function fof_update_feed($id)
     $p =& FoF_Prefs::instance();
     $admin_prefs = $p->admin_prefs;
     
-    if($admin_prefs['purge'] != "")
-    {
+    if($admin_prefs['purge'] != "") {
         fof_log('purge is ' . $admin_prefs['purge']);
         $count = count($ids);
         fof_log('items in feed: ' . $count);
 
-        if($count) {
-            $in_placeholders = implode(', ', array_fill(0,$count,'?'));
-           	array_unshift($ids, $feed_id);
-            
-            global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
-            $sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = ? and item_id not in ($in_placeholders) order by item_cached desc limit $count, 1000000000"; 
-            $result = fof_query_log($sql, $ids);
-            
-            while($row = fof_db_get_row($result))
-            {
-                if($row['item_cached'] < (time() - ($admin_prefs['purge'] * 24 * 60 * 60)))
-                {
-                    if(!fof_item_has_tags($row['item_id']))
-                    {		      
-                        $delete[] = $row['item_id'];
-                    }
-                }
-            }
-            
-            $ndelete = count($delete);
-            if($ndelete) {
-            	$in_placeholders = implode(', ', array_fill(0,$ndelete,'?'));
-                fof_query_log("DELETE from $FOF_ITEM_TABLE where item_id in ($in_placeholders)", $delete);
-                fof_query_log("DELETE from $FOF_ITEM_TAG_TABLE where item_id in ($in_placeholders)", $delete);
-            }
-        }
+        fof_db_purge_feed($ids, $feed_id, $admin_prefs['purge']);
     }
     
     unset($rss);

@@ -304,6 +304,37 @@ function fof_db_delete_feed($feed_id) {
     fof_query_log("delete from $FOF_ITEM_TABLE where feed_id = ?", array($feed_id));
 }
 
+function fof_db_purge_feed($ignoreable_items, $feed_id, $purge_dats){
+	global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
+	
+	$count = count($ignoreable_items);
+	if ($count) {
+		$in_placeholders = implode(', ', array_fill(0,$count,'?'));
+    	array_unshift($ignoreable_items, $feed_id);
+    	$sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = ? and item_id not in ($in_placeholders) order by item_cached desc limit $count, 1000000000";
+    } else {
+    	$ignoreable_items = array($feed_id);
+    	$sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = ? order by item_cached desc limit $count, 1000000000";
+    }
+    
+    $result = fof_query_log($sql, $ignoreable_items);
+            
+    while($row = fof_db_get_row($result)) {
+		if($row['item_cached'] < (time() - ($purge_days * 24 * 60 * 60))) {
+			if(!fof_item_has_tags($row['item_id'])) {		      
+				$delete[] = $row['item_id'];
+			}
+		}
+	}
+            
+	$ndelete = count($delete);
+	if($ndelete) {
+		$in_placeholders = implode(', ', array_fill(0,$ndelete,'?'));
+		fof_query_log("DELETE from $FOF_ITEM_TABLE where item_id in ($in_placeholders)", $delete);
+		fof_query_log("DELETE from $FOF_ITEM_TAG_TABLE where item_id in ($in_placeholders)", $delete);
+	}
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Item level stuff
