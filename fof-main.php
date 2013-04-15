@@ -1045,11 +1045,6 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
     }
 }
 
-function fof_item_has_tags($item_id)
-{
-	return fof_db_item_has_tags($item_id);
-}
-
 function fof_init_plugins()
 {
 	global $fof_item_filters, $fof_item_prefilters, $fof_tag_prefilters, $fof_plugin_prefs;

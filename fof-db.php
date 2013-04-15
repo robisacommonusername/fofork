@@ -304,7 +304,7 @@ function fof_db_delete_feed($feed_id) {
     fof_query_log("delete from $FOF_ITEM_TABLE where feed_id = ?", array($feed_id));
 }
 
-function fof_db_purge_feed($ignoreable_items, $feed_id, $purge_dats){
+function fof_db_purge_feed($ignoreable_items, $feed_id, $purge_days){
 	global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
 	
 	$count = count($ignoreable_items);
