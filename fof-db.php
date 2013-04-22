@@ -312,10 +312,12 @@ function fof_db_delete_subscription($user_id, $feed_id) {
 }
 
 function fof_db_delete_feed($feed_id) {
-    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE;
+    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE;
     
-    fof_query_log("delete from $FOF_FEED_TABLE where feed_id = ?", array($feed_id));
-    fof_query_log("delete from $FOF_ITEM_TABLE where feed_id = ?", array($feed_id));
+    $fid_array = array($feed_id);
+    fof_query_log("DELETE from $FOF_FEED_TABLE where feed_id = ?", $fid_array);
+    fof_query_log("DELETE from $FOF_ITEM_TABLE where feed_id = ?", $fid_array);
+    fof_query_log("DELETE from $FOF_SUBSCRIPTION_TABLE where feed_id = ?", $fid_array);
 }
 
 function fof_db_purge_feed($ignoreable_items, $feed_id, $purge_days){
@@ -751,8 +753,6 @@ function fof_db_mark_read($user_id, $items) {
 }
 
 function fof_db_mark_feed_read($user_id, $feed_id) {
-	//this is the sort of function that could benefit from a better way
-	//of storing the tags
     global $FOF_ITEM_TAG_TABLE;
     
     $result = fof_db_get_items($user_id, $feed_id, $what="all");
