@@ -824,6 +824,7 @@ function fof_get_subscribed_users($feed_id)
    return(fof_db_get_subscribed_users($feed_id));
 }
 
+/*
 function fof_mark_item_unread($feed_id, $id)
 {
    $result = fof_get_subscribed_users($feed_id);
@@ -835,6 +836,7 @@ function fof_mark_item_unread($feed_id, $id)
    
    fof_db_mark_item_unread($users, $id);
 }
+*/
 
 function fof_parse($url)
 {
@@ -875,8 +877,7 @@ function fof_apply_tags($feed_id, $item_id)
 }
 */
 
-function fof_update_feed($id)
-{
+function fof_update_feed($id) {
     if(!$id) return 0;
     
     $feed = fof_db_get_feed_by_id($id);
@@ -915,17 +916,17 @@ function fof_update_feed($id)
     fof_db_feed_update_metadata($id, $sub, $title, $rss->get_link(), $rss->get_description(), $image, $image_cache_date );
     
     $feed_id = $feed['feed_id'];
-    $n = 0;
     
     $items = $rss->get_items();
     if($items) {
- 		//add the items to the db
+ 		//add the items to the db and mark as unread
         $ids = fof_db_add_items($feed_id, $items);
         
         //apply any necessary subscription tags
         fof_db_apply_subscription_tags($feed_id, $ids);
         
     }
+    $n = count($ids);
 
     // optionally purge old items -  if 'purge' is set we delete items that are not
     // unread or starred, not currently in the feed or within sizeof(feed) items
@@ -933,13 +934,12 @@ function fof_update_feed($id)
     
     $p =& FoF_Prefs::instance();
     $admin_prefs = $p->admin_prefs;
-    
+    $ndelete = 0;
     if($admin_prefs['purge'] != "") {
         fof_log('purge is ' . $admin_prefs['purge']);
-        $count = count($ids);
-        fof_log('items in feed: ' . $count);
+        fof_log("items in feed: $n");
 
-        fof_db_purge_feed($ids, $feed_id, $admin_prefs['purge']);
+        $ndelete = fof_db_purge_feed($ids, $feed_id, $admin_prefs['purge']);
     }
     
     unset($rss);
@@ -949,14 +949,14 @@ function fof_update_feed($id)
     $log = "feed update complete, $n new items, $ndelete items purged";
     if($admin_prefs['purge'] == "")
     {
-        $log .= " (purging disabled)";
+        $log .= ' (purging disabled)';
     }
-    fof_log($log, "update");
+    fof_log($log, 'update');
 
-    return array($n, "");
+    return array($n, '');
 }
 
-function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
+function fof_apply_plugin_tags($feed_id, $item_id = null, $user_id = null)
 {
     $users = array();
 
