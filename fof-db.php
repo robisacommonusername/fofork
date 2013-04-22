@@ -617,6 +617,7 @@ function fof_db_apply_subscription_tags($feed_id, $ids) {
     while ($row = fof_db_get_row($result)) {
     	$prefs = unserialize($row['subscription_prefs']);
         $tags = $prefs['tags'];
+        if (!is_array($tags)) continue;
         foreach ($ids as $item_id) {
         	foreach ($tags as $tag_id){
         		$values[] = sprintf('(%d, %d, %d)', $row['user_id'], $item_id, $tag_id);
