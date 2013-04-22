@@ -78,7 +78,6 @@ function fof_query_log_private($sql, $params, $censors){
 }
 
 //returns a closure that can re-execute a prepared statement
-/*
 function fof_prepare_query_log($sql){
 	global $fof_connection;
 	$stmnt = $fof_connection->prepare($sql);
@@ -86,12 +85,11 @@ function fof_prepare_query_log($sql){
 		$t1 = microtime(true);
 		$result = $stmnt->execute($params);
 		$t2 = microtime(true);
-		$logmessage = sprintf('%.3f: [%s] (%d affected)', $t2 - $t1, $stmnt->queryString, $result->rowCount());
+		$logmessage = sprintf('%.3f: [%s] (%d affected)', $t2 - $t1, $stmnt->queryString, $stmnt->rowCount());
 		fof_log($log_message, 'prepared pdo query');
 		return $result;
 	};
 }
-*/
 
 function fof_query_log_get_id($sql, $params, $table, $id_param){
 	//performs a query, returning the result and the last insert id
@@ -335,9 +333,13 @@ function fof_db_purge_feed($ignoreable_items, $feed_id, $purge_days){
     
     $result = fof_query_log($sql, $ignoreable_items);
             
+    //items older than purge age which HAVE NOT been tagged will be deleted
+    $now = time();
+    $item_num_tags = fof_prepare_query_log("select count(*) as \"count\" from $FOF_ITEM_TAG_TABLE where item_id=? and tag_id <= 2");
     while($row = fof_db_get_row($result)) {
-		if($row['item_cached'] < (time() - ($purge_days * 24 * 60 * 60))) {
-			if(!fof_db_item_has_tags($row['item_id'])) {		      
+		if($row['item_cached'] < ($now - ($purge_days * 24 * 60 * 60))) {
+			$num = fof_db_get_row($item_num_tags(array($row['item_id'])));
+			if(!$num['count']) {		      
 				$delete[] = $row['item_id'];
 			}
 		}
@@ -384,14 +386,15 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
 //not for production use yet
 function fof_db_add_items($feed_id, $items) {
 	//items is an array of simplepie item objects
+	
 	if (count($items) == 0){
 		return array();
 	}
 	
 	//the combination of feed_id + item_guid is unique, but neither the item_guid or the feed_id are unique
-	//this makes it hard to do on duplicate key update
-	global $FOF_ITEM_TABLE, $fof_connection;
+	//this makes it hard to do on duplicate key update.  grrr...
 	
+	global $FOF_ITEM_TABLE, $fof_connection;
 	//technically need to do all queries in a transaction to prevent race conditions
 	$fof_connection->beginTransaction();
 	
@@ -404,10 +407,10 @@ function fof_db_add_items($feed_id, $items) {
 		$existingGuids[$row['item_guid']] = True;
 	}
 	
-	$newItems = array_filter($items, function($item) use($existingGuids){
+	$newItems = array_values(array_filter($items, function($item) use($existingGuids){
 		$guid = $item->get_id() ? $item->get_id() : $item->get_permalink();
 		return !array_key_exists($guid, $existingGuids);
-	});
+	}));
 	
 	if (count($newItems) == 0){
 		$fof_connection->commit();
@@ -417,7 +420,7 @@ function fof_db_add_items($feed_id, $items) {
 	//now insert the new items
 	$now = time();
 	$placeholder = "($fid, ?, ?, ?, ?, $now, ?, ?)";
-	$placeholders = implode(', ', array_fill(0, count($items), $placeholder));
+	$placeholders = implode(', ', array_fill(0, count($newItems), $placeholder));
 	$params = array_reduce($newItems, function($body, $curr){
 		$link = $curr->get_permalink();
 		$guid = $curr->get_id();
@@ -429,12 +432,12 @@ function fof_db_add_items($feed_id, $items) {
 			$date = time();
 		}
 		return array_merge($body, array($link, $guid, $curr->get_title(), $curr->get_content(), $date, $date));
-	}, array()); 
+	}, array());
 	fof_query_log("INSERT into $FOF_ITEM_TABLE (feed_id, item_link, item_guid, item_title, item_content, item_cached, item_published, item_updated) values $placeholders", $params);
 	
 	//need to get the ids of the added items.  on pgsql, could have just used "returning item_id"
 	$guids = array_map(function($item) {return $item->get_id() ? $item->get_id() : $item->get_permalink();}, $newItems);
-	$guid_placeholders = implode(',', array_fill(0,count($guids),'?'));
+	$guid_placeholders = implode(', ', array_fill(0,count($guids),'?'));
 	$result = fof_query_log("SELECT item_id from $FOF_ITEM_TABLE where feed_id = $fid and item_guid in ($guid_placeholders)", $guids);
 	
 	//commit transaction
@@ -538,8 +541,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
         
         $i++;
     }
-    
-    //can't do implode($ids, ', '), because PDO will escape most of the arguments (except the first)
+
     $placeholders = implode(', ', array_fill(0,$i,'?'));
     $ids[] = $user_id;
     
@@ -611,7 +613,9 @@ function fof_db_apply_subscription_tags($feed_id, $ids) {
     		}
     	}
     }
+    set_error_handler(function() use($values) {var_dump($values);});
     $allValues = implode(', ', $values);
+    restore_error_handler();
     fof_query_log("INSERT into $FOF_ITEM_TAG_TABLE (user_id, item_id, tag_id) values $allValues", null);
 }
 
