@@ -272,7 +272,7 @@ function fof_get_tags($user_id)
     return $tags;
 }
 
-function fof_get_item_tags($user_id, $item_id)
+/*function fof_get_item_tags($user_id, $item_id)
 {
 	$result = fof_db_get_item_tags($user_id, $item_id);
    
@@ -284,7 +284,7 @@ function fof_get_item_tags($user_id, $item_id)
     }
     
 	return $tags;
-}
+}*/
 
 function fof_tag_feed($user_id, $feed_id, $tag)
 {
@@ -852,6 +852,7 @@ function fof_parse($url)
 	return $pie;
 }
 
+/*
 function fof_apply_tags($feed_id, $item_id)
 {
     global $fof_subscription_to_tags;
@@ -872,6 +873,7 @@ function fof_apply_tags($feed_id, $item_id)
         }
     }
 }
+*/
 
 function fof_update_feed($id)
 {
@@ -915,49 +917,14 @@ function fof_update_feed($id)
     $feed_id = $feed['feed_id'];
     $n = 0;
     
-    if($rss->get_items())
-    {
-        foreach($rss->get_items() as $item)
-        {
-            $link = $item->get_permalink();
-            $title = $item->get_title();
-            $content = $item->get_content();
-            $date = $item->get_date('U');
-            if(!$date) $date = time();
-            $item_id = $item->get_id();
-            
-            if(!$item_id)
-            {
-                $item_id = $link;
-            }
-            
-            $id = fof_db_find_item($feed_id, $item_id);
-
-            if($id == NULL)
-            {                
-                $n++;
-                
-                global $fof_item_prefilters;
-                foreach($fof_item_prefilters as $filter)
-                {
-                    list($link, $title, $content) = $filter($item, $link, $title, $content);
-                }
-                
-                $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date);
-                fof_apply_tags($feed_id, $id);
-
-                $republished = false;
-
-                if(!$republished)
-                {
-                    fof_mark_item_unread($feed_id, $id);                
-                }
-
-				fof_apply_plugin_tags($feed_id, $id, NULL);
-            }
-            
-            $ids[] = $id;
-        }
+    $items = $rss->get_items();
+    if($items) {
+ 		//add the items to the db
+        $ids = fof_db_add_items($feed_id, $items);
+        
+        //apply any necessary subscription tags
+        fof_db_apply_subscription_tags($feed_id, $ids);
+        
     }
 
     // optionally purge old items -  if 'purge' is set we delete items that are not
