@@ -808,6 +808,8 @@ function fof_db_mark_item_unread($users, $id) {
 */
 
 function fof_db_mark_items_unread($feed_id, $item_ids) {
+	global $FOF_ITEM_TAG_TABLE;
+	
 	$result = fof_db_get_subscribed_users($feed_id);
 	$vals = array();
 	while ($row = fof_db_get_row($result)){
