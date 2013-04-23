@@ -25,7 +25,7 @@ else
 	$width = 250;
 }
 
-$unread_count = fof_get_unread_count(fof_current_user());
+$unread_count = fof_db_get_unread_count(fof_current_user());
 
 ?>
 <!DOCTYPE html>
