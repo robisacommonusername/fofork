@@ -40,7 +40,8 @@ if($_POST['confirmed'] == 'delete' && fof_authenticate_CSRF_challenge($_POST['CS
 	}
 
 	$tables = array($FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE,
-				$FOF_SUBSCRIPTION_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE);
+				$FOF_SUBSCRIPTION_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE,
+				$FOF_CONFIG_TABLE);
 	$allTables = implode(', ', $tables);
 	fof_query_log("DROP TABLE $allTables", null);
 

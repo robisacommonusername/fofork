@@ -51,7 +51,7 @@ $iconv_ok = extension_loaded('iconv');
 <!DOCTYPE html>
 <html>
 
-<head><title>feed on feeds - installation</title>
+<head><title>feed on feeds 1.5.0 - installation</title>
 		<link rel="stylesheet" href="fof.css" media="screen" />
 		<script src="fof.js" type="text/javascript"></script>
 		<meta name="ROBOTS" content="NOINDEX, NOFOLLOW" />
@@ -170,7 +170,7 @@ Creating tables...
 $tables = fof_query_log('SHOW TABLES',null);
 $tableNames = array($FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_FEED_TABLE, 
 				$FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, 
-				$FOF_SUBSCRIPTION_TABLE);
+				$FOF_SUBSCRIPTION_TABLE, $FOF_CONFIG_TABLE);
 $conflict = False;
 while ($line = fof_db_get_row($tables)){
 	if (in_array($line[0], $tableNames)){
@@ -274,6 +274,16 @@ CREATE TABLE IF NOT EXISTS `$FOF_SESSION_TABLE` (
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 EOQ;
 
+$tables[] = <<<EOQ
+CREATE TABLE IF NOT EXISTS `$FOF_CONFIG_TABLE` (
+`param` VARCHAR( 128 ) NOT NULL ,
+`val` TEXT NOT NULL ,
+UNIQUE (
+`parameter`
+)
+) ENGINE = MyISAM;
+EOQ;
+
 foreach($tables as $table)
 {
 	if(fof_query_log($table, 1, False) === False)
@@ -288,7 +298,7 @@ Inserting initial data...
 
 <?php
 fof_query_log("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (1, 'unread'), (2, 'star')", null, False);
-//fof_query_log("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (2, 'star')", null, False);
+fof_query_log("insert into $FOF_CONFIG_TABLE (param, val) values ('version', '1.5.0'), ('bcrypt-level', '9')", null, False);
 ?>
 
 Done.<hr>

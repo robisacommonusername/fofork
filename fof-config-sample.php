@@ -36,7 +36,7 @@ define('FOF_TAG_TABLE', FOF_DB_PREFIX . "tag");
 define('FOF_USER_TABLE', FOF_DB_PREFIX . "user");
 define('FOF_COOKIE_TABLE', FOF_DB_PREFIX . 'cookies');
 define('FOF_SESSION_TABLE', FOF_DB_PREFIX . 'sessions');
-
+define('FOF_CONFIG_TABLE', FOF_DB_PREFIX . 'config');
 
 // Find ourselves and the cache dir
 

@@ -20,6 +20,7 @@ $FOF_TAG_TABLE = FOF_TAG_TABLE;
 $FOF_USER_TABLE = FOF_USER_TABLE;
 $FOF_COOKIE_TABLE = FOF_COOKIE_TABLE;
 $FOF_SESSION_TABLE = FOF_SESSION_TABLE;
+$FOF_CONFIG_TABLE = FOF_CONFIG_TABLE;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
@@ -159,9 +160,19 @@ function fof_db_get_row($result) {
 }
 
 function fof_db_optimize() {
-	global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE;
+	global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE, $FOF_CONFIG_TABLE;
     
-	fof_query_log("optimize table $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE", null);
+	fof_query_log("optimize table $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE, $FOF_CONFIG_TABLE", null);
+}
+
+function fof_db_get_version() {
+	global $FOF_CONFIG_TABLE;
+	
+	$result = fof_query_log("SELECT val from $FOF_CONFIG_TABLE where param = 'version'", null);
+	if ($row = fof_db_get_row($result)) {
+		return $row['val'];
+	}
+	return '1.1';
 }
 
 ////////////////////////////////////////////////////////////////////////////////
