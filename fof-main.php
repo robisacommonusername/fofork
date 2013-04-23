@@ -229,12 +229,12 @@ function fof_authenticate_CSRF_challenge($response){
     $challenge = sha1($user_name . session_id());
     return ($challenge === $response);
 }
-
+/*
 function fof_get_users()
 {
     return fof_db_get_users();
 }
-
+*/
 function fof_prefs()
 {        
     $p =& FoF_Prefs::instance();
@@ -245,12 +245,12 @@ function fof_is_admin()
 {   
     return ($_SESSION['user_level'] == "admin");
 }
-
+/*
 function fof_get_unread_count($user_id)
 {
     return fof_db_get_unread_count($user_id);
 }
-
+*/
 function fof_get_tags($user_id)
 {
     $tags = array();
@@ -619,17 +619,18 @@ function fof_escape_item_info($item){
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
 	return array($feed_link, $feed_title, $feed_image, $feed_description, $item_link, $item_id, $item_title, $item_content, $item_published);
 }
-
+/*
 function fof_mark_read($user_id, $items)
 {
     fof_db_mark_read($user_id, $items);
 }
-
+*/
+/*
 function fof_mark_unread($user_id, $items)
 {
     fof_db_mark_unread($user_id, $items);
 }
-
+*/
 function fof_delete_subscription($user_id, $feed_id)
 {
     fof_db_delete_subscription($user_id, $feed_id);
@@ -730,7 +731,7 @@ function fof_subscribe($user_id, $url, $unread="today")
     $url = fof_prepare_url($url);    
     $feed = fof_db_get_feed_by_url($url);
     
-    if(fof_is_subscribed($user_id, $url))
+    if(fof_db_is_subscribed($user_id, $url))
     {
         return "You are already subscribed to " . fof_render_feed_link($feed) . "<br />";
     }
@@ -761,7 +762,7 @@ function fof_subscribe($user_id, $url, $unread="today")
         {
             $feed = fof_db_get_feed_by_url($url);
             
-            if(fof_is_subscribed($user_id, $url))
+            if(fof_db_is_subscribed($user_id, $url))
             {
                 return "You are already subscribed to " . fof_render_feed_link($feed) . "<br />";
             }
@@ -792,12 +793,12 @@ function fof_add_feed($url, $title, $link, $description)
    
    return $id;
 }
-
+/*
 function fof_is_subscribed($user_id, $url)
 {
    return(fof_db_is_subscribed($user_id, $url));
 }
-
+*/
 function fof_feed_exists($url)
 {
    $feed = fof_db_get_feed_by_url($url);
@@ -938,7 +939,7 @@ function fof_apply_plugin_tags($feed_id, $item_id = null, $user_id = null)
         }
     }
     
-    $userdata = fof_get_users();
+    $userdata = fof_db_get_users();
     
     foreach($users as $user)
     {
@@ -1131,7 +1132,7 @@ function fof_repair_drain_bamage()
         $_REQUEST = undoMagicQuotes($_REQUEST);
     }
 }
-
+/*
 // for PHP 4 compatibility
 
 if(!function_exists('str_ireplace'))
@@ -1142,4 +1143,5 @@ if(!function_exists('str_ireplace'))
         return preg_replace("/".$search."/i", $replace, $subject);
     }
 }
+*/
 ?>
