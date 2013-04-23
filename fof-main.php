@@ -89,6 +89,10 @@ function fof_log($message, $topic="debug")
     
     $message = str_replace ("\n", "\\n", $message); 
     $message = str_replace ("\r", "\\r", $message);
+    //truncate long messages
+    if (strlen($message) > 500) {
+    	$message = substr($message, 0, 500);
+    }
     $totalMessage = date('r') . " [$topic] $message";
     
     $aes = new Crypt_AES();
