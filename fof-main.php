@@ -272,20 +272,6 @@ function fof_get_tags($user_id)
     return $tags;
 }
 
-/*function fof_get_item_tags($user_id, $item_id)
-{
-	$result = fof_db_get_item_tags($user_id, $item_id);
-   
-	$tags = array();
-   
-	while($row = fof_db_get_row($result))
-	{
-    	$tags[] = $row['tag_name'];
-    }
-    
-	return $tags;
-}*/
-
 function fof_tag_feed($user_id, $feed_id, $tag)
 {
     $tag_id = fof_db_get_tag_by_name($user_id, $tag);
@@ -824,20 +810,6 @@ function fof_get_subscribed_users($feed_id)
    return(fof_db_get_subscribed_users($feed_id));
 }
 
-/*
-function fof_mark_item_unread($feed_id, $id)
-{
-   $result = fof_get_subscribed_users($feed_id);
-   
-   while($row = fof_db_get_row($result))
-   {
-      $users[] = $row['user_id'];
-   }
-   
-   fof_db_mark_item_unread($users, $id);
-}
-*/
-
 function fof_parse($url)
 {
     $p =& FoF_Prefs::instance();
@@ -853,29 +825,6 @@ function fof_parse($url)
 	
 	return $pie;
 }
-
-/*
-function fof_apply_tags($feed_id, $item_id)
-{
-    global $fof_subscription_to_tags;
-    
-    if(!isset($fof_subscription_to_tags))
-    {
-        $fof_subscription_to_tags = fof_db_get_subscription_to_tags();
-    }
-    
-    foreach((array)$fof_subscription_to_tags[$feed_id] as $user_id => $tags)
-    {
-        if(is_array($tags))
-        {
-            foreach($tags as $tag)
-            {
-                fof_db_tag_items($user_id, $tag, $item_id);
-            }
-        }
-    }
-}
-*/
 
 function fof_update_feed($id) {
     if(!$id) return 0;

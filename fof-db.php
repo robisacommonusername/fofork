@@ -361,34 +361,6 @@ function fof_db_purge_feed($ignoreable_items, $feed_id, $purge_days){
 ////////////////////////////////////////////////////////////////////////////////
 // Item level stuff
 ////////////////////////////////////////////////////////////////////////////////
-/*
-function fof_db_find_item($feed_id, $item_guid) {
-    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $fof_connection;
-    
-    $result = fof_query_log("select item_id from $FOF_ITEM_TABLE where feed_id=? and item_guid=?", array($feed_id, $item_guid));
-    if($result->rowCount() == 0) {
-        return null;
-    }
-    else {
-    	$row = fof_db_get_row($result);
-        return($row['item_id']);
-    }
-}
-*/
-
-/*
-//this function gets called a lot.  Would be nice to optimise it
-function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $published, $updated) {
-    global $FOF_ITEM_TABLE, $fof_connection;
-    
-    list($res,$id) = fof_query_log_get_id("insert into $FOF_ITEM_TABLE (feed_id, item_link, item_guid, item_title, item_content, item_cached, 	item_published, item_updated) values (?, ?, ? ,?, ?, ?, ?, ?)",
-    										array($feed_id, $link, $guid, $title, $content, $cached, $published, $updated),
-    										$FOF_ITEM_TABLE,
-    										'item_id');
-    
-    return $id;
-}
-*/
 
 function fof_db_add_items($feed_id, $items) {
 	//items is an array of simplepie item objects
@@ -592,23 +564,6 @@ function fof_db_get_item($user_id, $item_id) {
 // Tag stuff
 ////////////////////////////////////////////////////////////////////////////////
 
-//combine into fof_db_apply_subscription_tags so we don't waste so much memory
-/*
-function fof_db_get_subscription_to_tags() {
-    $r = array();
-    global $FOF_SUBSCRIPTION_TABLE;
-    $result = fof_query_log("select * from $FOF_SUBSCRIPTION_TABLE", null);
-    while($row = fof_db_get_row($result)) {
-        $prefs = unserialize($row['subscription_prefs']);
-        $tags = $prefs['tags'];
-        if(!is_array($r[$row['feed_id']])) $r[$row['feed_id']] = array();
-        $r[$row['feed_id']][$row['user_id']] = $tags;
-    }
-    
-    return $r;    
-}
-*/
-
 function fof_db_apply_subscription_tags($feed_id, $ids) {
 	global $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE;
     
@@ -655,14 +610,6 @@ function fof_db_untag_feed($user_id, $feed_id, $tag_id) {
     
     fof_query_log("update $FOF_SUBSCRIPTION_TABLE set subscription_prefs = ? where feed_id = ? and user_id = ?", array(serialize($prefs), $feed_id, $user_id));
 }
-
-/*function fof_db_get_item_tags($user_id, $item_id) {
-    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
-    
-    $result = fof_query_log("select $FOF_TAG_TABLE.tag_name from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = ? and $FOF_ITEM_TAG_TABLE.user_id = ?", array($item_id, $user_id));
-    
-    return $result;   
-}*/
 
 function fof_db_item_has_tags($item_id) {
     global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
@@ -788,24 +735,6 @@ function fof_db_mark_feed_unread($user_id, $feed, $what)
     
     fof_db_tag_items($user_id, 1, $items);
 }
-
-/*
-function fof_db_mark_item_unread($users, $id) {
-    global $FOF_ITEM_TAG_TABLE;
-    
-    if(count($users) == 0) return;
-    
-    foreach($users as $user) {
-        $sql[] = sprintf("(%d, 1, %d)", $user, $id);
-    }
-    
-    $values = implode ( ",", $sql );
-    
-	$sql = "insert into $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) values " . $values;
-	
-	$result = fof_query_log($sql, null);
-}
-*/
 
 function fof_db_mark_items_unread($feed_id, $item_ids) {
 	global $FOF_ITEM_TAG_TABLE;
