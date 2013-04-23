@@ -321,7 +321,7 @@ function fof_db_purge_feed($ignoreable_items, $feed_id, $purge_days){
             
     while($row = fof_db_get_row($result)) {
 		if($row['item_cached'] < (time() - ($purge_days * 24 * 60 * 60))) {
-			if(!fof_item_has_tags($row['item_id'])) {		      
+			if(!fof_db_item_has_tags($row['item_id'])) {		      
 				$delete[] = $row['item_id'];
 			}
 		}
