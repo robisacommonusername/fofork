@@ -23,6 +23,7 @@ define('FOF_BASE_URL','http://www.my.domain.com/');
 define('FOF_DB_TYPE','mysql');
 
 // The rest you should not need to change
+define('FOF_VERSION', '1.5.0');
 
 // DB table names
 

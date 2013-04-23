@@ -51,7 +51,7 @@ $iconv_ok = extension_loaded('iconv');
 <!DOCTYPE html>
 <html>
 
-<head><title>feed on feeds 1.5.0 - installation</title>
+<head><title>feed on feeds <?php echo FOF_VERSION;?> - installation</title>
 		<link rel="stylesheet" href="fof.css" media="screen" />
 		<script src="fof.js" type="text/javascript"></script>
 		<meta name="ROBOTS" content="NOINDEX, NOFOLLOW" />
@@ -298,7 +298,7 @@ Inserting initial data...
 
 <?php
 fof_query_log("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (1, 'unread'), (2, 'star')", null, False);
-fof_query_log("insert into $FOF_CONFIG_TABLE (param, val) values ('version', '1.5.0'), ('bcrypt-level', '9')", null, False);
+fof_query_log("insert into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt-level', '9')", array(FOF_VERSION), False);
 ?>
 
 Done.<hr>
