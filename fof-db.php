@@ -826,9 +826,9 @@ function fof_db_add_user($username, $password) {
 	if ($result->rowCount() > 0){
 		return False;
 	} else {
-		$salt = fof_make_salt();
-		$password_hash = md5($password . $salt);  //update this to blowfish
-		fof_query_log("insert into $FOF_USER_TABLE (user_name, user_password_hash, salt) values (?, ?, ?)", array($username, $password_hash, $salt));
+		$salt = fof_make_blowfish_salt();
+		$password_hash = crypt($password, $salt);
+		fof_query_log("insert into $FOF_USER_TABLE (user_name, user_password_hash) values (?, ?)", array($username, $password_hash));
 		return True;
 	}
     
@@ -837,11 +837,11 @@ function fof_db_add_user($username, $password) {
 
 function fof_db_change_password($username, $password) {
     global $FOF_USER_TABLE;
-    $salt = fof_make_salt();
+    $salt = fof_make_blowfish_salt();
     
-	$password_hash = md5($password . $salt); //update to blowfish
+	$password_hash = crypt($password, $salt); //update to blowfish
     
-	fof_query_log("update $FOF_USER_TABLE set user_password_hash = ?, salt=? where user_name = ?", array($password_hash, $salt, $username));
+	fof_query_log("update $FOF_USER_TABLE set user_password_hash = ? where user_name = ?", array($password_hash, $username));
 }
 
 function fof_db_get_user_id($username) {
@@ -872,7 +872,6 @@ function fof_db_save_prefs($user_id, $prefs) {
 
 function fof_db_authenticate($user_name, $password){
     global $FOF_USER_TABLE;
-    
     $result = fof_query_log("select * from $FOF_USER_TABLE where user_name = ?", array($user_name));
     if ($result instanceof PDOStatement){
     	if($result->rowCount() == 0)
@@ -881,7 +880,7 @@ function fof_db_authenticate($user_name, $password){
     	}
     
     	$row = fof_db_get_row($result);
-    	$computedHash = md5($password . $row['salt']); //update to blowfish
+    	$computedHash = crypt($password, $row['user_password_hash']);
     	if ($computedHash === $row['user_password_hash']){
     		$_SESSION['user_name'] = $row['user_name'];
     		$_SESSION['user_id'] = $row['user_id'];
