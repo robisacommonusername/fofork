@@ -162,13 +162,28 @@ function require_user()
 	$_SESSION['last_access'] = time();
 }
 
+//deprecated
 function fof_make_salt(){
-	#generate new random id.  mt_rand gives us ~31 bits of entropy, let's try and up things to 160
+	//generate new random id.  mt_rand gives us ~31 bits of entropy, let's try and up things to 160
 	$new_id = '';
 	for ($i=0; $i<6; $i++){
 		$new_id = sha1($new_id . mt_rand());
 	}
 	return $new_id;
+}
+
+function fof_make_blowfish_salt() {
+	//64 character alphabet, 22 characters = 132 bits.  Assume mt_rand gives 31 bits entropy
+	$new_id = '';
+	for ($i=0; $i<6; $i++){
+		$new_id = sha1($new_id . mt_rand());
+	}
+	$bytes = pack('H*', $new_id);
+	//base 64 encode bytes, use . instead of +, return first 22
+	$salt = substr(str_replace('+', '.', base64_encode($bytes)), 0, 22);
+	$effort = fof_db_blowfish_effort();
+	$final = '$2a$' . $effort . '$' . $salt;
+	return $final;
 }
 
 function fof_place_cookie($user_id){

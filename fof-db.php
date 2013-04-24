@@ -893,6 +893,17 @@ function fof_db_authenticate($user_name, $password){
     return False;
 }
 
+function fof_db_blowfish_effort() {
+	//get effort from config table, and format as two digit string
+	global $FOF_CONFIG_TABLE;
+	
+	$result = fof_query_log("SELECT val from $FOF_CONFIG_TABLE where param = 'blowfish_effort'", null);
+	if ($row = fof_db_get_row($result)) {
+		return sprintf('%02d', $row['val']);
+	}
+	return "09";
+}
+
 function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 	global $FOF_COOKIE_TABLE;
 	// clear previous cookie if there is one.  It is possible, though unlikely, that another user may have the same

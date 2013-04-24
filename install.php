@@ -248,11 +248,10 @@ $tables[] = <<<EOQ
 CREATE TABLE IF NOT EXISTS `$FOF_USER_TABLE` (
   `user_id` int(11) NOT NULL auto_increment,
   `user_name` varchar(100) NOT NULL default '',
-  `user_password_hash` varchar(32) NOT NULL default '',
+  `user_password_hash` varchar(60) NOT NULL default '',
   `user_level` enum('user','admin') NOT NULL default 'user',
   `user_prefs` text,
-  `salt` varchar(40) NOT NULL default '',
-  PRIMARY KEY  (`user_id`)
+  PRIMARY KEY  (`user_id`), UNIQUE KEY (`user_name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 EOQ;
 
@@ -279,16 +278,14 @@ CREATE TABLE IF NOT EXISTS `$FOF_CONFIG_TABLE` (
 `param` VARCHAR( 128 ) NOT NULL ,
 `val` TEXT NOT NULL ,
 UNIQUE (
-`parameter`
+`param`
 )
 ) ENGINE = MyISAM;
 EOQ;
 
-foreach($tables as $table)
-{
-	if(fof_query_log($table, 1, False) === False)
-	{
-		exit ("Database error: Can't create table $table. <br />" );
+foreach($tables as $table) {
+	if(fof_query($table, 1, False) === False) {
+		die("Database error: Can't create table $table. <br />" );
 	}
 }
 
@@ -297,8 +294,9 @@ foreach($tables as $table)
 Inserting initial data...
 
 <?php
-fof_query_log("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (1, 'unread'), (2, 'star')", null, False);
-fof_query_log("insert into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt-level', '9')", array(FOF_VERSION), False);
+fof_query("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (1, 'unread'), (2, 'star')", null, False);
+fof_query("insert into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('blowfish_effort', ?),
+				('logging', '0'), ('autotimeout', '10'), ('manualtimeout', '5'), ('purge', '7')", array(FOF_VERSION, BLOWFISH_EFFORT), False);
 ?>
 
 Done.<hr>
