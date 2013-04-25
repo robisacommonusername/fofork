@@ -161,25 +161,34 @@ function require_user()
 	$_SESSION['last_access'] = time();
 }
 
-//deprecated
 function fof_make_salt(){
-	//generate new random id.  mt_rand gives us ~31 bits of entropy, let's try and up things to 160
-	$new_id = '';
-	for ($i=0; $i<6; $i++){
-		$new_id = sha1($new_id . mt_rand());
+	$bytes = null;
+	//try to get something cryptographically secure (*nix only)
+	if (file_exists('/dev/urandom')){
+		try {
+			$f = fopen('/dev/urandom', 'r');
+			$bytes = fread($f, 32);
+			fclose($f);
+		} catch (Exception $e) {
+			$bytes = null;
+		}
 	}
-	return $new_id;
+	if ($bytes === null) {
+		//fallback using mersenne twister.  Not great, but hopefully can extract
+		//enough entropy from mt_rand without being able to reconstruct internal state
+		// Want 128 bits
+		$new_id = '';
+		for ($i=0; $i<6; $i++){
+			$new_id = sha1($new_id . mt_rand());
+		}
+		$bytes = pack('H*', $new_id);
+	}
+	$salt = substr(str_replace('+', '.', base64_encode($bytes)), 0, 22);
+	return $salt;
 }
 
 function fof_make_bcrypt_salt() {
-	//64 character alphabet, 22 characters = 132 bits.  Assume mt_rand gives 31 bits entropy
-	$new_id = '';
-	for ($i=0; $i<6; $i++){
-		$new_id = sha1($new_id . mt_rand());
-	}
-	$bytes = pack('H*', $new_id);
-	//base 64 encode bytes, use . instead of +, return first 22
-	$salt = substr(str_replace('+', '.', base64_encode($bytes)), 0, 22);
+	$salt = fof_make_salt();
 	$effort = fof_db_bcrypt_effort();
 	$final = '$2a$' . $effort . '$' . $salt;
 	return $final;
