@@ -980,7 +980,7 @@ function fof_db_logout_everywhere(){
 
 function fof_db_delete_cookie($token){
 	global $FOF_COOKIE_TABLE;
-	return fof_query_log("DELETE from $FOF_COOKIE_TABLE where token_hash='%s'", array(sha1($token)));
+	return fof_query_log("DELETE from $FOF_COOKIE_TABLE where token_hash=?", array(sha1($token)));
 }
 
 function fof_db_open_session(){
@@ -1019,7 +1019,8 @@ function fof_db_write_session($id, $data){
 
 function fof_db_destroy_session($id){
 	global $FOF_SESSION_TABLE;
-    return fof_query_log_private("DELETE from $FOF_SESSION_TABLE where id=?", array($id), array('XXX session id XXX'));
+    fof_query_log_private("DELETE from $FOF_SESSION_TABLE where id=?", array($id), array('XXX session id XXX'));
+    return True;
 }
 
 function fof_db_clean_session($max){
