@@ -828,7 +828,7 @@ function fof_db_add_user($username, $password) {
 	} else {
 		$salt = fof_make_bcrypt_salt();
 		$password_hash = crypt($password, $salt);
-		fof_query_log("insert into $FOF_USER_TABLE (user_name, user_password_hash) values (?, ?)", array($username, $password_hash));
+		fof_query_log_private("insert into $FOF_USER_TABLE (user_name, user_password_hash) values (?, ?)", array($username, $password_hash), array(1 => 'XXX password_hash XXX'));
 		return True;
 	}
     
@@ -841,7 +841,7 @@ function fof_db_change_password($username, $password) {
     
 	$password_hash = crypt($password, $salt);
     
-	fof_query_log("update $FOF_USER_TABLE set user_password_hash = ? where user_name = ?", array($password_hash, $username));
+	fof_query_log_private("update $FOF_USER_TABLE set user_password_hash = ? where user_name = ?", array($password_hash, $username), array('XXX password_hash XXX'));
 }
 
 function fof_db_get_user_id($username) {
@@ -956,7 +956,7 @@ function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 
 function fof_db_validate_cookie($token, $userAgent){
 	global $FOF_COOKIE_TABLE, $FOF_USER_TABLE;
-	$result = fof_query_log("SELECT * from $FOF_COOKIE_TABLE where token_hash=?",array(hash('tiger160,4',$token)));
+	$result = fof_query_log_private("SELECT * from $FOF_COOKIE_TABLE where token_hash=?",array(hash('tiger160,4',$token)), array('XXX token_hash XXX'));
 	if ($result instanceof PDOStatement){
 		if ($result->rowCount() > 0){
 			$row = fof_db_get_row($result);
@@ -980,7 +980,7 @@ function fof_db_logout_everywhere(){
 
 function fof_db_delete_cookie($token){
 	global $FOF_COOKIE_TABLE;
-	return fof_query_log("DELETE from $FOF_COOKIE_TABLE where token_hash=?", array(hash('tiger160,4',$token)));
+	return fof_query_log_private("DELETE from $FOF_COOKIE_TABLE where token_hash=?", array(hash('tiger160,4',$token)), array('XXX token_hash XXX'));
 }
 
 function fof_db_open_session(){
