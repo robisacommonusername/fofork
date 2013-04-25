@@ -949,7 +949,7 @@ function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 	}
 	$result = fof_query_log($query, $args);
 	$result = fof_query_log_private("INSERT into $FOF_COOKIE_TABLE (token_hash, user_id, user_agent_hash) VALUES (:tokenhash, :userid, :useragenthash)",
-									array('tokenhash' => hash('tiger160,4', $newToken), 'userid' => $uid, 'useragenthash' => hash('tiger160,4', $user_agent)),
+									array('tokenhash' => hash('tiger160,4', $newToken), 'userid' => $uid, 'useragenthash' => hash('tiger160,4', $user_agent . $newToken)),
 									array('tokenhash' => 'XXX token hash XXX'));
 	return True;
 }
@@ -960,7 +960,7 @@ function fof_db_validate_cookie($token, $userAgent){
 	if ($result instanceof PDOStatement){
 		if ($result->rowCount() > 0){
 			$row = fof_db_get_row($result);
-			if (hash('tiger160,4',$userAgent) === $row['user_agent_hash']){
+			if (hash('tiger160,4',$userAgent . $token) === $row['user_agent_hash']){
 				$uid = $row['user_id'];
 				$result = fof_query_log("SELECT * from $FOF_USER_TABLE where user_id=?", array($uid));
 				if ($result->rowCount() > 0){
