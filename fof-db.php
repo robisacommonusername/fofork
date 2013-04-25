@@ -941,26 +941,26 @@ function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 	// and NOT simply do an update.  This will slightly inconvenience the second user, who will have to (re) log in,
 	// but will guarantee that 2nd user doesn't get access to first user's account.
 	//also delete any tokens with the new value - see bug report 180
-	$args[] = sha1($newToken);
+	$args[] = hash('tiger160,4', $newToken);
 	$query = "DELETE from $FOF_COOKIE_TABLE where token_hash=?";
 	if ($oldToken) {
-		$args[] = sha1($oldToken);
+		$args[] = hash('tiger160,4',$oldToken);
 		$query .= " or token_hash=?";
 	}
 	$result = fof_query_log($query, $args);
 	$result = fof_query_log_private("INSERT into $FOF_COOKIE_TABLE (token_hash, user_id, user_agent_hash) VALUES (:tokenhash, :userid, :useragenthash)",
-									array('tokenhash' => sha1($newToken), 'userid' => $uid, 'useragenthash' => sha1($user_agent)),
+									array('tokenhash' => hash('tiger160,4', $newToken), 'userid' => $uid, 'useragenthash' => hash('tiger160,4', $user_agent)),
 									array('tokenhash' => 'XXX token hash XXX'));
 	return True;
 }
 
 function fof_db_validate_cookie($token, $userAgent){
 	global $FOF_COOKIE_TABLE, $FOF_USER_TABLE;
-	$result = fof_query_log("SELECT * from $FOF_COOKIE_TABLE where token_hash=?",array(sha1($token)));
+	$result = fof_query_log("SELECT * from $FOF_COOKIE_TABLE where token_hash=?",array(hash('tiger160,4',$token)));
 	if ($result instanceof PDOStatement){
 		if ($result->rowCount() > 0){
 			$row = fof_db_get_row($result);
-			if (sha1($userAgent) === $row['user_agent_hash']){
+			if (hash('tiger160,4',$userAgent) === $row['user_agent_hash']){
 				$uid = $row['user_id'];
 				$result = fof_query_log("SELECT * from $FOF_USER_TABLE where user_id=?", array($uid));
 				if ($result->rowCount() > 0){
@@ -980,7 +980,7 @@ function fof_db_logout_everywhere(){
 
 function fof_db_delete_cookie($token){
 	global $FOF_COOKIE_TABLE;
-	return fof_query_log("DELETE from $FOF_COOKIE_TABLE where token_hash=?", array(sha1($token)));
+	return fof_query_log("DELETE from $FOF_COOKIE_TABLE where token_hash=?", array(hash('tiger160,4',$token)));
 }
 
 function fof_db_open_session(){

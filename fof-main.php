@@ -117,7 +117,7 @@ function require_user()
     }
     //check user agent hasn't changed
 	if (isset($_SESSION['user_agent_hash']) && isset($_SESSION['hash_salt'])){
-		$computed = sha1($_SERVER['HTTP_USER_AGENT'] . $_SESSION['hash_salt']);
+		$computed = hash('tiger160,4', $_SERVER['HTTP_USER_AGENT'] . $_SESSION['hash_salt']);
 		if ($computed != $_SESSION['user_agent_hash']){
 			session_unset();
 			session_destroy();
@@ -127,7 +127,7 @@ function require_user()
 		}
 	} else {
 		$_SESSION['hash_salt'] = fof_make_salt();
-		$_SESSION['user_agent_hash'] = sha1($_SERVER['HTTP_USER_AGENT'] . $_SESSION['hash_salt']);
+		$_SESSION['user_agent_hash'] = hash('tiger160,4', $_SERVER['HTTP_USER_AGENT'] . $_SESSION['hash_salt']);
 	}
 	//check for timeout
 	if (isset($_SESSION['last_access'])){
@@ -148,8 +148,8 @@ function require_user()
 				//to have an expired session (ie still won't be able to do CSRF)
 				//this is potentially dangerous, as it allows an attacker who has acquired the old session id
 				//to do a CSRF
-				if (sha1($_SESSION['user_name'] . $old_id) == $_POST['CSRF_hash']){
-					$_POST['CSRF_hash'] = sha1($_SESSION['user_name'] . session_id());
+				if (hash('tiger160,4', $_SESSION['user_name'] . $old_id) === $_POST['CSRF_hash']){
+					$_POST['CSRF_hash'] = hash('tiger160,4', $_SESSION['user_name'] . session_id());
 				}
 			} else {
 				session_unset();
@@ -184,7 +184,7 @@ function fof_make_salt(){
 		// Want 128 bits
 		$new_id = '';
 		for ($i=0; $i<6; $i++){
-			$new_id = sha1($new_id . mt_rand());
+			$new_id = hash('tiger160,4', $new_id . mt_rand());
 		}
 		$bytes = pack('H*', $new_id);
 	}
@@ -257,13 +257,13 @@ function fof_username()
 
 function fof_compute_CSRF_challenge(){
 	$user_name = $_SESSION['user_name'];
-    $challenge = sha1($user_name . session_id());
+    $challenge = hash('tiger160,4', $user_name . session_id());
     return $challenge;
 }
 
 function fof_authenticate_CSRF_challenge($response){
 	$user_name = $_SESSION['user_name'];
-    $challenge = sha1($user_name . session_id());
+    $challenge = hash('tiger160,4', $user_name . session_id());
     return ($challenge === $response);
 }
 
