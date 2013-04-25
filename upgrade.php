@@ -21,7 +21,7 @@ function upgradePoint1Point5($adminPassword){
 	
 	//move admin prefs into config table
 	$p =& FoF_Prefs::instance();
-    $admin_prefs = $p->admin_prefs;
+    $admin_prefs = $p->adminPrefs();
     
     $adminKeys = array('purge' => null, 'autotimeout' => null, 'manualtimeout' => null, 'logging' => null);
     $actualAdminPrefs = array_intersect_key($admin_prefs, $adminKeys);

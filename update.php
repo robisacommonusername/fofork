@@ -20,7 +20,7 @@ $feed = $_GET['feed']; #untrusted
 $feeds = array();
 
 $p =& FoF_Prefs::instance();
-$admin_prefs = $p->admin_prefs;
+$admin_prefs = $p->adminPrefs();
 
 if($feed)
 {

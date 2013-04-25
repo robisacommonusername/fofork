@@ -12,14 +12,12 @@
  *
  */
 
-class FoF_Prefs
-{
+class FoF_Prefs {
 	var $user_id;
     var $prefs;
     var $admin_prefs;
     
-	function FoF_Prefs($user_id)
-	{
+	function FoF_Prefs($user_id) {
         global $FOF_USER_TABLE;
         
 		$this->user_id = $user_id;
@@ -30,37 +28,35 @@ class FoF_Prefs
         if(!is_array($prefs)) $prefs = array();
         $this->prefs = $prefs;
         
-        if($user_id != 1)
-        {
+        //get the admin prefs
+        $this->admin_prefs = fof_db_get_admin_prefs();
+        
+        if($user_id != 1) {
             $result = fof_query_log("select user_prefs from $FOF_USER_TABLE where user_id = 1", null);
             $row = fof_db_get_row($result);
             $admin_prefs = unserialize($row['user_prefs']);
             if(!is_array($admin_prefs)) $admin_prefs = array();
             $this->admin_prefs = $admin_prefs;
         }
-        else
-        {
+        else {
             $this->admin_prefs = $prefs;
         }
         
         $this->populate_defaults();
         
-        if($user_id == 1)
-        {
+        if($user_id == 1) {
            $this->prefs = array_merge($this->prefs, $this->admin_prefs);
         }
     }
     
-    function &instance()
-    {
+    function &instance() {
         static $instance;
         if(!isset($instance)) $instance = new FoF_Prefs(fof_current_user());
         
         return $instance;
     }
     
-    function populate_defaults()
-    {
+    function populate_defaults() {
         $defaults = array(
             'favicons' => True,
             'keyboard' => False,
@@ -83,27 +79,35 @@ class FoF_Prefs
         $this->stuff_array($this->admin_prefs, $admin_defaults);
     }
     
-    function stuff_array(&$array, $defaults)
-    {
-        foreach($defaults as $k => $v)
-        {
+    function stuff_array(&$array, $defaults) {
+        foreach($defaults as $k => $v) {
             if(!isset($array[$k])) $array[$k] = $v;
         }
     }
     
-    function get($k)
-    {
+    function get($k) {
         return $this->prefs[$k];
     }
     
-    function set($k, $v)
-    {
+    function set($k, $v) {
         $this->prefs[$k] = $v;
     }
     
-    function save()
-    {
+    function setAdmin($k, $v) {
+    	$this->admin_prefs[$k] = $v;
+    }
+    
+    function getAdmin($k) {
+    	return $this->admin_prefs[$k];
+    }
+    
+    function adminPrefs(){
+    	return $this->admin_prefs;
+    }
+    
+    function save() {
         fof_db_save_prefs($this->user_id, $this->prefs);
+        fof_db_set_admin_prefs($this->admin_prefs);
     }
 }
 

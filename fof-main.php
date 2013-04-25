@@ -74,13 +74,12 @@ function fof_set_content_type()
     }
 }
 
-function fof_log($message, $topic="debug")
-{
+function fof_log($message, $topic="debug") {
     global $fof_prefs_obj;
     
     if(!$fof_prefs_obj) return;
     
-    $p = $fof_prefs_obj->admin_prefs;
+    $p = $fof_prefs_obj->adminPrefs();
     if(!$p['logging']) return;
 
     static $log;
@@ -91,7 +90,7 @@ function fof_log($message, $topic="debug")
     $message = str_replace ("\r", "\\r", $message);
     //truncate long messages
     if (strlen($message) > 500) {
-    	$message = substr($message, 0, 500);
+    	$message = substr($message, 0, 500) . " ... ";
     }
     $totalMessage = date('r') . " [$topic] $message";
     
@@ -807,7 +806,7 @@ function fof_get_subscribed_users($feed_id)
 function fof_parse($url)
 {
     $p =& FoF_Prefs::instance();
-    $admin_prefs = $p->admin_prefs;
+    $admin_prefs = $p->adminPrefs();
     
     $pie = new SimplePie();
     $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
@@ -876,7 +875,7 @@ function fof_update_feed($id) {
     // of being in the feed, and are over 'purge' many days old
     
     $p =& FoF_Prefs::instance();
-    $admin_prefs = $p->admin_prefs;
+    $admin_prefs = $p->adminPrefs();
     $ndelete = 0;
     if($admin_prefs['purge'] != "") {
         fof_log('purge is ' . $admin_prefs['purge']);

@@ -12,10 +12,40 @@
  *
  */
 
-include_once("fof-main.php");
+include_once('fof-main.php');
+
+if (!fof_authenticate_CSRF_challenge($_POST['CSRF_hash'])){
+	die('CSRF detected in set-prefs.php');
+}
+
+function sanityCheck($val, $pattern) {
+	$ret = False;
+	$type = gettype($pattern);
+	switch ($type){
+		case 'string':
+		if (strlen($val) < intval($pattern)) {
+			$ret = True;
+		}
+		break;
+				
+		case 'integer':
+		$vc = intval($val);
+		if ($vc < $pattern){
+			$ret = True;
+		}
+		break;
+				
+		default:
+		$x = "is_".$type;
+		if ($x($val)) {
+			$ret = True;
+		}
+	}
+	return $ret;
+}
 
 $prefs =& FoF_Prefs::instance();
-$allowedFields = array(
+$allowedUserFields = array(
 	'favicons' => True,
 	'keyboard' => True,
 	'newtabs' => True,
@@ -24,42 +54,34 @@ $allowedFields = array(
 	'sharing' => '3',
 	'feed_order' => '50',
 	'feed_direction' => '3',
-	'purge' => '3',
-	'autotimeout' => '3',
-	'manualtimeout' => '3',
-	'logging' => True,
 	'tzoffset' => 24,
 	'order' => '4',
 	'sharedname' => '100',
 	'sharedurl' => '500'
 );
-if (!fof_authenticate_CSRF_challenge($_POST['CSRF_hash'])){
-	die('CSRF detected in set-prefs.php');
+$allowedAdminFields = array(
+	'purge' => '3',
+	'autotimeout' => '3',
+	'manualtimeout' => '3',
+	'logging' => True,
+);
+
+//set any user prefs
+foreach (array_intersect_key($_POST, $allowedUserFields) as $k => $v) {
+	$pattern = $allowedUserFields[$k];
+	if (sanityCheck($v, $pattern)) {
+		$prefs->set($k, $v);
+	}
 }
 
-foreach($_POST as $k => $v){
-	if (array_key_exists($k, $allowedFields)){
-		$type = gettype($allowedFields[$k]);
-		switch ($type){
-			case 'string':
-			if (strlen($v) < intval($allowedFields[$k]))
-				$prefs->set($k, strval($v));
-			break;
-				
-			case 'integer':
-			$vc = intval($v);
-			if ($vc < $allowedFields[$k]){
-				$prefs->set($k, $vc);
-			}
-			break;
-				
-			default:
-			$x = "is_".$type;
-			if ($x($v))
-				$prefs->set($k, $v);
+//set any admin prefs if allowed
+if (fof_is_admin()) {
+	foreach (array_intersect_key($_POST, $allowedAdminFields) as $k => $v) {
+		$pattern = $allowedAdminFields[$k];
+		if (sanityCheck($v, $pattern)) {
+			$prefs->setAdmin($k, $v);
 		}
-    	
-    }
+	}
 }
 
 $prefs->save();
