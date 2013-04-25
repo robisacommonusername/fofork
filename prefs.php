@@ -299,7 +299,7 @@ foreach($feeds as $feed)
 <br><h1>Feed on Feeds - Admin Options</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
 <input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
-Enable logging? <input type="checkbox" name="logging" <?php if($prefs->getAdmin('logging')) echo "checked" ?>><br><br>
+Enable logging? <input type="checkbox" name="logging" <?php if($prefs->getAdmin('logging')) echo "checked"; ?>><br><br>
 Purge read items after <input size="4" type="string" name="purge" value="<?php echo intval($prefs->getAdmin('purge'))?>"> days (leave blank to never purge)<br><br>
 Allow automatic feed updates every <input size="4" type="string" name="autotimeout" value="<?php echo intval($prefs->getAdmin('autotimeout'))?>"> minutes<br><br>
 Allow manual feed updates every <input size="4" type="string" name="manualtimeout" value="<?php echo intval($prefs->getAdmin('manualtimeout'))?>"> minutes<br><br>

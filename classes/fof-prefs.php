@@ -31,22 +31,7 @@ class FoF_Prefs {
         //get the admin prefs
         $this->admin_prefs = fof_db_get_admin_prefs();
         
-        if($user_id != 1) {
-            $result = fof_query_log("select user_prefs from $FOF_USER_TABLE where user_id = 1", null);
-            $row = fof_db_get_row($result);
-            $admin_prefs = unserialize($row['user_prefs']);
-            if(!is_array($admin_prefs)) $admin_prefs = array();
-            $this->admin_prefs = $admin_prefs;
-        }
-        else {
-            $this->admin_prefs = $prefs;
-        }
-        
         $this->populate_defaults();
-        
-        if($user_id == 1) {
-           $this->prefs = array_merge($this->prefs, $this->admin_prefs);
-        }
     }
     
     function &instance() {
