@@ -121,7 +121,7 @@ function require_user()
 			exit();
 		}
 	} else {
-		$_SESSION['hash_salt'] = mt_rand();
+		$_SESSION['hash_salt'] = fof_make_salt();
 		$_SESSION['user_agent_hash'] = sha1($_SERVER['HTTP_USER_AGENT'] . $_SESSION['hash_salt']);
 	}
 	#check for timeout
@@ -141,7 +141,7 @@ function require_user()
 				//iff the CSRF check would have passed with the old session id.  This prevents the case
 				//where an attacker tricks the user into submitting a request, and she just happens
 				//to have an expired session (ie still won't be able to do CSRF)
-				if (sha1($_SESSION['user_name'] . $old_id) == $_POST['CSRF_hash']){
+				if (sha1($_SESSION['user_name'] . $old_id) === $_POST['CSRF_hash']){
 					$_POST['CSRF_hash'] = sha1($_SESSION['user_name'] . session_id());
 				}
 			} else {
@@ -157,12 +157,29 @@ function require_user()
 }
 
 function fof_make_salt(){
-	#generate new random id.  mt_rand gives us ~31 bits of entropy, let's try and up things to 160
-	$new_id = '';
-	for ($i=0; $i<6; $i++){
-		$new_id = sha1($new_id . mt_rand());
+	$bytes = null;
+	//try to get something cryptographically secure (*nix only)
+	if (file_exists('/dev/urandom')){
+		try {
+			$f = fopen('/dev/urandom', 'r');
+			$bytes = fread($f, 32);
+			fclose($f);
+		} catch (Exception $e) {
+			$bytes = null;
+		}
 	}
-	return $new_id;
+	if ($bytes === null) {
+		//fallback using mersenne twister.  Not great, but hopefully can extract
+		//enough entropy from mt_rand without being able to reconstruct internal state
+		// Want 128 bits
+		$new_id = '';
+		for ($i=0; $i<6; $i++){
+			$new_id = sha1($new_id . mt_rand());
+		}
+		$bytes = pack('H*', $new_id);
+	}
+	$salt = substr(str_replace('+', '.', base64_encode($bytes)), 0, 22);
+	return $salt;
 }
 
 function fof_place_cookie($user_id){
