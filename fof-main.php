@@ -126,7 +126,7 @@ function require_user()
 			exit();
 		}
 	} else {
-		$_SESSION['hash_salt'] = mt_rand();
+		$_SESSION['hash_salt'] = fof_make_salt();
 		$_SESSION['user_agent_hash'] = sha1($_SERVER['HTTP_USER_AGENT'] . $_SESSION['hash_salt']);
 	}
 	//check for timeout
@@ -146,6 +146,8 @@ function require_user()
 				//iff the CSRF check would have passed with the old session id.  This prevents the case
 				//where an attacker tricks the user into submitting a request, and she just happens
 				//to have an expired session (ie still won't be able to do CSRF)
+				//this is potentially dangerous, as it allows an attacker who has acquired the old session id
+				//to do a CSRF
 				if (sha1($_SESSION['user_name'] . $old_id) == $_POST['CSRF_hash']){
 					$_POST['CSRF_hash'] = sha1($_SESSION['user_name'] . session_id());
 				}
@@ -175,7 +177,10 @@ function fof_make_salt(){
 	}
 	if ($bytes === null) {
 		//fallback using mersenne twister.  Not great, but hopefully can extract
-		//enough entropy from mt_rand without being able to reconstruct internal state
+		//enough entropy from mt_rand without being able to reconstruct internal state.
+		//the hashing is important! Must not give attacker access to the outputs!
+		//further note - must NOT use mt_rand ANYWHERE in code where it can give
+		//attacker access to output.  Should probably enforce this somehow.
 		// Want 128 bits
 		$new_id = '';
 		for ($i=0; $i<6; $i++){
@@ -210,6 +215,11 @@ function fof_place_cookie($user_id){
 
 function fof_validate_cookie(){
 	if (isset($_COOKIE['token'])){
+		//check that the cookie is the correct length, correct alphabet.  This is to reduce chance
+		//of attacker finding a working preimage from the hash (ie minimise the size of the working preimage space)
+		if (!preg_match('|^[./0-9a-zA-z]{22}$|', $_COOKIE['token'])) {
+			return False;
+		}
 		$result = fof_db_validate_cookie($_COOKIE['token'], $_SERVER['HTTP_USER_AGENT']);
 		if (is_array($result)){
 			$_SESSION['authenticated'] = True;
