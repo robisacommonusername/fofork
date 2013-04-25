@@ -899,9 +899,8 @@ function fof_db_authenticate($user_name, $password){
     global $FOF_USER_TABLE;
     $result = fof_query_log("select * from $FOF_USER_TABLE where user_name = ?", array($user_name));
     if ($result instanceof PDOStatement){
-    	if($result->rowCount() == 0)
-    	{
-        	return false;
+    	if($result->rowCount() == 0) {
+        	return False;
     	}
     
     	$row = fof_db_get_row($result);
@@ -911,6 +910,13 @@ function fof_db_authenticate($user_name, $password){
     		$_SESSION['user_id'] = $row['user_id'];
     		$_SESSION['user_level'] = $row['user_level'];
     		$_SESSION['authenticated'] = True;
+    		
+    		//check whether we need to change the bcrypt effort
+    		$storedEffort = intval(substr($row['user_password_hash'], 4, 2));
+    		$requiredEffort = intval(fof_db_bcrypt_effort());
+    		if ($storedEffort != $requiredEffort) {
+    			fof_db_change_password($user_name, $password); //same password, just rehashes
+    		}
     		return True;
    		}
    	}
