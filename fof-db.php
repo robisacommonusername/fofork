@@ -826,7 +826,7 @@ function fof_db_add_user($username, $password) {
 	if ($result->rowCount() > 0){
 		return False;
 	} else {
-		$salt = fof_make_blowfish_salt();
+		$salt = fof_make_bcrypt_salt();
 		$password_hash = crypt($password, $salt);
 		fof_query_log("insert into $FOF_USER_TABLE (user_name, user_password_hash) values (?, ?)", array($username, $password_hash));
 		return True;
@@ -837,9 +837,9 @@ function fof_db_add_user($username, $password) {
 
 function fof_db_change_password($username, $password) {
     global $FOF_USER_TABLE;
-    $salt = fof_make_blowfish_salt();
+    $salt = fof_make_bcrypt_salt();
     
-	$password_hash = crypt($password, $salt); //update to blowfish
+	$password_hash = crypt($password, $salt);
     
 	fof_query_log("update $FOF_USER_TABLE set user_password_hash = ? where user_name = ?", array($password_hash, $username));
 }
@@ -870,6 +870,31 @@ function fof_db_save_prefs($user_id, $prefs) {
     fof_query_log("update $FOF_USER_TABLE set user_prefs = ? where user_id = ?", array($prefs, $user_id));
 }
 
+function fof_db_get_admin_prefs() {
+	global $FOF_CONFIG_TABLE;
+	
+	$result = fof_query_log("SELECT * from $FOF_CONFIG_TABLE where param in ('logging','autotimeout','manualtimeout','purge')", null);
+	$ret = array();
+	while ($row = fof_db_get_row($result)){
+		$ret[$row['param']] = $row['val'];
+	}
+	return $ret;
+}
+
+function fof_db_set_admin_prefs($prefs) {
+	global $FOF_CONFIG_TABLE;
+	
+	if (count($prefs) == 0) return;
+	$allowedKeys = array('logging' => null, 'autotimeout' => null, 'manualtimeout' => null, 'purge' => null);
+	$placeholders = array();
+	$args = array();
+	//performance not important, this shouldn't change often
+	$updater = fof_prepare_query_log("UPDATE $FOF_CONFIG_TABLE set val = ? where param = ?");
+	foreach (array_intersect_key($prefs, $allowedKeys) as $key => $val) {
+		$updater(array($val, $key));
+	} 
+}
+
 function fof_db_authenticate($user_name, $password){
     global $FOF_USER_TABLE;
     $result = fof_query_log("select * from $FOF_USER_TABLE where user_name = ?", array($user_name));
@@ -892,11 +917,11 @@ function fof_db_authenticate($user_name, $password){
     return False;
 }
 
-function fof_db_blowfish_effort() {
+function fof_db_bcrypt_effort() {
 	//get effort from config table, and format as two digit string
 	global $FOF_CONFIG_TABLE;
 	
-	$result = fof_query_log("SELECT val from $FOF_CONFIG_TABLE where param = 'blowfish_effort'", null);
+	$result = fof_query_log("SELECT val from $FOF_CONFIG_TABLE where param = 'bcrypt_effort'", null);
 	if ($row = fof_db_get_row($result)) {
 		return sprintf('%02d', $row['val']);
 	}

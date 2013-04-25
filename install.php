@@ -295,8 +295,8 @@ Inserting initial data...
 
 <?php
 fof_query("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (1, 'unread'), (2, 'star')", null, False);
-fof_query("insert into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('blowfish_effort', ?),
-				('logging', '0'), ('autotimeout', '10'), ('manualtimeout', '5'), ('purge', '7')", array(FOF_VERSION, BLOWFISH_EFFORT), False);
+fof_query("insert into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?),
+				('logging', '0'), ('autotimeout', '10'), ('manualtimeout', '5'), ('purge', '7')", array(FOF_VERSION, BCRYPT_EFFORT), False);
 ?>
 
 Done.<hr>

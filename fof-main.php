@@ -172,7 +172,7 @@ function fof_make_salt(){
 	return $new_id;
 }
 
-function fof_make_blowfish_salt() {
+function fof_make_bcrypt_salt() {
 	//64 character alphabet, 22 characters = 132 bits.  Assume mt_rand gives 31 bits entropy
 	$new_id = '';
 	for ($i=0; $i<6; $i++){
@@ -181,7 +181,7 @@ function fof_make_blowfish_salt() {
 	$bytes = pack('H*', $new_id);
 	//base 64 encode bytes, use . instead of +, return first 22
 	$salt = substr(str_replace('+', '.', base64_encode($bytes)), 0, 22);
-	$effort = fof_db_blowfish_effort();
+	$effort = fof_db_bcrypt_effort();
 	$final = '$2a$' . $effort . '$' . $salt;
 	return $final;
 }

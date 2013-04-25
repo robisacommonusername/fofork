@@ -24,7 +24,7 @@ define('FOF_DB_TYPE','mysql');
 
 // The rest you should not need to change
 define('FOF_VERSION', '1.5.0');
-define('BLOWFISH_EFFORT', '9');
+define('BCRYPT_EFFORT', '9');
 
 // DB table names
 

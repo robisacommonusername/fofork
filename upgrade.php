@@ -17,7 +17,7 @@ function upgradePoint1Point5($adminPassword){
 	UNIQUE KEY (`param`))", null);
 	
 	//add some new parameters
-	fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('blowfish_effort', ?)", array(FOF_VERSION, BLOWFISH_EFFORT));
+	fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?)", array(FOF_VERSION, bcrypt_EFFORT));
 	
 	//move admin prefs into config table
 	$p =& FoF_Prefs::instance();
@@ -35,7 +35,7 @@ function upgradePoint1Point5($adminPassword){
     $paramString = implode(', ', $params);
     fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values $paramString", $args);
     
-	//update users table - drop salt, change hashing to blowfish
+	//update users table - drop salt, change hashing to bcrypt
 	//will need to drop all users except admin user
 	$result = fof_query("SELECT user_name, user_level, user_prefs from $FOF_USER_TABLE where user_id = 1", null);
 	if ($row = fof_db_get_row($result)){
@@ -51,7 +51,7 @@ function upgradePoint1Point5($adminPassword){
   				`user_prefs` text,
   				PRIMARY KEY  (`user_id`), UNIQUE KEY (`user_name`)
 				)");
-			$salt = fof_make_blowfish_salt();
+			$salt = fof_make_bcrypt_salt();
 			$row['user_password_hash'] = crypt($adminPassword, $salt);
 			$stmnt = $fof_connection->prepare("INSERT into $FOF_USER_TABLE (user_name, user_password_hash, user_level, user_prefs)
 				values (:user_name, :user_password_hash, :user_level, :user_prefs)");
