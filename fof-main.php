@@ -198,6 +198,10 @@ function fof_place_cookie($user_id){
 
 function fof_validate_cookie(){
 	if (isset($_COOKIE['token'])){
+		//do a length and alphabet checks
+		if (!preg_match('|^[./0-9a-zA-z]{22}$|', $_COOKIE['token'])) {
+			return False;
+		}
 		$result = fof_db_validate_cookie($_COOKIE['token'], $_SERVER['HTTP_USER_AGENT']);
 		if (is_array($result)){
 			$_SESSION['authenticated'] = True;

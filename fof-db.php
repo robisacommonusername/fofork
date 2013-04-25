@@ -838,7 +838,7 @@ function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 		$censors[] = 'XXX token_hash XXX';
 	}
 	$result = fof_safe_query($query, $args);
-	$result = fof_private_safe_query("INSERT into $FOF_COOKIE_TABLE (token_hash, user_id, user_agent_hash) VALUES ('%s', %d, '%s')", $censors, sha1($newToken), $uid, sha1($user_agent));
+	$result = fof_private_safe_query("INSERT into $FOF_COOKIE_TABLE (token_hash, user_id, user_agent_hash) VALUES ('%s', %d, '%s')", $censors, sha1($newToken), $uid, sha1($user_agent . $newToken));
 	return True;
 }
 
@@ -848,7 +848,7 @@ function fof_db_validate_cookie($token, $userAgent){
 	$result = fof_private_safe_query("SELECT * from $FOF_COOKIE_TABLE where token_hash='%s'", $censors, sha1($token));
 	if (mysql_num_rows($result) > 0){
 		$row = fof_db_get_row($result);
-		if (sha1($userAgent) === $row['user_agent_hash']){
+		if (sha1($userAgent . $token) === $row['user_agent_hash']){
 			$uid = $row['user_id'];
 			$result = fof_safe_query("SELECT * from $FOF_USER_TABLE where user_id=%d", $uid);
 			if (mysql_num_rows($result) > 0){
