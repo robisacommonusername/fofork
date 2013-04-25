@@ -21,7 +21,7 @@ function decrypt_line($line){
 	$IV = substr($line, 0, 22);
 	$data = substr($line, 22);
 	$aes = new Crypt_AES();
-	$aes->setKey(FOF_DB_PASS);
+	$aes->setKey(fof_db_log_password());
 	$aes->setIV($IV);
 	$decoded = $aes->decrypt(base64_decode($data));
 	return $decoded;

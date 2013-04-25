@@ -17,7 +17,7 @@ function upgradePoint1Point5($adminPassword){
 	UNIQUE KEY (`param`))", null);
 	
 	//add some new parameters
-	fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?)", array(FOF_VERSION, bcrypt_EFFORT));
+	fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?), ('log_password', ?)", array(FOF_VERSION, bcrypt_EFFORT, fof_make_salt()));
 	
 	//move admin prefs into config table
 	$p =& FoF_Prefs::instance();

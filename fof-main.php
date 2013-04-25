@@ -95,7 +95,7 @@ function fof_log($message, $topic="debug") {
     $totalMessage = date('r') . " [$topic] $message";
     
     $aes = new Crypt_AES();
-    $aes->setKey(FOF_DB_PASS); //just use the same password as database for now
+    $aes->setKey(fof_db_log_password());
     $IV = fof_make_salt();
     $aes->setIV($IV);
     $cipherText = $IV . base64_encode($aes->encrypt($totalMessage)) . "\n";

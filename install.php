@@ -15,7 +15,7 @@
 $fof_no_login = true;
 $fof_installer = true;
 
-include_once("fof-main.php");
+include_once('fof-main.php');
 
 fof_set_content_type();
 
@@ -295,8 +295,8 @@ Inserting initial data...
 
 <?php
 fof_query("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (1, 'unread'), (2, 'star')", null, False);
-fof_query("insert into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?),
-				('logging', '0'), ('autotimeout', '10'), ('manualtimeout', '5'), ('purge', '7')", array(FOF_VERSION, BCRYPT_EFFORT), False);
+fof_query("insert into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?), ('log_password', ?),
+				('logging', '0'), ('autotimeout', '10'), ('manualtimeout', '5'), ('purge', '7')", array(FOF_VERSION, BCRYPT_EFFORT, fof_make_salt()), False);
 ?>
 
 Done.<hr>

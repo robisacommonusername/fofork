@@ -175,6 +175,21 @@ function fof_db_get_version() {
 	return '1.1';
 }
 
+function fof_db_log_password() {
+	global $FOF_CONFIG_TABLE;
+	static $password;
+	
+	if (isset($password)){
+		return $password;
+	}
+	$result = fof_query("SELECT val from $FOF_CONFIG_TABLE where param = 'log_password'", null);
+	if ($row = fof_db_get_row($result)) {
+		$password = $row['val'];
+	} else {
+		$password = FOF_DB_PASS;
+	}
+	return $password;
+}
 ////////////////////////////////////////////////////////////////////////////////
 // Feed level stuff
 ////////////////////////////////////////////////////////////////////////////////
