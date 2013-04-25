@@ -18,8 +18,8 @@ if (!fof_is_admin()){
 }
 
 function decrypt_line($line){
-	$IV = substr($line, 0, 40);
-	$data = substr($line, 40);
+	$IV = substr($line, 0, 22);
+	$data = substr($line, 22);
 	$aes = new Crypt_AES();
 	$aes->setKey(FOF_DB_PASS);
 	$aes->setIV($IV);
