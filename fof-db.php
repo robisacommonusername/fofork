@@ -754,7 +754,8 @@ function fof_db_add_user($username, $password)
 	} else {
 		$salt = fof_make_salt();
 		$password_hash = md5($password . $salt);
-		fof_safe_query("insert into $FOF_USER_TABLE (user_name, user_password_hash, salt) values ('%s', '%s', '%s')", $username, $password_hash, $salt);
+		$censors = array(1 => 'XXX password_hash XXX', 2 => 'XXX salt XXX');
+		fof_private_safe_query("insert into $FOF_USER_TABLE (user_name, user_password_hash, salt) values ('%s', '%s', '%s')", $censors, $username, $password_hash, $salt);
 		return True;
 	}
     
@@ -767,8 +768,8 @@ function fof_db_change_password($username, $password)
     $salt = fof_make_salt();
     
 	$password_hash = md5($password . $salt);
-    
-	fof_safe_query("update $FOF_USER_TABLE set user_password_hash = '%s', salt='%s' where user_name = '%s'", $password_hash, $salt, $username);
+    $censors = array('XXX password_hash XXX', 'XXX salt XXX');
+	fof_private_safe_query("update $FOF_USER_TABLE set user_password_hash = '%s', salt='%s' where user_name = '%s'", $censors, $password_hash, $salt, $username);
 }
 
 function fof_db_get_user_id($username)
@@ -830,19 +831,21 @@ function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 	// but will guarantee that 2nd user doesn't get access to first user's account and vice-versa.
 	$query = "DELETE from $FOF_COOKIE_TABLE where token_hash='%s'";
 	$args[] = sha1($newToken);
+	$censors[] = 'XXX token_hash XXX';
 	if ($oldToken) {
 		$query .= " or token_hash='%s'";
 		$args[] = sha1($oldToken);
+		$censors[] = 'XXX token_hash XXX';
 	}
 	$result = fof_safe_query($query, $args);
-	$censors[] = 'XXX token_hash XXX';
 	$result = fof_private_safe_query("INSERT into $FOF_COOKIE_TABLE (token_hash, user_id, user_agent_hash) VALUES ('%s', %d, '%s')", $censors, sha1($newToken), $uid, sha1($user_agent));
 	return True;
 }
 
 function fof_db_validate_cookie($token, $userAgent){
 	global $FOF_COOKIE_TABLE, $FOF_USER_TABLE;
-	$result = fof_safe_query("SELECT * from $FOF_COOKIE_TABLE where token_hash='%s'",sha1($token));
+	$censors[] = 'XXX token_hash XXX';
+	$result = fof_private_safe_query("SELECT * from $FOF_COOKIE_TABLE where token_hash='%s'", $censors, sha1($token));
 	if (mysql_num_rows($result) > 0){
 		$row = fof_db_get_row($result);
 		if (sha1($userAgent) === $row['user_agent_hash']){
@@ -863,7 +866,8 @@ function fof_db_logout_everywhere(){
 
 function fof_db_delete_cookie($token){
 	global $FOF_COOKIE_TABLE;
-	return (fof_safe_query("DELETE from $FOF_COOKIE_TABLE where token_hash='%s'", sha1($token)));
+	$censors[] = 'XXX token_hash XXX';
+	return (fof_private_safe_query("DELETE from $FOF_COOKIE_TABLE where token_hash='%s'", $censors, sha1($token)));
 }
 
 function fof_db_open_session(){
@@ -898,7 +902,8 @@ function fof_db_write_session($id, $data){
 
 function fof_db_destroy_session($id){
 	global $FOF_SESSION_TABLE;
-    return fof_safe_query("DELETE from $FOF_SESSION_TABLE where id='%s'", $id);
+	$censors[] = 'XXX session_id XXX';
+    return fof_private_safe_query("DELETE from $FOF_SESSION_TABLE where id='%s'", $censors, $id);
 }
 
 function fof_db_clean_session($max){
