@@ -36,7 +36,11 @@ function date_filter($line, $date, $laterThan){
 	return $laterThan ? ($parsedDate > $date) : ($parsedDate < $date);
 }
 //slurp all text, and split lines
-$logLines = file('fof.log');
+if (file_exists('fof.log')) {
+	$logLines = file('fof.log');
+} else {
+	$logLines = array();
+}
 
 //use head/tail.  Only look at last or first n lines
 if (isset($_POST['headtail_checkbox'])){
