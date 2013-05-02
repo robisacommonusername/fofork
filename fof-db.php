@@ -158,7 +158,7 @@ function fof_db_get_row($result) {
     }
     return $ret;
 }
-
+//Deprecate??
 function fof_db_get_all_rows($result) {
 	$ret = array();
 	if ($result instanceof PDOStatement){

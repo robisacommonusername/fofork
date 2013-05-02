@@ -22,13 +22,13 @@ if($_GET['how'] == 'paged' && !isset($_GET['which'])){
 }
 
 if(!isset($_GET['what'])) {
-    $what = "unread";
+    $what = 'unread';
 } else {
     $what = htmlspecialchars($_GET['what']);
 }
 
 if(!isset($_GET['order'])) {
-	$order = $fof_prefs_obj->get("order") == 'asc' ? 'asc' : 'desc';
+	$order = $fof_prefs_obj->get('order') == 'asc' ? 'asc' : 'desc';
 } else {
 	$order = $_GET['order'] == 'asc' ? 'asc' : 'desc';
 }
@@ -38,12 +38,27 @@ $feed = intval($_GET['feed']);
 $when = htmlspecialchars($_GET['when']);
 $howmany = intval($_GET['howmany']);
 if (!$howmany){
-	$howmany = intval($fof_prefs_obj->get("howmany"));
+	$howmany = intval($fof_prefs_obj->get('howmany'));
 }
 $search = isset($_GET['search']) ? htmlspecialchars($_GET['search']) : "";
 
-$title = fof_view_title($feed, $what, $when, $which, $howmany, $search);
-
+//prepare the page title
+$title = 'feed on feeds';
+if ($when != ''){
+	$title .= " - $when" ;
+}
+if ($feed > 0) {
+	$r = fof_db_get_feed_by_id($feed);
+	$title .= " - {$r['feed_title']}";
+}
+if ($what != 'all') {
+	$title .= ' - unread items';
+} else {
+	$title .= ' - all items';
+}
+if ($search != '') {
+	$title .= " - <a href=\"javascript:toggle_highlight()\">matching <i class=\"highlight\">$search</i></a>";
+}
 ?>
 
 <br style="clear: both"><br />
@@ -54,12 +69,12 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search);
 <ul id="item-display-controls" class="inline-list">
 	<li class="orderby"><?php
 	
-	echo ($order == "desc") ? '[new to old]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=desc\">[new to old]</a>" ;
+	echo ($order == 'desc') ? '[new to old]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=desc\">[new to old]</a>" ;
 	
 	?></li>
 	<li class="orderby"><?php
 
-	echo ($order == "asc") ? '[old to new]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=asc\">[old to new]</a>" ;
+	echo ($order == 'asc') ? '[old to new]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=asc\">[old to new]</a>" ;
 	
 	?></li>
 	<li><a href="javascript:flag_all();mark_read()"><strong>Mark all read</strong></a></li>
@@ -81,16 +96,6 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search);
 		<input type="hidden" name="return" />
 
 <?php
-	$links = fof_get_nav_links($feed, $what, $when, $which, $howmany);
-
-	if($links)
-	{
-?>
-		<center><?php echo $links?></center>
-
-<?php
-	}
-
 
 $result = fof_get_items(fof_current_user(), $feed, $what, $when, $which, $howmany, $order, $search);
 
