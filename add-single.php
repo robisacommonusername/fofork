@@ -30,7 +30,7 @@ if (fof_authenticate_CSRF_challenge($hash)){
     if (!$feed) {
 		//feed with specified url doesn't exist.  try to parse url given
 		$rss = fof_parse($url);
-    	if (isset($rss->error())) {
+    	if ($rss->error()) {
         	exit('Error: <b>' . htmlspecialchars($rss->error()) . '</b>');
 		}
         $url = html_entity_decode($rss->subscribe_url(), ENT_QUOTES);
