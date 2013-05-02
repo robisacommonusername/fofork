@@ -159,6 +159,14 @@ function fof_db_get_row($result) {
     return $ret;
 }
 
+function fof_db_get_all_rows($result) {
+	$ret = array();
+	if ($result instanceof PDOStatement){
+		$ret = $result->fetchAll(PDO::FETCH_ASSOC);
+	}
+	return $ret;
+}
+
 function fof_db_optimize() {
 	global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE, $FOF_CONFIG_TABLE;
     
@@ -460,108 +468,99 @@ function fof_db_add_items($feed_id, $items) {
 
 }
 
-function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL) {
+function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $start=null, $limit=null, $order='desc', $search=null) {
     global $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
     
     $prefs = fof_prefs();
     $offset = $prefs['tzoffset'];
     
-    if(!is_null($when) && $when != "")
-    {
-        if($when == "today")
-        {
+    if($when != null) {
+        if($when == 'today') {
             $whendate = fof_todays_date();
-        }
-        else
-        {
+        } else {
             $whendate = $when;
         }
         
-        $whendate = explode("/", $whendate);
+        $whendate = explode('/', $whendate);
         $begin = gmmktime(0, 0, 0, $whendate[1], $whendate[2], $whendate[0]) - ($offset * 60 * 60);
         $end = $begin + (24 * 60 * 60);
     }
     
-    if(is_numeric($start))
-    {
-        if(!is_numeric($limit))
-        {
-            $limit = intval($prefs["howmany"]);
+    if(is_numeric($start)) {
+        if(!is_numeric($limit)) {
+            $limit = $prefs['howmany'];
         }
-        
-        $limit_clause = " limit $start, $limit ";
+        $limit_clause = sprintf(' limit %d, %d ', $start, $limit);;
     }
     
     $args = array();
-    $select = "SELECT i.* , f.* ";
+    $select = 'SELECT i.* , f.* ';
     $from = "FROM $FOF_FEED_TABLE f, $FOF_ITEM_TABLE i, $FOF_SUBSCRIPTION_TABLE s ";
-    $where = sprintf("WHERE s.user_id = %d AND s.feed_id = f.feed_id AND f.feed_id = i.feed_id ", $user_id);
+    $where = 'WHERE s.user_id = ? AND s.feed_id = f.feed_id AND f.feed_id = i.feed_id ';
+    $args[] = $user_id;
  
-    if(!is_null($feed) && $feed != "")
-    {
-        $where .= sprintf("AND f.feed_id = %d ", $feed);
+    if($feed != null) {
+        $where .= 'AND f.feed_id = ? ';
+        $args[] = $feed;
     }
     
-    if(!is_null($when) && $when != "")
-    {
-        $where .= sprintf("AND i.item_published > %d and i.item_published < %d ", $begin, $end);
+    if($when != null) {
+        $where .= 'AND i.item_published > ? and i.item_published < ? ';
+        $args[] = $begin;
+        $args[] = $end;
     }
     
-    if($what != "all")
-    {
-        $tags = split(" ", $what);
-        $in = implode(", ", array_fill(0, count($tags), '?'));
+    if($what != 'all') {
+        $tags = split(' ', $what);
+        $in = implode(', ', array_fill(0, count($tags), '?'));
         $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
-        $where .= sprintf("AND it.user_id = %d ", $user_id);
-        $where .= "AND it.tag_id = t.tag_id AND ( t.tag_name IN ( $in ) ) AND i.item_id = it.item_id ";
-        $group = sprintf("GROUP BY i.item_id HAVING COUNT( i.item_id ) = %d ", count($tags));
+        $where .= "AND it.user_id = ? AND it.tag_id = t.tag_id AND ( t.tag_name IN ( $in ) ) AND i.item_id = it.item_id "; 
+        $args[] = $user_id;
         $args = array_merge($args, $tags);
+        $group = sprintf("GROUP BY i.item_id HAVING COUNT( i.item_id ) = %d ", count($tags));
     }
     
-    if(!is_null($search) && $search != "")
-    {
-        $where .= "AND (i.item_title like ? or i.item_content like ? )";
+    if($search != null) {
+        $where .= 'AND (i.item_title like ? or i.item_content like ? )';
         $args[] = $search;
         $args[] = $search;
     }
     
-    $order_by = "order by i.item_published desc $limit_clause ";
+    if ($order != 'desc') {
+    	$order = 'asc';
+    }
+    $order_by = "order by i.item_published $order $limit_clause ";
     
     $query = $select . $from . $where . $group . $order_by;
     
     $result = fof_query_log($query, $args);
     
-    if($result->rowCount() == 0) {
+    if ($result->rowCount() == 0) {
         return array();
     }
-    	
-    while($row = fof_db_get_row($result)) {
-        $array[] = $row;
-    }
-    
-    $array = fof_multi_sort($array, 'item_published', $order != 'asc');
     
     $i = 0;
-    foreach($array as $item)
-    {
+    $items = array();
+    while ($item = fof_db_get_row($result)) {
+    	$items[] = $item;
         $ids[] = $item['item_id'];
-        $lookup[$item['item_id']] = $i;
-        $array[$i]['tags'] = array();
-        
+        $lookup[$item['item_id']] = $i; //item_id => array index
+        $items[$i]['tags'] = array();
         $i++;
     }
 
     $placeholders = implode(', ', array_fill(0,$i,'?'));
-    $ids[] = $user_id;
+    $ids[] = $user_id;  //just tack on the end
     
+    //get the tags.
     $result = fof_query_log("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id in ($placeholders) and $FOF_ITEM_TAG_TABLE.user_id = ?", $ids);
     
     while ($row = fof_db_get_row($result)){
     	$item_id = $row['item_id'];
     	$tag = $row['tag_name'];
-    	$array[$lookup[$item_id]]['tags'][] = $tag;
+    	$items[$lookup[$item_id]]['tags'][] = $tag;
     }
-    return $array;
+    return $items;
 }
 
 function fof_db_get_item($user_id, $item_id) {
@@ -575,7 +574,7 @@ function fof_db_get_item($user_id, $item_id) {
     
     $item['tags'] = array();
     
-	if($user_id) {
+	if ($user_id) {
 		$result = fof_query_log("select $FOF_TAG_TABLE.tag_name from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = ? and $FOF_ITEM_TAG_TABLE.user_id = ?", array($item_id, $user_id));
 
 		while($row = fof_db_get_row($result)) {

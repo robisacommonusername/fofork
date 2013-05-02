@@ -100,7 +100,7 @@ function fof_render_item($item){
 			onclick="return toggle_favorite('<?php echo $item_id ?>')"
 		/>
 		<script>
-			document.getElementById("fav<?php echo $item_id ?>").star = <?php if($star) echo 'true'; else echo 'false'; ?>;
+			document.getElementById("fav<?php echo $item_id ?>").star = <?php echo $star ? 'true' : 'false'; ?>;
 		</script>
 		<a href="<?php echo $item_link ?>" <?php if ($prefs['newtabs']) echo 'target="_blank"'?> >
 			<?php echo $item_title ?>
