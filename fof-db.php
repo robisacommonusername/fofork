@@ -1012,10 +1012,11 @@ function fof_db_close_session(){
 }
 
 function fof_db_read_session($id){
+	$hash = base64_encode(hash('tiger192,4',$id,True));
 	global $FOF_SESSION_TABLE;
     $result = fof_query_log_private("SELECT data from $FOF_SESSION_TABLE where id = :sessid",
-    								array('sessid' => $id),
-    								array('sessid' => 'XXX session id XXX'));
+    								array('sessid' => $hash),
+    								array('sessid' => 'XXX session id hash XXX'));
     if ($result->rowCount()){
     	$record = fof_db_get_row($result);
     	return $record['data'];
@@ -1024,16 +1025,18 @@ function fof_db_read_session($id){
 }
 
 function fof_db_write_session($id, $data){
-	global $FOF_SESSION_TABLE;  
+	global $FOF_SESSION_TABLE;
+	$hash = base64_encode(hash('tiger192,4',$id,True));
     $access = time();
     return fof_query_log_private("REPLACE into $FOF_SESSION_TABLE VALUES (:sessid, :access, :data)",
-    							array('sessid' => $id, 'access' => $access, 'data' => $data),
-    							array('sessid' => 'XXX session id XXX'));
+    							array('sessid' => $hash, 'access' => $access, 'data' => $data),
+    							array('sessid' => 'XXX session id hash XXX'));
 }
 
 function fof_db_destroy_session($id){
 	global $FOF_SESSION_TABLE;
-    fof_query_log_private("DELETE from $FOF_SESSION_TABLE where id=?", array($id), array('XXX session id XXX'));
+	$hash = base64_encode(hash('tiger192,4',$id,True));
+    fof_query_log_private("DELETE from $FOF_SESSION_TABLE where id=?", array($hash), array('XXX session id hash XXX'));
     return True;
 }
 
