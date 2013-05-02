@@ -543,42 +543,6 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
    return $feeds;
 }
 
-function fof_view_title($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL, $search=NULL)
-{
-    $prefs = fof_prefs();
-    $title = "feed on feeds";
-    
-    if(!is_null($when) && $when != "")
-    {
-        $title .= ' - ' . $when ;
-    }
-    if(!is_null($feed) && $feed != "")
-    {
-        $r = fof_db_get_feed_by_id($feed);
-        $title .=' - ' . $r['feed_title'];
-    }
-    if(is_numeric($start))
-    {
-        if(!is_numeric($limit)) $limit = $prefs["howmany"];
-        $title .= " - items $start to " . ($start + $limit);
-    }
-    if($what != "all")
-    {
-        $title .=' - new items';
-    }
-    else
-    {
-        $title .= ' - all items';
-    }
-    
-    if(isset($search))
-    {
-        $title .= " - <a href=\"javascript:toggle_highlight()\">matching <i class=\"highlight\">$search</i></a>";
-    }
-    
-    return $title;
-}
-
 function fof_get_items($user_id, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
 {
    global $fof_item_filters;
@@ -655,60 +619,6 @@ function fof_delete_subscription($user_id, $feed_id)
     }
 }
 
-function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL)
-{
-    $prefs = fof_prefs();
-    
-    if(!is_null($when) && $when != "")
-    {
-        if($when == "today")
-        {
-            $whendate = fof_todays_date();
-        }
-        else
-        {
-            $whendate = $when;
-        }
-        
-        $begin = strtotime($whendate);
-        
-        $tomorrow = date( "Y/m/d", $begin + (24 * 60 * 60) );
-        $yesterday = date( "Y/m/d", $begin - (24 * 60 * 60) );
-        
-        $string = "<a href=\".?feed=$feed&amp;what=$what&amp;when=$yesterday&amp;how=$how&amp;howmany=$howmany\">[&laquo; $yesterday]</a> ";
-        if($when != "today") $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=today&amp;how=$how&amp;howmany=$howmany\">[today]</a> ";
-        if($when != "today") $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$tomorrow&amp;how=$how&amp;howmany=$howmany\">[$tomorrow &raquo;]</a> ";
-    }
-    
-    if(is_numeric($start))
-    {
-        if(!is_numeric($limit)) $limit = $prefs["howmany"];
-        
-        $earlier = $start + $limit;
-        $later = $start - $limit;
-        
-        $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$earlier&amp;howmany=$limit\">[&laquo; previous $limit]</a> ";
-        if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;howmany=$limit\">[current items]</a> ";
-        if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$later&amp;howmany=$limit\">[next $limit &raquo;]</a> ";
-    }
-    
-    return $string;
-}
-
-function fof_render_feed_link($row)
-{
-	$stripper = new FofFeedSanitiser();
-   $link = $stripper->sanitiseLink($row['feed_link']);
-   $description = htmlspecialchars($row['feed_description'], ENT_QUOTES);
-   $title = htmlspecialchars($row['feed_title'], ENT_QUOTES);
-   $url = $stripper->sanitiseLink($row['feed_url']);
-
-   $s = "<b><a href=\"$link\" title=\"$description\">$title</a></b> ";
-   $s .= "<a href=\"$url\">(rss)</a>";
-
-   return $s;
-}
-
 function fof_opml_to_array($opml)
 {
    $rx = '/xmlurl\s*=\s*"([^"]*)"/mi'; //get whatever's between the quotes
@@ -738,67 +648,6 @@ function fof_prepare_url($url)
     return $url;
 }
 
-function fof_subscribe($user_id, $url, $unread="today")
-{
-    if(!$url) return false;
-    
-    $url = fof_prepare_url($url);    
-    $feed = fof_db_get_feed_by_url($url);
-    
-    if(fof_db_is_subscribed($user_id, $url))
-    {
-        return "You are already subscribed to " . fof_render_feed_link($feed) . "<br />";
-    }
-    
-    if(fof_feed_exists($url))
-    {
-        fof_db_add_subscription($user_id, $feed['feed_id']);
-        fof_apply_plugin_tags($id, NULL, $user_id);
-        fof_update_feed($feed['feed_id']);
-        
-        if($unread != "no") fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
-        return '<font color="green"><b>Subscribed.</b></font><br>';
-    }
-    
-    $rss = fof_parse($url);
-     $escapedUrl = htmlspecialchars($url, ENT_QUOTES);
-    if (isset($rss->error))
-    {
-        return "Error: <B>" . $rss->error . "</b> <a href=\"http://feedvalidator.org/check?url=$escapedUrl\">try to validate it?</a><br />";
-    }
-    else
-    {
-        $url = html_entity_decode($rss->subscribe_url(), ENT_QUOTES);
-        $self = $rss->get_link(0, 'self');
-        if($self) $url = html_entity_decode($self, ENT_QUOTES);
-
-        if(fof_feed_exists($url))
-        {
-            $feed = fof_db_get_feed_by_url($url);
-            
-            if(fof_db_is_subscribed($user_id, $url))
-            {
-                return "You are already subscribed to " . fof_render_feed_link($feed) . "<br />";
-            }
-            
-            fof_db_add_subscription($user_id, $feed['feed_id']);
-            if($unread != "no") fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
-
-            return '<font color="green"><b>Subscribed.</b></font><br />';
-        }
-        
-        $id = fof_add_feed($url, $rss->get_title(), $rss->get_link(), $rss->get_description() );
-		
-        fof_update_feed($id);
-        fof_db_add_subscription($user_id, $id);
-        if($unread != "no") fof_db_mark_feed_unread($user_id, $id, $unread);
-        
-        fof_apply_plugin_tags($id, NULL, $user_id);
- 
-       return '<font color="green"><b>Subscribed.</b></font><br />';
-    }
-}
-
 function fof_add_feed($url, $title, $link, $description)
 {
    if($title == "") $title = "[no title]";
@@ -806,13 +655,6 @@ function fof_add_feed($url, $title, $link, $description)
    $id = fof_db_add_feed($url, $title, $link, $description);
    
    return $id;
-}
-
-function fof_feed_exists($url)
-{
-   $feed = fof_db_get_feed_by_url($url);
-
-   return $feed;
 }
 
 function fof_get_subscribed_users($feed_id)
@@ -851,7 +693,7 @@ function fof_update_feed($id) {
     if ($rss->error())
     {
         fof_log("feed update failed: " . $rss->error(), "update");
-        return array(0, "Error: <b>" . $rss->error() . "</b> <a href=\"http://feedvalidator.org/check?url=$escapedUrl\">try to validate it?</a>");
+        return array(0, "Error: <b>" . htmlspecialchars($rss->error(),ENT_QUOTES) . "</b> <a href=\"http://feedvalidator.org/check?url=$escapedUrl\">try to validate it?</a>");
     }
         
     $sub = html_entity_decode($rss->subscribe_url(), ENT_QUOTES);
