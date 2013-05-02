@@ -182,11 +182,9 @@ function fof_make_salt(){
 		//further note - must NOT use mt_rand ANYWHERE in code where it can give
 		//attacker access to output.  Should probably enforce this somehow.
 		// Want 128 bits
-		$new_id = '';
 		for ($i=0; $i<6; $i++){
-			$new_id = hash('tiger160,4', $new_id . mt_rand());
+			$bytes = hash('tiger160,4', $bytes . mt_rand(), True);
 		}
-		$bytes = pack('H*', $new_id);
 	}
 	$salt = substr(str_replace('+', '.', base64_encode($bytes)), 0, 22);
 	return $salt;
