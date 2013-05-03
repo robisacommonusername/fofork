@@ -170,41 +170,34 @@ function fof_render_item($item){
 
 	<span class="meta">on <?php echo $item_published ?></span>
 
-</div>
-
-
-<div class="body"><?php echo $item_content ?></div>
-
-<?php
-//for long items, display control links at bottom
-//TODO: get a better way of working out the item height
-if (strlen($item_content) > 3000) { ?>
-	<div class="header">
-	<a onclick="document.getElementById('c<?php echo $item_id;?>').checked = true; return false;" href="">flag this item</a> | 
-	<a onclick="flag_upto('c<?php echo $item_id;?>'); return false;" href="">flag all items above</a>
 	</div>
+
+
+	<div class="body"><?php echo $item_content ?></div>
+
+	<?php
+	//for long items, display control links at bottom
+	//TODO: get a better way of working out the item height
+	if (strlen($item_content) > 3000) { ?>
+		<div class="header">
+		<a onclick="document.getElementById('c<?php echo $item_id;?>').checked = true; return false;" href="">flag this item</a> | 
+		<a onclick="flag_upto('c<?php echo $item_id;?>'); return false;" href="">flag all items above</a>
+		</div>
+	<?php } ?>
+
+	<?php
+	$widgets = fof_get_widgets($item);
+	if($widgets) { ?>
+		<div class="clearer"></div>
+
+		<div class="widgets">
+
+		<?php foreach($widgets as $widget) {
+        	echo "<span class='widget'>$widget</span> ";
+    	} ?>
+
+		</div>
+
+	<?php } ?>
+
 <?php } ?>
-
-<?php
-    $widgets = fof_get_widgets($item);
-    if($widgets) {
-?>
-
-<div class="clearer"></div>
-
-<div class="widgets">
-
-<?php
-    foreach($widgets as $widget)
-    {
-        echo "<span class='widget'>$widget</span> ";
-    }
-?>
-
-</div>
-
-<?php } ?>
-
-<?php
-}
-?>

@@ -59,12 +59,28 @@ if ($what != 'all') {
 if ($search != '') {
 	$title .= " - <a href=\"javascript:toggle_highlight()\">matching <i class=\"highlight\">$search</i></a>";
 }
-?>
 
+//fetch the items from the db
+$items = fof_get_items(fof_current_user(), $feed, $what, $when, $which, $howmany, $order, $search);
+
+//prepare the navigation links
+$next = $which + $howmany;
+$prev = $which - $howmany;
+
+$navParts = array();
+if ($prev >= 0) {
+	$navParts[] = "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$prev&amp;howmany=$howmany\">[&laquo; previous $howmany]</a> ";
+}
+if (count($items) == $howmany){
+	$navParts[] = "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$next&amp;howmany=$howmany\">[next $howmany &raquo; ]</a> ";
+}
+
+$navLink = implode(' | ', $navParts);
+?>
 <br style="clear: both"><br />
 
-<p><?php echo $title ?></p> 
-
+<center><p><?php echo $title; ?></p> 
+<?php echo $navLink; ?></center>
 
 <ul id="item-display-controls" class="inline-list">
 	<li class="orderby"><?php
@@ -96,12 +112,9 @@ if ($search != '') {
 		<input type="hidden" name="return" />
 
 <?php
-
-$result = fof_get_items(fof_current_user(), $feed, $what, $when, $which, $howmany, $order, $search);
-
 $first = true;
 
-foreach($result as $row)
+foreach($items as $row)
 {
 	$item_id = $row['item_id'];
 	if($first) print "<script>firstItem = 'i$item_id'; </script>";
@@ -111,7 +124,7 @@ foreach($result as $row)
 	print '</div>';
 }
 
-if(count($result) == 0)
+if(count($items) == 0)
 {
 	echo "<p><i>No items found.</i></p>";
 }
@@ -119,6 +132,6 @@ if(count($result) == 0)
 ?>
 		</form>
         
-        <div id="end-of-items"></div>
+        <div id="end-of-items"><center><?php echo $navLink; ?></center></div>
 
 <script>itemElements = $$('.item');</script>
