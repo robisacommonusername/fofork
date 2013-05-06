@@ -24,7 +24,7 @@ if(isset($_POST['user_name']) && isset($_POST['user_password']))
 {
     if(fof_db_authenticate($_POST['user_name'], $_POST['user_password']))
     {
-    	session_regenerate_id();
+    	session_regenerate_id(True);
     	if ($_POST['persistent'] == 'True'){
     		fof_place_cookie($_SESSION['user_id']);
     	}
