@@ -80,6 +80,17 @@ function fof_log($message, $topic="debug")
     $p = $fof_prefs_obj->admin_prefs;
     if(!$p['logging']) return;
     
+    if (array_key_exists('log_password', $p)) {
+    	$password = $p['log_password'];
+    } else {
+    	//generate a new pwd - none exists
+    	$password = fof_make_salt();
+    	$adminPrefs = fof_is_admin() ? $fof_prefs_obj : new FoF_Prefs(1);
+    	$adminPrefs->set('log_password',$password);
+    	$adminPrefs->save();
+    }
+    
+    
     static $log;
     if(!isset($log)) $log = @fopen("fof.log", 'a');
     
@@ -90,7 +101,7 @@ function fof_log($message, $topic="debug")
     $totalMessage = date('r') . " [$topic] $message";
     
     $aes = new Crypt_AES();
-    $aes->setKey(FOF_DB_PASS); //just use the same password as database for now
+    $aes->setKey($p['log_password']); //just use the same password as database for now
     $IV = fof_make_salt();
     $aes->setIV($IV);
     $cipherText = $IV . base64_encode($aes->encrypt($totalMessage)) . "\n";
@@ -172,11 +183,9 @@ function fof_make_salt(){
 		//fallback using mersenne twister.  Not great, but hopefully can extract
 		//enough entropy from mt_rand without being able to reconstruct internal state
 		// Want 128 bits
-		$new_id = '';
 		for ($i=0; $i<6; $i++){
-			$new_id = sha1($new_id . mt_rand());
+			$bytes = sha1($bytes . mt_rand(), True);
 		}
-		$bytes = pack('H*', $new_id);
 	}
 	$salt = substr(str_replace('+', '.', base64_encode($bytes)), 0, 22);
 	return $salt;
