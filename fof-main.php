@@ -109,7 +109,7 @@ function require_user()
     {
     	if (fof_validate_cookie()){
     		//prevent session fixation
-    		session_regenerate_id();
+    		session_regenerate_id(True);
     	} else {
         	Header("Location: login.php");
         	exit();
@@ -137,7 +137,7 @@ function require_user()
 			//and redirect to login
 			if (fof_validate_cookie()){
 				$old_id = session_id();
-				session_regenerate_id();
+				session_regenerate_id(True);
 				//regenerating session id will upset all the csrf checks
 				//ie if user has left a form for more than half an hour, then
 				//submits it, application will falsely accuse her of trying to launch a CSRF.
@@ -208,7 +208,7 @@ function fof_place_cookie($user_id){
 	
 	//possible dns rebinding problem here, so ensure cookie can only be accessed from our domain
 	$domain = substr($FOF_BASE_URL,0,-1); //remove trailing /
-	setcookie('token',$new_id, time()+60*60*24*30, '',$domain,False,True); #30 day expiry
+	setcookie('token',$new_id, time()+60*60*24*30, '',$domain,False,True); //30 day expiry
 }
 
 function fof_validate_cookie(){
