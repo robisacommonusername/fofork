@@ -21,6 +21,7 @@ if(fof_is_admin() && isset($_POST['adminprefs']) && fof_authenticate_CSRF_challe
 	$prefs->setAdmin('manualtimeout', intval($_POST['manualtimeout']));
 	$prefs->setAdmin('autotimeout', intval($_POST['autotimeout']));
 	$prefs->setAdmin('logging', $_POST['logging'] ? True : False);
+	$prefs->setAdmin('max_items_per_request', intval($_POST['max_items_per_request']));
 	$prefs->save();
     	
 	$message .= ' Saved admin prefs.';
@@ -303,6 +304,7 @@ Enable logging? <input type="checkbox" name="logging" <?php if($prefs->getAdmin(
 Purge read items after <input size="4" type="string" name="purge" value="<?php echo intval($prefs->getAdmin('purge'))?>"> days (leave blank to never purge)<br><br>
 Allow automatic feed updates every <input size="4" type="string" name="autotimeout" value="<?php echo intval($prefs->getAdmin('autotimeout'))?>"> minutes<br><br>
 Allow manual feed updates every <input size="4" type="string" name="manualtimeout" value="<?php echo intval($prefs->getAdmin('manualtimeout'))?>"> minutes<br><br>
+Maximum number of items per page request <input size="4" type="string" name="max_items_per_request" value="<?php echo intval($prefs->getAdmin('max_items_per_request'))?>"><br><br>
 <input type="submit" name="adminprefs" value="Save Options">
 </form>
 

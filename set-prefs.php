@@ -61,9 +61,10 @@ $allowedUserFields = array(
 );
 $allowedAdminFields = array(
 	'purge' => '3',
-	'autotimeout' => '3',
-	'manualtimeout' => '3',
+	'autotimeout' => 1000,
+	'manualtimeout' => 1000,
 	'logging' => True,
+	'max_items_per_request' => 10000
 );
 
 //set any user prefs

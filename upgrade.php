@@ -14,10 +14,10 @@ function upgradePoint1Point5($adminPassword){
 	fof_query("CREATE TABLE IF NOT EXISTS `$FOF_CONFIG_TABLE` (
 	`param` VARCHAR( 128 ) NOT NULL ,
 	`val` TEXT NOT NULL ,
-	UNIQUE KEY (`param`))", null);
+	PRIMARY KEY (`param`))", null);
 	
 	//add some new parameters
-	fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?), ('log_password', ?)", array(FOF_VERSION, bcrypt_EFFORT, fof_make_salt()));
+	fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?), ('log_password', ?), (max_items_per_request, ?)", array(FOF_VERSION, BCRYPT_EFFORT, fof_make_salt(), 100));
 	
 	//move admin prefs into config table
 	$p =& FoF_Prefs::instance();
@@ -34,6 +34,11 @@ function upgradePoint1Point5($adminPassword){
     }
     $paramString = implode(', ', $params);
     fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values $paramString", $args);
+    
+    //check - is there a log password in the admin prefs?
+    if (array_key_exists('log_password',$admin_prefs)){
+    	fof_query("UPDATE $FOF_CONFIG_TABLE set val = ? where param = 'log_password'", array($admin_prefs['log_password']));
+    }
     
 	//update users table - drop salt, change hashing to bcrypt
 	//will need to drop all users except admin user

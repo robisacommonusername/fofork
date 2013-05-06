@@ -887,7 +887,7 @@ function fof_db_save_prefs($user_id, $prefs) {
 function fof_db_get_admin_prefs() {
 	global $FOF_CONFIG_TABLE;
 	
-	$result = fof_query_log("SELECT * from $FOF_CONFIG_TABLE where param in ('logging','autotimeout','manualtimeout','purge')", null);
+	$result = fof_query_log("SELECT * from $FOF_CONFIG_TABLE where param in ('logging','autotimeout','manualtimeout','purge', 'max_items_per_request')", null);
 	$ret = array();
 	while ($row = fof_db_get_row($result)){
 		$ret[$row['param']] = $row['val'];
@@ -899,9 +899,7 @@ function fof_db_set_admin_prefs($prefs) {
 	global $FOF_CONFIG_TABLE;
 	
 	if (count($prefs) == 0) return;
-	$allowedKeys = array('logging' => null, 'autotimeout' => null, 'manualtimeout' => null, 'purge' => null);
-	$placeholders = array();
-	$args = array();
+	$allowedKeys = array('logging' => null, 'autotimeout' => null, 'manualtimeout' => null, 'purge' => null, 'max_items_per_request' => null);
 	//performance not important, this shouldn't change often
 	$updater = fof_prepare_query_log("UPDATE $FOF_CONFIG_TABLE set val = ? where param = ?");
 	foreach (array_intersect_key($prefs, $allowedKeys) as $key => $val) {

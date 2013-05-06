@@ -58,6 +58,7 @@ class FoF_Prefs {
             'autotimeout' => 30,
             'manualtimeout' => 15,
             'logging' => False,
+            'max_items_per_request' => 100
              );
         
         $this->stuff_array($this->prefs, $defaults);

@@ -40,6 +40,9 @@ $howmany = intval($_GET['howmany']);
 if (!$howmany){
 	$howmany = intval($fof_prefs_obj->get('howmany'));
 }
+if ($howmany > intval($fof_prefs_obj->getAdmin('max_items_per_request'))){
+	$howmany = intval($fof_prefs_obj->getAdmin('max_items_per_request'));
+}
 $search = isset($_GET['search']) ? htmlspecialchars($_GET['search']) : "";
 
 //prepare the page title
