@@ -740,6 +740,16 @@ function delete_tag(tag,hash)
     return false;
 }
 
+function delete_feed(feedid, hash){
+	throb();
+	var url = 'delete.php';
+	var params = {feed_id: feedid, CSRF_hash: hash};
+	var complete = function () {refreshlist(); };
+	var options = {method: 'post', parameters: params, onComplete: complete};
+	new Ajax.Request(url, options);
+	return false;
+}
+
 function change_feed_order(order, direction, hash)
 {
     throb();

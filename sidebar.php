@@ -15,6 +15,7 @@
 include_once("fof-main.php");
 
 fof_set_content_type();
+$CSRF_hash = fof_compute_CSRF_challenge();
 
 ?>
 <img id="throbber" src="image/throbber.gif" align="left" style="position: fixed; left: 0; top: 0; display: none;">
@@ -141,7 +142,6 @@ foreach($tags as $tag)
    if($unread) print "<a class='unread' href=\".?what=$tagNameEncoded+unread\">$unread</a>/";
    print "<a href=\".?what=$tagNameEncoded\">$count</a></td>";
    print "<td><b><a href=\".?what=$tagNameEncoded\">$tag_name</a></b></td>";
-   $CSRF_hash = fof_compute_CSRF_challenge();
    print "<td><a href=\"#\" title=\"untag all items\" onclick=\"if(confirm('Untag all [$tagNameEscaped] items --are you SURE?')) { delete_tag('$tagNameEscaped', '$CSRF_hash'); return false; }  else { return false; }\">[x]</a></td>";
 
    print "</tr>";
@@ -284,7 +284,7 @@ foreach($feeds as $feed)
    
    print "<a href=\"update.php?feed=$id\" title=\"update\">u</a>";
    print " <a href=\"#\" title=\"mark all read\" onclick=\"if(confirm('Mark all [$stitle] items as read --are you SURE?')) { mark_feed_read($id); return false; }  else { return false; }\">m</a>";
-   print " <a href=\"delete.php?feed=$id\" title=\"delete\" >d</a>";
+   print " <a  title=\"delete\" onclick=\"if(confirm('Delete feed [$stitle] - are you SURE?')) {delete_feed($id, '$CSRF_hash'); return false;} else {return false;}\" href=\"#\">d</a>";
    
    print "</nobr></td>";
 
