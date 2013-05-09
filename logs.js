@@ -27,7 +27,7 @@ FofLogViewer = (function () {
 	};
 	
 		
-	my.DOMobjects = [
+	var DOMobjects = [
 		{property: 'include',
 		checkbox_id: 'include_checkbox',
 		input_id: 'include',
@@ -79,7 +79,7 @@ FofLogViewer = (function () {
 	
 	my.update = function() {
 		var newLines = my.allLines;
-		my.DOMobjects.forEach(function (obj) {
+		DOMobjects.forEach(function (obj) {
 			if (document.getElementById(obj.checkbox_id).checked) {
 				newLines = obj.filterFunction(newLines);
 			}

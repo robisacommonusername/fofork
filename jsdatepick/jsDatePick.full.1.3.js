@@ -266,6 +266,7 @@ JsDatePick.prototype.populateFieldWithSelectedDate = function(){
 	this.lastPickedDateObject.year = this.selectedDayObject.year;
 	
 	this.closeCalendar();
+	FofLogViewer.update();
 };
 
 JsDatePick.prototype.makeCalendar = function(){
@@ -455,6 +456,7 @@ JsDatePick.prototype.determineFieldDate = function(){
 				}
 				
 				if (tflag){
+
 					for (i=0; i<12; i++){
 						if (g_l["MONTHS"][i].substr(0,3).toUpperCase() == array[mI].toUpperCase()){
 							mI = i+1; break;
