@@ -82,7 +82,6 @@ if (isset($_POST['export'])){
 	$export_state = isset($_POST['export']);
  	?>
  	<h1>Feed on feeds log viewer</h1> <br />
- 	<form method="post" action="logs.php">
  		<input type="checkbox" name="headtail_checkbox" id="headtail_checkbox" onclick="FofLogViewer.update()" <?php echo $headtail_checkbox_state ? 'checked' : ''; ?>>
  		Search the <select name="headtail" id="head_or_tail" onchange="FofLogViewer.update()"><option value="head">First</option><option value="tail">Last</option></select><select name="headTailQty" id="head_tail_qty" onchange="FofLogViewer.update()"><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="500">500</option></select> lines<br /><br />
  		
@@ -98,8 +97,7 @@ if (isset($_POST['export'])){
 		
 		<input type="checkbox" name="after_checkbox" id="after_checkbox" onclick="FofLogViewer.update()" <?php echo $after_checkbox_state ? 'checked' : ''; ?>>
 		Show results from after <input type="text" id="after_id" name="after" value="<?php echo $after;?>"  onchange="FofLogViewer.update()"><br /><br />
- 
- 		<input type="submit" value="Update" name="update_btn"></form>
+
  		<form method="post" action="logs.php">
  		<input type="hidden" name="export" value="yes">
  		<input type="submit" value="Export log as text file" id="export_btn"></form>
