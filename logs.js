@@ -1,7 +1,7 @@
-FofLogViewer = (function () {
+var FofLogViewer = (function () {
 	my = {};
 	
-	var makeSearchFilter = function (needle, positive = true) {
+	var makeSearchFilter = function (needle, positive) {
 		if (positive) {
 			return function(x){
 				return x.search(needle) != -1;
@@ -13,7 +13,7 @@ FofLogViewer = (function () {
 		}
 	};
 	
-	var makeDateFilter = function(cutoffDateString, after = true) {
+	var makeDateFilter = function(cutoffDateString, after) {
 		var cutoff = Date.parse(cutoffDateString);
 		return function(lineString) {
 			var lineDateString = lineString.substring(0,31);
