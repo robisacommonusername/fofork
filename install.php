@@ -52,9 +52,13 @@ function createTables() {
 	
 	$sql = file_get_contents('schema/fof_tables.sql');
 	$sql = str_replace(array_keys($FOF_TABLES_ARRAY), array_values($FOF_TABLES_ARRAY), $sql);
-	if(fof_db_query($sql, 0, False) === False) {
-		var_dump($sql);
-		die("Database error: Can't create tables!. <br />" );
+	//there seems to be a problem using multiple statements separated with ;, so we'll split them
+	$statements = explode(';', $sql);
+	foreach ($statements as $stmnt) {
+		if(fof_db_query($stmnt, 1, False) === False) {
+			var_dump($sql);
+			die("Database error: Can't create tables!. <br />" );
+		}
 	}
 }
 
