@@ -48,6 +48,8 @@ function get_curl_version() {
 }
 
 function createTables() {
+	global $FOF_TABLES_ARRAY;
+	
 	$sql = file_get_contents('schema/fof_tables.sql');
 	$sql = str_replace(array_keys($FOF_TABLES_ARRAY), array_values($FOF_TABLES_ARRAY), $sql);
 	if(fof_db_query($sql, 1, False) === False) {
