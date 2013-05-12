@@ -73,6 +73,7 @@ function fof_render_item($item){
 	$star_image = $star ? 'image/star-on.gif' : 'image/star-off.gif';
 		
 	$unread = in_array('unread', $tags);
+	$CSRF_challenge = fof_compute_CSRF_challenge();
 ?>
 
 <div class="header">
@@ -97,7 +98,7 @@ function fof_render_item($item){
 			width="16"
 			src="<?php echo $star_image ?>"
 			id="fav<?php echo $item_id ?>"
-			onclick="return toggle_favorite('<?php echo $item_id ?>')"
+			onclick="return toggle_favorite('<?php echo $item_id ?>', '<?php echo $CSRF_challenge; ?>')"
 		/>
 		<script>
 			document.getElementById("fav<?php echo $item_id ?>").star = <?php echo $star ? 'true' : 'false'; ?>;
