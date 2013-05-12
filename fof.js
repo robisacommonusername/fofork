@@ -755,14 +755,14 @@ function change_feed_order(order, direction, hash)
 
 }
 
-function toggle_favorite(id)
+function toggle_favorite(id, hash)
 {
     throb();
     
     var image = $('fav' + id);    
     
     var url = "add-tag.php";
-    var params = {tag: 'star', item: id};
+    var params = {tag: 'star', item: id, CSRF_hash: hash};
     image.src = 'image/star-pending.gif';
 	
     if(image.star)
