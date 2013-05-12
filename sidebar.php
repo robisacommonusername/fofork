@@ -168,13 +168,14 @@ foreach($tags as $tag)
 <tr class="heading">
 
 <?php
-
+$title = array();
 $title['feed_age'] = 'sort by last update time';
 $title['max_date'] = 'sort by last new item';
 $title['feed_unread'] = 'sort by number of unread items';
 $title['feed_url'] = 'sort by feed URL';
 $title['feed_title'] = 'sort by feed title';
 
+$name = array();
 $name["feed_age"] = "age";
 $name["max_date"] = "latest";
 $name["feed_unread"] = "#";
