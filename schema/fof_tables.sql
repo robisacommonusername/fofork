@@ -71,9 +71,3 @@ CREATE TABLE IF NOT EXISTS `$FOF_SESSION_TABLE` (
     `data` text,
     PRIMARY KEY (`id`)
 );
-
-CREATE TABLE IF NOT EXISTS `$FOF_CONFIG_TABLE` (
-	`param` VARCHAR( 128 ) NOT NULL ,
-	`val` TEXT NOT NULL ,
-	PRIMARY KEY (`param`)
-);
