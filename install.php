@@ -54,6 +54,8 @@ function createTables() {
 	$sql = str_replace(array_keys($FOF_TABLES_ARRAY), array_values($FOF_TABLES_ARRAY), $sql);
 	//there seems to be a problem using multiple statements separated with ;, so we'll split them
 	$statements = explode(';', $sql);
+	//filter out any blank lines
+	$statements = array_filter($statements, function($x) {return !preg_match('/^\s*$/',$x);});
 	foreach ($statements as $stmnt) {
 		if(fof_db_query($stmnt, 1, False) === False) {
 			var_dump($stmnt);
