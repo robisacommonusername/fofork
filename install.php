@@ -58,7 +58,6 @@ function createTables() {
 	$statements = array_filter($statements, function($x) {return !preg_match('/^\s*$/',$x);});
 	foreach ($statements as $stmnt) {
 		if(fof_db_query($stmnt, 1, False) === False) {
-			var_dump($stmnt);
 			die("Database error: Can't create tables!. <br />" );
 		}
 	}
