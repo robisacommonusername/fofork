@@ -194,7 +194,7 @@ foreach ($allowedOrders as $col)
         $url = "return change_feed_order('$col', 'asc', '$challenge')";
     }
     
-    echo "<td><nobr><a href='#' title='$title[$col]' onclick=\"$url\">";
+    echo "<td><nobr><a href='#' title='{$title[$col]}' onclick=\"$url\">";
     
     if($col == "feed_unread")
     {
