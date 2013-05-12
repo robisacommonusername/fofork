@@ -1088,7 +1088,7 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
         {
             fof_log("considering $plugin $filter");
     
-            if(!$userdata[$user]['prefs']['plugin_' . $plugin])
+            if(!$userdata[$user]['user_prefs']['plugin_' . $plugin])
             {
                 foreach($items as $item)
                 {
