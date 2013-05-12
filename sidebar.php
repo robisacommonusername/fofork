@@ -175,11 +175,11 @@ $title['feed_unread'] = 'sort by number of unread items';
 $title['feed_url'] = 'sort by feed URL';
 $title['feed_title'] = 'sort by feed title';
 
-$name["feed_age"] = "age";
-$name["max_date"] = "latest";
-$name["feed_unread"] = "#";
-$name["feed_url"] = "feed";
-$name["feed_title"] = "title";
+$name['feed_age'] = 'age';
+$name['max_date'] = 'latest';
+$name['feed_unread'] = '#';
+$name['feed_url'] = 'feed';
+$name['feed_title'] = 'title';
 
 foreach ($allowedOrders as $col)
 {
