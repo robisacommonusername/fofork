@@ -839,8 +839,8 @@ function fof_db_get_users() {
     
     $result = fof_query_log("select user_name, user_id, user_prefs from $FOF_USER_TABLE",null);
     while($row = fof_db_get_row($result)) {
-        $users[$row['user_id']['user_name']] = $row['user_name'];
-        $users[$row['user_id']['user_prefs']] = unserialize($row['user_prefs']);
+        $users[$row['user_id']]['user_name'] = $row['user_name'];
+        $users[$row['user_id']]['user_prefs'] = unserialize($row['user_prefs']);
     }
 }
 
