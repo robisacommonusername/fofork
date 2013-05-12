@@ -18,7 +18,7 @@ $fof_installer = true;
 include_once('fof-main.php');
 
 //test if there's already an installation or a conflicting table name
-$tables = fof_query_log('SHOW TABLES',null);
+$tables = fof_db_query('SHOW TABLES');
 $tableNames = array_values($FOF_TABLES_ARRAY);
 $conflict = False;
 while ($line = fof_db_get_row($tables)){
@@ -50,7 +50,7 @@ function get_curl_version() {
 function createTables() {
 	$sql = file_get_contents('schema/fof_tables.sql');
 	$sql = str_replace(array_keys($FOF_TABLES_ARRAY), array_values($FOF_TABLES_ARRAY), $sql);
-	if(fof_query($sql, 1, False) === False) {
+	if(fof_db_query($sql, 1, False) === False) {
 		die("Database error: Can't create tables!. <br />" );
 	}
 }
@@ -116,12 +116,12 @@ if ($_POST['install_confirmed'] == 'yes' && isset($_POST['password']) && isset($
 		createTables();
 		echo 'Inserting initial data... <br />';
 		
-		fof_query("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (1, 'unread'), (2, 'star')", null, False);
+		fof_db_query("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (1, 'unread'), (2, 'star')");
 
 		echo 'Done.<hr>';
 		
 		//set admin password
-		fof_query_log("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level, salt) values (1, 'admin', 'ABCDEF', 'admin', 'ABCDEF')", null);
+		fof_db_query("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level, salt) values (1, 'admin', 'ABCDEF', 'admin', 'ABCDEF')");
 		fof_db_change_password('admin',$_POST['password']);
 		
 		echo '<center><b>OK!  Setup complete! <a href=".">Login as admin</a>, and start subscribing!</center></b></div></body></html>';
