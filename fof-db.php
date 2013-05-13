@@ -145,6 +145,27 @@ function fof_query_log_get_id($sql, $params, $table, $id_param){
 	return array($result, $id);
 }
 
+function fof_db_table_list() {
+	$ret = array();
+	switch (FOF_DB_TYPE){
+		case 'pgsql':
+		$result = fof_query_log("select table_name from information_schema.tables where table_schema='public'", null);
+		while ($row = fof_db_get_row($result)){
+			$ret[] = $row['table_name'];
+		}
+		break;
+		
+		//mysql atm
+		default:
+		$result = fof_query_log("SHOW TABLES", null);
+		while ($row = fof_db_get_row($result)){
+			$names = array_values($row);
+			$ret[] = $names[0];
+		}
+	}
+	return $ret;
+}
+
 function fof_fix_query_string($query, $subs){
 	//turn pdo placeholders into the full query string with params
 	//substituted (used for logging)
@@ -1024,12 +1045,12 @@ function fof_db_close_session(){
 function fof_db_read_session($id){
 	$hash = base64_encode(hash('tiger192,4',$id,True));
 	global $FOF_SESSION_TABLE;
-    $result = fof_query_log_private("SELECT data from $FOF_SESSION_TABLE where id = :sessid",
+    $result = fof_query_log_private("SELECT session_data from $FOF_SESSION_TABLE where session_id = :sessid",
     								array('sessid' => $hash),
     								array('sessid' => 'XXX session id hash XXX'));
     if ($result->rowCount()){
     	$record = fof_db_get_row($result);
-    	return $record['data'];
+    	return $record['session_data'];
     }
     return '';
 }
@@ -1046,14 +1067,14 @@ function fof_db_write_session($id, $data){
 function fof_db_destroy_session($id){
 	global $FOF_SESSION_TABLE;
 	$hash = base64_encode(hash('tiger192,4',$id,True));
-    fof_query_log_private("DELETE from $FOF_SESSION_TABLE where id=?", array($hash), array('XXX session id hash XXX'));
+    fof_query_log_private("DELETE from $FOF_SESSION_TABLE where session_id=?", array($hash), array('XXX session id hash XXX'));
     return True;
 }
 
 function fof_db_clean_session($max){
 	global $FOF_SESSION_TABLE;
     $old = time() - $max;
-	return fof_query_log("DELETE from $FOF_SESSION_TABLE where access < ?", array($old));
+	return fof_query_log("DELETE from $FOF_SESSION_TABLE where session_access < ?", array($old));
 }
 
 ?>

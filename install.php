@@ -18,19 +18,15 @@ $fof_installer = true;
 include_once('fof-main.php');
 
 //test if there's already an installation or a conflicting table name
-$tables = fof_query_log('SHOW TABLES',null);
+$tablesInDB = fof_db_table_list();
 $tableNames = array_values($FOF_TABLES_ARRAY);
-$conflict = False;
-while ($line = fof_db_get_row($tables)){
-	$name = array_values($line);
-	if (in_array($name[0], $tableNames)){
-		$conflict = True;
-		$conflictName = $name[0];
-		break;
+$isect = array_intersect($tablesInDB, $tableNames);
+if (count($isect) > 0){
+	echo 'Cannot install.  The following tables already exist in the database: <br />';
+	foreach ($isect as $conflictTable) {
+		echo "$conflictTable <br />";
 	}
-}
-if ($conflict){
-	die("Cannot install, there already exists a table named $conflictName in the database");
+	die();
 }
 
 fof_set_content_type();
@@ -51,10 +47,24 @@ function get_curl_version() {
 function createTables() {
 	global $FOF_TABLES_ARRAY;
 	
-	$sql = file_get_contents('schema/fof_tables.sql');
+	$schema = '';
+	switch (FOF_DB_TYPE) {
+		case 'pgsql':
+		$schema = 'schema/fof_tables_pgsql.sql';
+		break;
+		
+		default:
+		$schema = 'schema/fof_tables.sql';
+	}
+	
+	$sql = file_get_contents($schema);
 	$sql = str_replace(array_keys($FOF_TABLES_ARRAY), array_values($FOF_TABLES_ARRAY), $sql);
-	if(fof_query($sql, null, False) === False) {
-		die("Database error: Can't create tables!. <br />" );
+	$stmnts = explode(';', $sql);
+	$stmnts = array_filter($stmnts, function ($x) {return !preg_match('/^\s*$/', $x);});
+	foreach ($stmnts as $stmnt) {
+		if (fof_query($stmnt, null, False) === False) {
+			die("Database error: Can't create tables!. <br />" );
+		}
 	}
 }
 
