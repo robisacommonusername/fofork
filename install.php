@@ -21,7 +21,7 @@ include_once('fof-main.php');
 $tables = fof_query_log('SHOW TABLES',null);
 $tableNames = array_values($FOF_TABLES_ARRAY);
 $conflict = False;
-while ($line = fof_db_get_row($tables)){
+while ($line = array_values(fof_db_get_row($tables))){
 	if (in_array($line[0], $tableNames)){
 		$conflict = True;
 		$conflictName = $line[0];
