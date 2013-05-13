@@ -21,10 +21,11 @@ include_once('fof-main.php');
 $tables = fof_query_log('SHOW TABLES',null);
 $tableNames = array_values($FOF_TABLES_ARRAY);
 $conflict = False;
-while ($line = array_values(fof_db_get_row($tables))){
-	if (in_array($line[0], $tableNames)){
+while ($line = fof_db_get_row($tables)){
+	$name = array_values($line);
+	if (in_array($name[0], $tableNames)){
 		$conflict = True;
-		$conflictName = $line[0];
+		$conflictName = $name[0];
 		break;
 	}
 }
@@ -124,7 +125,7 @@ if ($_POST['install_confirmed'] == 'yes' && isset($_POST['password']) && isset($
 		echo 'Done.<hr>';
 		
 		//set admin password
-		fof_query_log("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level, salt) values (1, 'admin', 'ABCDEF', 'admin', 'ABCDEF')", null);
+		fof_query_log("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level) values (1, 'admin', 'ABCDEF', 'admin')", null);
 		fof_db_change_password('admin',$_POST['password']);
 		
 		echo '<center><b>OK!  Setup complete! <a href=".">Login as admin</a>, and start subscribing!</center></b></div></body></html>';
