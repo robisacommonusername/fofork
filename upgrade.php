@@ -11,13 +11,13 @@ function upgradePoint1Point5($adminPassword){
 	//performs an upgrade of the database from the 1.1 series to 1.5
 	
 	//create the config table
-	fof_query("CREATE TABLE IF NOT EXISTS `$FOF_CONFIG_TABLE` (
-	`param` VARCHAR( 128 ) NOT NULL ,
-	`val` TEXT NOT NULL ,
-	PRIMARY KEY (`param`))", null);
+	fof_query("CREATE TABLE IF NOT EXISTS $FOF_CONFIG_TABLE (
+	param VARCHAR( 128 ) NOT NULL ,
+	val TEXT NOT NULL ,
+	PRIMARY KEY (param))", null);
 	
 	//add some new parameters
-	fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?), ('log_password', ?), (max_items_per_request, ?)", array(FOF_VERSION, BCRYPT_EFFORT, fof_make_salt(), 100));
+	fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?), ('max_items_per_request', ?)", array(FOF_VERSION, BCRYPT_EFFORT, 100));
 	
 	//move admin prefs into config table
 	$p =& FoF_Prefs::instance();
@@ -36,9 +36,8 @@ function upgradePoint1Point5($adminPassword){
     fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values $paramString", $args);
     
     //check - is there a log password in the admin prefs?
-    if (array_key_exists('log_password',$admin_prefs)){
-    	fof_query("UPDATE $FOF_CONFIG_TABLE set val = ? where param = 'log_password'", array($admin_prefs['log_password']));
-    }
+    $logPassword = array_key_exists('log_password',$admin_prefs) ? $admin_prefs['log_password'] : fof_make_salt();
+    fof_query("INSERT into $FOF_CONFIG_TABLE (param,val) values ('log_password', ?)", array($logPassword));
     
 	//update users table - drop salt, change hashing to bcrypt
 	//will need to drop all users except admin user
@@ -47,14 +46,14 @@ function upgradePoint1Point5($adminPassword){
 		global $fof_connection;
 		$fof_connection->beginTransaction();
 		try {
-			$fof_connection->query("DROP TABLE `$FOF_USER_TABLE`");
-			$fof_connection->query("CREATE TABLE `$FOF_USER_TABLE` (
-  				`user_id` int(11) NOT NULL auto_increment,
-  				`user_name` varchar(100) NOT NULL default '',
-  				`user_password_hash` varchar(60) NOT NULL default '',
-  				`user_level` enum('user','admin') NOT NULL default 'user',
-  				`user_prefs` text,
-  				PRIMARY KEY  (`user_id`), UNIQUE KEY (`user_name`)
+			$fof_connection->query("DROP TABLE $FOF_USER_TABLE");
+			$fof_connection->query("CREATE TABLE $FOF_USER_TABLE (
+  				user_id int(11) NOT NULL auto_increment,
+  				user_name varchar(100) NOT NULL default '',
+  				user_password_hash varchar(60) NOT NULL default '',
+  				user_level enum('user','admin') NOT NULL default 'user',
+  				user_prefs text,
+  				PRIMARY KEY  (user_id), UNIQUE KEY (user_name)
 				)");
 			$salt = fof_make_bcrypt_salt();
 			$row['user_password_hash'] = crypt($adminPassword, $salt);
@@ -76,10 +75,10 @@ if (isset($_POST['confirm']) && fof_authenticate_CSRF_challenge($_POST['CSRF_has
 		//can only upgrade from 1.x.y, x<2 to 1.5.z (for now)
 		if (version_compare($oldVersion,'1.2','<') && version_compare($newVersion, '1.5', '>=') && version_compare($newVersion,'1.6','<')){
 			upgradePoint1Point5($_POST['admin_password']);
-			die("Upgrade was successful.  Now replace the fofork code on your webserver with the newer version, and delete this upgrade script");
+			die('Upgrade was successful.  Now replace the fofork code on your webserver with the newer version, and delete this upgrade script');
 		}
 	} else {
-		die("Please enter the correct admin password to upgrade fofork!");
+		die('Please enter the correct admin password to upgrade fofork!');
 	}
 }
 $oldVersion = fof_db_get_version();
