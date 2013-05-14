@@ -127,7 +127,7 @@ function fof_query_log_get_id($sql, $params, $table, $id_param){
 			break;
 			
 			default:
-			$temp_res = $fof_connection->prepare("SELECT :id_param FROM :table ORDER BY :id_param DESC limit 0,1");
+			$temp_res = $fof_connection->prepare("SELECT :id_param FROM :table ORDER BY :id_param DESC limit 1 OFFSET 0");
 			$temp_res->execute(array('table' => $table,
 									'id_param' => $id_param));
 			$arr = $temp_res->fetch(PDO::FETCH_ASSOC);
@@ -396,10 +396,10 @@ function fof_db_purge_feed($ignoreable_items, $feed_id, $purge_days){
 	if ($count) {
 		$in_placeholders = implode(', ', array_fill(0,$count,'?'));
     	array_unshift($ignoreable_items, $feed_id);
-    	$sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = ? and item_id not in ($in_placeholders) order by item_cached desc limit $count, 1000000000";
+    	$sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = ? and item_id not in ($in_placeholders) order by item_cached desc limit 1000000000 OFFSET $count";
     } else {
     	$ignoreable_items = array($feed_id);
-    	$sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = ? order by item_cached desc limit $count, 1000000000";
+    	$sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = ? order by item_cached desc limit 1000000000 OFFSET $count";
     }
     
     $result = fof_query_log($sql, $ignoreable_items);
@@ -525,7 +525,7 @@ function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $s
         if(!is_numeric($limit)) {
             $limit = $prefs['howmany'];
         }
-        $limit_clause = sprintf(' limit %d, %d ', $start, $limit);;
+        $limit_clause = sprintf(' limit %d offset %d ', $limit, $start);;
     }
     
     $args = array();
