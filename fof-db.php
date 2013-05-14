@@ -629,7 +629,7 @@ function fof_db_get_item($user_id, $item_id) {
 		$result = fof_query_log("select $FOF_TAG_TABLE.tag_name from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = ? and $FOF_ITEM_TAG_TABLE.user_id = ?", array($item_id, $user_id));
 
 		while($row = fof_db_get_row($result)) {
-			$item['tags'][] = $row['tag_name'];
+			$item['tags'][] = trim($row['tag_name']);
 		}
 	}
     
