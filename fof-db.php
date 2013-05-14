@@ -571,7 +571,8 @@ function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $s
     $order_by = "order by i.item_published $order $limit_clause ";
     
     $query = $select . $from . $where . $group . $order_by;
-    
+    $arg_s = serialize($args);
+    fof_log("query = $query, args = $arg_s", 'star debug');
     $result = fof_query_log($query, $args);
     
     if ($result->rowCount() == 0) {
