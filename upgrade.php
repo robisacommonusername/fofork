@@ -1,53 +1,111 @@
 <?php
 
-require('fof-main.php');
+require('fof-main.php'); //old (1.1.x) version
+
+//reimplement some standard functions from 1.5.x series
+//but using 1.1.x style db calls
+
+function future_make_salt(){
+	$bytes = null;
+	//try to get something cryptographically secure (*nix only)
+	if (file_exists('/dev/urandom')){
+		try {
+			$f = fopen('/dev/urandom', 'r');
+			$bytes = fread($f, 32);
+			fclose($f);
+		} catch (Exception $e) {
+			$bytes = null;
+		}
+	}
+	if ($bytes === null) {
+		//fallback using mersenne twister.  Not great, but hopefully can extract
+		//enough entropy from mt_rand without being able to reconstruct internal state.
+		//the hashing is important! Must not give attacker access to the outputs!
+		//further note - must NOT use mt_rand ANYWHERE in code where it can give
+		//attacker access to output.  Should probably enforce this somehow.
+		// Want 128 bits
+		for ($i=0; $i<6; $i++){
+			$bytes = hash('tiger160,4', $bytes . mt_rand(), True);
+		}
+	}
+	$salt = substr(str_replace('+', '.', base64_encode($bytes)), 0, 22);
+	return $salt;
+}
+function future_make_bcrypt_salt(){
+	$salt = future_make_salt();
+	$effort = BCRYPT_EFFORT;
+	$final = '$2a$' . $effort . '$' . $salt;
+	return $final;
+}
+function future_db_get_version(){
+	return '1.1';
+}
+function backup_table($table){
+	
+}
+function restore_table($table){
+}
+function makeRestorer($table){
+	return function() use($table){
+		restore_table($table);
+		echo "ERROR: could not upgrade table $table <br />";
+		echo "Attempted to restore $table from backup<br />";
+		echo "The backup file has not been deleted, and is still available";
+		exit;
+	}
+}
+
 
 if (!fof_is_admin()) {
 	die('You must be logged in as admin to upgrade fofork!');
 }
 
 function upgradePoint1Point5($adminPassword){
-	global $FOF_CONFIG_TABLE, $FOF_USER_TABLE;
+	global $FOF_USER_TABLE;
+	$FOF_CONFIG_TABLE = FOF_CONFIG_TABLE;
 	//performs an upgrade of the database from the 1.1 series to 1.5
 	
 	//create the config table
-	fof_query("CREATE TABLE IF NOT EXISTS $FOF_CONFIG_TABLE (
+	fof_safe_query("CREATE TABLE IF NOT EXISTS $FOF_CONFIG_TABLE (
 	param VARCHAR( 128 ) NOT NULL ,
 	val TEXT NOT NULL ,
-	PRIMARY KEY (param))", null);
+	PRIMARY KEY (param))");
 	
 	//add some new parameters
-	fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?), ('max_items_per_request', ?)", array(FOF_VERSION, BCRYPT_EFFORT, 100));
+	fof_safe_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', '%s'), ('bcrypt_effort', '%d'), ('max_items_per_request', '%d')", FOF_VERSION, BCRYPT_EFFORT, 100);
 	
 	//move admin prefs into config table
 	$p =& FoF_Prefs::instance();
-    $admin_prefs = $p->adminPrefs();
+    $admin_prefs = $p->admin_prefs;
     
     $adminKeys = array('purge' => null, 'autotimeout' => null, 'manualtimeout' => null, 'logging' => null);
     $actualAdminPrefs = array_intersect_key($admin_prefs, $adminKeys);
     $params = array();
     $args = array();
     foreach ($actualAdminPrefs as $key => $val){
-    	$params[] = '(?, ?)';
+    	$params[] = "('%s', '%s')";
     	$args[] = $key;
     	$args[] = $val;
     }
     $paramString = implode(', ', $params);
-    fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) values $paramString", $args);
+    fof_safe_query("INSERT into $FOF_CONFIG_TABLE (param, val) values $paramString", $args);
     
     //check - is there a log password in the admin prefs?
     $logPassword = array_key_exists('log_password',$admin_prefs) ? $admin_prefs['log_password'] : fof_make_salt();
-    fof_query("INSERT into $FOF_CONFIG_TABLE (param,val) values ('log_password', ?)", array($logPassword));
+    fof_safe_query("INSERT into $FOF_CONFIG_TABLE (param,val) values ('log_password', '%s')", $logPassword);
     
 	//update users table - drop salt, change hashing to bcrypt
 	//will need to drop all users except admin user
-	$result = fof_query("SELECT user_name, user_level, user_prefs from $FOF_USER_TABLE where user_id = 1", null);
+	//no transactions!!
+	
+	$result = fof_safe_query("SELECT user_name, user_level, user_prefs from $FOF_USER_TABLE where user_id = 1");
 	if ($row = fof_db_get_row($result)){
-		global $fof_connection;
-		$fof_connection->beginTransaction();
-		try {
-			$fof_connection->query("DROP TABLE $FOF_USER_TABLE");
-			$fof_connection->query("CREATE TABLE $FOF_USER_TABLE (
+		backup_table($FOF_USER_TABLE);
+		$restorer = makeRestorer($FOF_USER_TABLE);
+		fof_safe_query("DROP TABLE $FOF_USER_TABLE");
+		if (mysql_errno()) {$restorer();}
+		
+		fof_safe_query("CREATE TABLE $FOF_USER_TABLE (
   				user_id int(11) NOT NULL auto_increment,
   				user_name varchar(100) NOT NULL default '',
   				user_password_hash varchar(60) NOT NULL default '',
@@ -55,22 +113,34 @@ function upgradePoint1Point5($adminPassword){
   				user_prefs text,
   				PRIMARY KEY  (user_id), UNIQUE KEY (user_name)
 				)");
-			$salt = fof_make_bcrypt_salt();
-			$row['user_password_hash'] = crypt($adminPassword, $salt);
-			$stmnt = $fof_connection->prepare("INSERT into $FOF_USER_TABLE (user_name, user_password_hash, user_level, user_prefs)
-				values (:user_name, :user_password_hash, :user_level, :user_prefs)");
-			$stmnt->execute($row);
-			$fof_connection->commit();	
-		} catch (Exception $e) {
-			$fof_connection->rollBack();
-		}
+		if (mysql_errno()) {$restorer();}
+		
+		$salt = future_make_bcrypt_salt();
+		$newHash = crypt($adminPassword, $salt);
+		fof_safe_query("INSERT into $FOF_USER_TABLE (user_name, user_password_hash, user_level, user_prefs)
+				VALUES (admin,'%s','%s','%s')", $newHash, $row['user_level'], $row['user_prefs']);	
+		if (mysql_errno()) {$restorer();}
 	}
+	
+	//rename columns in session table.  Will not be able to do a
+	//session_write at the end of this script, but thats fine
+	backup_table($FOF_SESSION_TABLE);
+	$restorer = makeRestorer($FOF_SESSION_TABLE);
+	fof_safe_query("DROP TABLE $FOF_SESSION_TABLE");
+	if (mysql_errno()) {$restorer();}
+	
+	fof_safe_query("CREATE TABLE $FOF_SESSION_TABLE (
+		session_id varchar(32) NOT NULL,
+		session_access int(11) unsigned,
+		session_data text,
+    PRIMARY KEY (session_id))");
+    if (mysql_errno()) {$restorer();}
 }
 
 if (isset($_POST['confirm']) && fof_authenticate_CSRF_challenge($_POST['CSRF_hash'])) {
 	//check that correct admin password was entered
 	if (fof_db_authenticate('admin', $_POST['admin_password'])) {
-		$oldVersion = fof_db_get_version();
+		$oldVersion = future_db_get_version();
 		$newVersion = FOF_VERSION;
 		//can only upgrade from 1.x.y, x<2 to 1.5.z (for now)
 		if (version_compare($oldVersion,'1.2','<') && version_compare($newVersion, '1.5', '>=') && version_compare($newVersion,'1.6','<')){
@@ -81,7 +151,7 @@ if (isset($_POST['confirm']) && fof_authenticate_CSRF_challenge($_POST['CSRF_has
 		die('Please enter the correct admin password to upgrade fofork!');
 	}
 }
-$oldVersion = fof_db_get_version();
+$oldVersion = future_db_get_version();
 $newVersion = FOF_VERSION;
 
 ?>
