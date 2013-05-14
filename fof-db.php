@@ -1072,7 +1072,7 @@ function fof_db_write_session($id, $data){
     	fof_query_log_private("DELETE from $FOF_SESSION_TABLE where session_id = ?", array($hash), array('XXX session id hash XXX'), False);
     	fof_query_log_private("INSERT into $FOF_SESSION_TABLE (session_id, session_access, session_data) 
     							VALUES (:sessid, :access, :data)",
-    							array('sessid' => $hash, 'access' => $access, 'data' => $data)
+    							array('sessid' => $hash, 'access' => $access, 'data' => $data),
     							array('sessid' => 'XXX session id hash XXX'),
     							False);
     	$fof_connection->commit();
