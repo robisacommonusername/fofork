@@ -175,6 +175,11 @@ function upgradePoint1Point5($adminPassword){
 		session_data text,
     PRIMARY KEY (session_id))");
     if (mysql_errno()) {$restorer();}
+    
+    //clear the log file
+    $f = fopen('fof.log','w');
+    fwrite($f,'');
+    fclose($f);
 }
 
 if (isset($_POST['confirm']) && fof_authenticate_CSRF_challenge($_POST['CSRF_hash'])) {
