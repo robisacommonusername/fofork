@@ -547,12 +547,16 @@ function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $s
     
     if($what != 'all') {
         $tags = split(' ', $what);
-        $in = implode(', ', array_fill(0, count($tags), '?'));
+        //there appears to be an escaping bug, at least with pgsql backend
+        //instead of ending up with IN ('star', 'unread'), we just get
+        //IN (star, unread).  This works on mysql, but fails on postgres
+        //therefore, add the quotes manually 
+        $in = implode(', ', array_fill(0, count($tags), "'?'"));
         $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
-        $where .= "AND it.user_id = ? AND it.tag_id = t.tag_id AND ( t.tag_name IN ( $in ) ) AND i.item_id = it.item_id "; 
+        $where .= "AND it.user_id = ? AND it.tag_id = t.tag_id AND ( t.tag_name IN ($in) ) AND i.item_id = it.item_id "; 
         $args[] = $user_id;
         $args = array_merge($args, $tags);
-        $group = sprintf("GROUP BY i.item_id HAVING COUNT( i.item_id ) = %d ", count($tags));
+        $group = sprintf("GROUP BY i.item_id,f.feed_id HAVING COUNT( i.item_id ) = %d ", count($tags));
     }
     
     if($search != null) {
