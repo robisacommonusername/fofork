@@ -599,6 +599,8 @@ function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $s
     	$tag = $row['tag_name'];
     	$items[$lookup[$item_id]]['tags'][] = $tag;
     }
+    $x = count($items);
+    fof_log("returned $x items", 'star debug');
     return $items;
 }
 
