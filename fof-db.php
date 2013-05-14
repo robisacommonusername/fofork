@@ -551,11 +551,18 @@ function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $s
         //instead of ending up with IN ('star', 'unread'), we just get
         //IN (star, unread).  This works on mysql, but fails on postgres
         //therefore, add the quotes manually 
-        $in = implode(', ', array_fill(0, count($tags), "'?'"));
+        
+        //even more annoying, bug in PGsql quoting fucks things up
+        //so can't use prepared queries easily, buggerydoo.
+        //instead, let's do an ugly hack, escape manually and interpolate
+        $tagsEscaped = array_map(function($x) {
+			global $fof_connection;
+			return $fof_connection->quote($x);
+		}, $tags);
+        $in = implode(', ', $tagsEscaped);
         $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
         $where .= "AND it.user_id = ? AND it.tag_id = t.tag_id AND ( t.tag_name IN ($in) ) AND i.item_id = it.item_id "; 
         $args[] = $user_id;
-        $args = array_merge($args, $tags);
         $group = sprintf("GROUP BY i.item_id,f.feed_id HAVING COUNT( i.item_id ) = %d ", count($tags));
     }
     
@@ -571,13 +578,8 @@ function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $s
     $order_by = "order by i.item_published $order $limit_clause ";
     
     $query = $select . $from . $where . $group . $order_by;
-    $arg_s = serialize($args);
-    fof_log("query = $query, args = $arg_s", 'star debug');
-    $result = fof_query_log($query, $args);
-    
-    if ($result->rowCount() == 0) {
-        return array();
-    }
+
+    $result = fof_query_log($query,$args);
     
     $i = 0;
     $items = array();
@@ -588,20 +590,27 @@ function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $s
         $items[$i]['tags'] = array();
         $i++;
     }
-
-    $placeholders = implode(', ', array_fill(0,$i,'?'));
-    $ids[] = $user_id;  //just tack on the end
+    if (count($items) == 0){
+		return $items;
+	}
+	
+	//ugly hack again to get around pgsql driver bug
+	$placeholders = implode(',',
+		array_map(function($x) {
+			global $fof_connection;
+			return $fof_connection->quote($x);
+		}, $ids));
+    //$placeholders = implode(', ', array_fill(0,$i,'?'));
+    //$ids[] = $user_id;  //just tack on the end
     
     //get the tags.
-    $result = fof_query_log("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id in ($placeholders) and $FOF_ITEM_TAG_TABLE.user_id = ?", $ids);
+    $result = fof_query_log("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id in ($placeholders) and $FOF_ITEM_TAG_TABLE.user_id = ?", array($user_id));
     
     while ($row = fof_db_get_row($result)){
     	$item_id = $row['item_id'];
-    	$tag = $row['tag_name'];
+    	$tag = trim($row['tag_name']);
     	$items[$lookup[$item_id]]['tags'][] = $tag;
     }
-    $x = count($items);
-    fof_log("returned $x items", 'star debug');
     return $items;
 }
 
@@ -730,7 +739,7 @@ function fof_db_get_tag_id_map() {
     $result = fof_query_log($sql,null);
     $tags = array();
     while($row = fof_db_get_row($result)) {
-        $tags[$row['tag_id']] = $row['tag_name'];
+        $tags[$row['tag_id']] = trim($row['tag_name']);
     }
     
     return $tags;   
