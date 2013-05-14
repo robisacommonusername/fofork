@@ -1077,7 +1077,7 @@ function fof_db_write_session($id, $data){
     							False);
     	$fof_connection->commit();
     	return True;
-    } catch (Exception e) {
+    } catch (Exception $e) {
     	$fof_connection->rollBack();
     }
 }
