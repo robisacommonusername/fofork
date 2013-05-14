@@ -59,6 +59,8 @@ function fof_query($sql, $params, $dieOnErrors=True){
 	} catch (PDOException $e) {
 		if ($dieOnErrors){
 			die('Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? Database says: <b>'. $e->getMessage() . '</b>');
+		} else {
+			throw $e;
 		}
 	}
 	return $result;
@@ -75,9 +77,9 @@ function fof_query_log($sql, $params, $dieOnErrors=True){
 	return $result;
 }
 
-function fof_query_log_private($sql, $params, $censors){
+function fof_query_log_private($sql, $params, $censors, $dieOnErrors=True){
 	$t1 = microtime(true);
-	$result = fof_query($sql, $params);
+	$result = fof_query($sql, $params, $dieOnErrors);
 	$t2 = microtime(true);
 	$elapsed = $t2 - $t1;
 	foreach ($censors as $field => $censorText){
@@ -1057,11 +1059,27 @@ function fof_db_read_session($id){
 
 function fof_db_write_session($id, $data){
 	global $FOF_SESSION_TABLE;
+	global $fof_connection;
+	
 	$hash = base64_encode(hash('tiger192,4',$id,True));
     $access = time();
-    return fof_query_log_private("REPLACE into $FOF_SESSION_TABLE VALUES (:sessid, :access, :data)",
-    							array('sessid' => $hash, 'access' => $access, 'data' => $data),
-    							array('sessid' => 'XXX session id hash XXX'));
+    
+    //do a separate delete then insert, cos not all database backends support replace
+    //don't really need the atomicity, because I assume php only ever issues unique sessin ids
+    //but hashes could collide, I suppose, and it seems good practice
+    $fof_connection->beginTransaction();
+    try {
+    	fof_query_log_private("DELETE from $FOF_SESSION_TABLE where session_id = ?", array($hash), array('XXX session id hash XXX'), False);
+    	fof_query_log_private("INSERT into $FOF_SESSION_TABLE (session_id, session_access, session_data) 
+    							VALUES (:sessid, :access, :data)",
+    							array('sessid' => $hash, 'access' => $access, 'data' => $data)
+    							array('sessid' => 'XXX session id hash XXX'),
+    							False);
+    	$fof_connection->commit();
+    	return True;
+    } catch (Exception e) {
+    	$fof_connection->rollBack();
+    }
 }
 
 function fof_db_destroy_session($id){
