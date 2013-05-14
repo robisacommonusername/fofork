@@ -40,17 +40,42 @@ function future_make_bcrypt_salt(){
 function future_db_get_version(){
 	return '1.1';
 }
-function backup_table($table){
-	
+function backup_table($table, $oldSchema){
+	//very basic dump routine.  Doesn't handle nulls or whatever,
+	//but there shouldn't be any
+	$backupFn = 'cache' . DIRETCORY_SEPARATOR . "$table.sql";
+	echo "backing up $table to file $backupFn <br />";
+	$f = fopen($backupFn,'w');
+	fwrite($f,"DROP TABLE $table;\n");
+	fwrite($f, $oldSchema);
+	$result = fof_db_query("SELECT * from $table",1);
+	while ($row = fof_db_get_row($result)){
+		$fields = array_keys($row);
+		$vals = array_values($row);
+		$vals = array_map('mysql_real_escape_string',$vals);
+		$placeholders = implode(',', array_fill(0,count($fields),'`%s`'));
+		$sql = vsprintf("INSERT into $table ($placeholders) VALUES "
+		$placeholders = implode(',', array_fill(0,count($vals),"'%s'"));
+		$sql .= vsprintf("($placeholders);\n", $vals);
+		fwrite($f, $sql);
+	}
+	fclose($f);
 }
 function restore_table($table){
+	$backupFn = 'cache' . DIRECTORY_SEPARATOR . "$table.sql";
+	$sql = file_get_contents($backupFn);
+	fof_db_query($sql,1);
+	if (mysql_errno()){
+		echo "restore from backup failed! <br />"
+		echo "backup file is still available at $backupFn - you can try and restore it manually";
+	} else {
+		unlink($backupFn);
+	}
 }
 function makeRestorer($table){
 	return function() use($table){
-		restore_table($table);
 		echo "ERROR: could not upgrade table $table <br />";
-		echo "Attempted to restore $table from backup<br />";
-		echo "The backup file has not been deleted, and is still available";
+		restore_table($table);
 		exit;
 	}
 }
@@ -100,7 +125,16 @@ function upgradePoint1Point5($adminPassword){
 	
 	$result = fof_safe_query("SELECT user_name, user_level, user_prefs from $FOF_USER_TABLE where user_id = 1");
 	if ($row = fof_db_get_row($result)){
-		backup_table($FOF_USER_TABLE);
+		backup_table($FOF_USER_TABLE,
+			"CREATE TABLE IF NOT EXISTS `$FOF_USER_TABLE` (
+				`user_id` int(11) NOT NULL auto_increment,
+				`user_name` varchar(100) NOT NULL default '',
+				`user_password_hash` varchar(32) NOT NULL default '',
+				`user_level` enum('user','admin') NOT NULL default 'user',
+				`user_prefs` text,
+				`salt` varchar(40) NOT NULL default '',
+				PRIMARY KEY (`user_id`)
+			);\n");
 		$restorer = makeRestorer($FOF_USER_TABLE);
 		fof_safe_query("DROP TABLE $FOF_USER_TABLE");
 		if (mysql_errno()) {$restorer();}
@@ -124,7 +158,13 @@ function upgradePoint1Point5($adminPassword){
 	
 	//rename columns in session table.  Will not be able to do a
 	//session_write at the end of this script, but thats fine
-	backup_table($FOF_SESSION_TABLE);
+	backup_table($FOF_SESSION_TABLE,
+		"CREATE TABLE IF NOT EXISTS `$FOF_SESSION_TABLE` (
+			`id` varchar(32) NOT NULL,
+			`access` int(11) unsigned,
+			`data` text,
+			PRIMARY KEY (`id`)
+		);\n");
 	$restorer = makeRestorer($FOF_SESSION_TABLE);
 	fof_safe_query("DROP TABLE $FOF_SESSION_TABLE");
 	if (mysql_errno()) {$restorer();}
