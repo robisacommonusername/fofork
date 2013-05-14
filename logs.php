@@ -87,9 +87,13 @@ if (isset($_POST['export'])){
  		
  		<input type="checkbox" name="include_checkbox" id="include_checkbox" onclick="FofLogViewer.update()" <?php echo $include_checkbox_state ? 'checked' : ''; ?>>
  		Show lines containing the text <input type="text" id = "include" value="<?php echo $inc; ?>" name="include"  onchange="FofLogViewer.update()"><br />
+ 		<input type="radio" id="include_insensitive_select_id" name="inc_insen" onclick="FofLogViewer.update()" checked>Case insensitive  <input type="radio" name = "inc_insen" onclick="FofLogViewer.update()"> Case sensitive<br />
+ 		<input type="radio" name = "inc_regex" onclick="FofLogViewer.update()" checked> Plain text search  <input type="radio" id="include_regex_select_id" name="inc_regex" onclick="FofLogViewer.update()">Regular expression<br /><br />
  
  		<input type="checkbox" name="exclude_checkbox" id="exclude_checkbox" onclick="FofLogViewer.update()" <?php echo $exclude_checkbox_state ? 'checked' : ''; ?>>
- 		Exclude lines containing <input type="text" id="exclude" value="<?php echo $exc; ?>" name="exclude"  onchange="FofLogViewer.update()"><br /><br />
+ 		Exclude lines containing <input type="text" id="exclude" value="<?php echo $exc; ?>" name="exclude"  onchange="FofLogViewer.update()"><br />
+ 		<input type="radio" id="exclude_insensitive_select_id" name="exc_insen" onclick="FofLogViewer.update()" checked>Case insensitive  <input type="radio" name = "exc_insen" onclick="FofLogViewer.update()"> Case sensitive<br />
+ 		<input type="radio" name = "exc_regex" onclick="FofLogViewer.update()" checked> Plain text search  <input type="radio" id="exclude_regex_select_id" name="exc_regex" onclick="FofLogViewer.update()">Regular expression<br /><br />
  
 
 		<input type="checkbox" name="before_checkbox" id="before_checkbox" onclick="FofLogViewer.update()" <?php echo $before_checkbox_state ? 'checked' : ''; ?>>

@@ -1,14 +1,19 @@
 var FofLogViewer = (function () {
 	my = {};
 	
-	var makeSearchFilter = function (needle, positive) {
+	var makeSearchFilter = function (needle, positive, insensitive, regex) {
+		function escapeRegExp(str) {
+  			return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+		}
+		searchString = regex ? needle : escapeRegExp(needle);
+		searchRegex = insensitive ? new RegExp(searchString,"i") : new RegExp(searchString);
 		if (positive) {
 			return function(x){
-				return x.search(needle) != -1;
+				return x.search(searchRegex) != -1;
 			};
 		} else {
 			return function(x){
-				return x.search(needle) == -1;
+				return x.search(searchRegex) == -1;
 			}
 		}
 	};
@@ -31,17 +36,25 @@ var FofLogViewer = (function () {
 		{property: 'include',
 		checkbox_id: 'include_checkbox',
 		input_id: 'include',
+		regex_select_id: 'include_regex_select_id',
+		insensitive_select_id: 'include_insensitive_select_id',
 		filterFunction: function (haystack){
+			var regex = document.getElementById(this.regex_select_id).checked;
+			var insensitive = document.getElementById(this.insensitive_select_id).checked;
 			var needle = document.getElementById(this.input_id).value;
-			return haystack.filter(makeSearchFilter(needle, true));
+			return haystack.filter(makeSearchFilter(needle, true, insensitive, regex));
 		}},
 		
 		{property: 'exclude',
 		checkbox_id: 'exclude_checkbox',
 		input_id: 'exclude',
+		regex_select_id: 'exclude_regex_select_id',
+		insensitive_select_id: 'exclude_insensitive_select_id',
 		filterFunction: function (haystack){
+			var regex = document.getElementById(this.regex_select_id).checked;
+			var insensitive = document.getElementById(this.insensitive_select_id).checked;
 			var needle = document.getElementById(this.input_id).value;
-			return haystack.filter(makeSearchFilter(needle, false));
+			return haystack.filter(makeSearchFilter(needle, false, insensitive, regex));
 		}},
 		
 		{property: 'headtail',
