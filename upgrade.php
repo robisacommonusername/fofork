@@ -166,15 +166,12 @@ function upgradePoint1Point5($adminPassword){
 			PRIMARY KEY (`id`)
 		);\n");
 	$restorer = makeRestorer($FOF_SESSION_TABLE);
-	fof_safe_query("DROP TABLE $FOF_SESSION_TABLE");
+	fof_safe_query("ALTER table $FOF_SESSION_TABLE change `id` `session_id` varchar(32) NOT NULL");
 	if (mysql_errno()) {$restorer();}
-	
-	fof_safe_query("CREATE TABLE $FOF_SESSION_TABLE (
-		session_id varchar(32) NOT NULL,
-		session_access int(11) unsigned,
-		session_data text,
-    PRIMARY KEY (session_id))");
-    if (mysql_errno()) {$restorer();}
+	fof_safe_query("ALTER TABLE $FOF_SESSION_TABLE CHANGE `access` `session_access` INT( 10 ) unsigned NOT NULL");
+	if (mysql_errno()) {$restorer();}
+	fof_safe_query("ALTER table $FOF_SESSION_TABLE change `data` `session_data` text");
+	if (mysql_errno()) {$restorer();}
     
     //clear the log file
     $f = fopen('fof.log','w');
