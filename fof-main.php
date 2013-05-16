@@ -286,6 +286,9 @@ function fof_get_tags($user_id)
     
     while($row = fof_db_get_row($result))
     {
+		//postgresql (maybe others) adds extra whitespace to end of tag
+		//that needs to be trimmed off
+		$row['tag_name'] = trim($row['tag_name']);
         if(isset($counts[$row['tag_id']]))
             $row['unread'] = $counts[$row['tag_id']];
         else

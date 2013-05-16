@@ -59,6 +59,8 @@ function fof_query($sql, $params, $dieOnErrors=True){
 	} catch (PDOException $e) {
 		if ($dieOnErrors){
 			die('Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? Database says: <b>'. $e->getMessage() . '</b>');
+		} else {
+			throw $e;
 		}
 	}
 	return $result;
@@ -75,9 +77,9 @@ function fof_query_log($sql, $params, $dieOnErrors=True){
 	return $result;
 }
 
-function fof_query_log_private($sql, $params, $censors){
+function fof_query_log_private($sql, $params, $censors, $dieOnErrors=True){
 	$t1 = microtime(true);
-	$result = fof_query($sql, $params);
+	$result = fof_query($sql, $params, $dieOnErrors);
 	$t2 = microtime(true);
 	$elapsed = $t2 - $t1;
 	foreach ($censors as $field => $censorText){
@@ -125,7 +127,7 @@ function fof_query_log_get_id($sql, $params, $table, $id_param){
 			break;
 			
 			default:
-			$temp_res = $fof_connection->prepare("SELECT :id_param FROM :table ORDER BY :id_param DESC limit 0,1");
+			$temp_res = $fof_connection->prepare("SELECT :id_param FROM :table ORDER BY :id_param DESC limit 1 OFFSET 0");
 			$temp_res->execute(array('table' => $table,
 									'id_param' => $id_param));
 			$arr = $temp_res->fetch(PDO::FETCH_ASSOC);
@@ -143,6 +145,27 @@ function fof_query_log_get_id($sql, $params, $table, $id_param){
 	$logmessage = sprintf('%.3f: [%s] (%d affected)', $elapsed, $queryString, $result->rowCount());
 	fof_log($logmessage, 'pdo query');
 	return array($result, $id);
+}
+
+function fof_db_table_list() {
+	$ret = array();
+	switch (FOF_DB_TYPE){
+		case 'pgsql':
+		$result = fof_query_log("select table_name from information_schema.tables where table_schema='public'", null);
+		while ($row = fof_db_get_row($result)){
+			$ret[] = $row['table_name'];
+		}
+		break;
+		
+		//mysql atm
+		default:
+		$result = fof_query_log("SHOW TABLES", null);
+		while ($row = fof_db_get_row($result)){
+			$names = array_values($row);
+			$ret[] = $names[0];
+		}
+	}
+	return $ret;
 }
 
 function fof_fix_query_string($query, $subs){
@@ -373,10 +396,10 @@ function fof_db_purge_feed($ignoreable_items, $feed_id, $purge_days){
 	if ($count) {
 		$in_placeholders = implode(', ', array_fill(0,$count,'?'));
     	array_unshift($ignoreable_items, $feed_id);
-    	$sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = ? and item_id not in ($in_placeholders) order by item_cached desc limit $count, 1000000000";
+    	$sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = ? and item_id not in ($in_placeholders) order by item_cached desc limit 1000000000 OFFSET $count";
     } else {
     	$ignoreable_items = array($feed_id);
-    	$sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = ? order by item_cached desc limit $count, 1000000000";
+    	$sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = ? order by item_cached desc limit 1000000000 OFFSET $count";
     }
     
     $result = fof_query_log($sql, $ignoreable_items);
@@ -502,7 +525,7 @@ function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $s
         if(!is_numeric($limit)) {
             $limit = $prefs['howmany'];
         }
-        $limit_clause = sprintf(' limit %d, %d ', $start, $limit);;
+        $limit_clause = sprintf(' limit %d offset %d ', $limit, $start);;
     }
     
     $args = array();
@@ -524,12 +547,23 @@ function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $s
     
     if($what != 'all') {
         $tags = split(' ', $what);
-        $in = implode(', ', array_fill(0, count($tags), '?'));
+        //there appears to be an escaping bug, at least with pgsql backend
+        //instead of ending up with IN ('star', 'unread'), we just get
+        //IN (star, unread).  This works on mysql, but fails on postgres
+        //therefore, add the quotes manually 
+        
+        //even more annoying, bug in PGsql quoting fucks things up
+        //so can't use prepared queries easily, buggerydoo.
+        //instead, let's do an ugly hack, escape manually and interpolate
+        $tagsEscaped = array_map(function($x) {
+			global $fof_connection;
+			return $fof_connection->quote($x);
+		}, $tags);
+        $in = implode(', ', $tagsEscaped);
         $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
-        $where .= "AND it.user_id = ? AND it.tag_id = t.tag_id AND ( t.tag_name IN ( $in ) ) AND i.item_id = it.item_id "; 
+        $where .= "AND it.user_id = ? AND it.tag_id = t.tag_id AND ( t.tag_name IN ($in) ) AND i.item_id = it.item_id "; 
         $args[] = $user_id;
-        $args = array_merge($args, $tags);
-        $group = sprintf("GROUP BY i.item_id HAVING COUNT( i.item_id ) = %d ", count($tags));
+        $group = sprintf("GROUP BY i.item_id,f.feed_id HAVING COUNT( i.item_id ) = %d ", count($tags));
     }
     
     if($search != null) {
@@ -544,12 +578,8 @@ function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $s
     $order_by = "order by i.item_published $order $limit_clause ";
     
     $query = $select . $from . $where . $group . $order_by;
-    
-    $result = fof_query_log($query, $args);
-    
-    if ($result->rowCount() == 0) {
-        return array();
-    }
+
+    $result = fof_query_log($query,$args);
     
     $i = 0;
     $items = array();
@@ -560,16 +590,25 @@ function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $s
         $items[$i]['tags'] = array();
         $i++;
     }
-
-    $placeholders = implode(', ', array_fill(0,$i,'?'));
-    $ids[] = $user_id;  //just tack on the end
+    if (count($items) == 0){
+		return $items;
+	}
+	
+	//ugly hack again to get around pgsql driver bug
+	$placeholders = implode(',',
+		array_map(function($x) {
+			global $fof_connection;
+			return $fof_connection->quote($x);
+		}, $ids));
+    //$placeholders = implode(', ', array_fill(0,$i,'?'));
+    //$ids[] = $user_id;  //just tack on the end
     
     //get the tags.
-    $result = fof_query_log("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id in ($placeholders) and $FOF_ITEM_TAG_TABLE.user_id = ?", $ids);
+    $result = fof_query_log("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id in ($placeholders) and $FOF_ITEM_TAG_TABLE.user_id = ?", array($user_id));
     
     while ($row = fof_db_get_row($result)){
     	$item_id = $row['item_id'];
-    	$tag = $row['tag_name'];
+    	$tag = trim($row['tag_name']);
     	$items[$lookup[$item_id]]['tags'][] = $tag;
     }
     return $items;
@@ -590,7 +629,7 @@ function fof_db_get_item($user_id, $item_id) {
 		$result = fof_query_log("select $FOF_TAG_TABLE.tag_name from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = ? and $FOF_ITEM_TAG_TABLE.user_id = ?", array($item_id, $user_id));
 
 		while($row = fof_db_get_row($result)) {
-			$item['tags'][] = $row['tag_name'];
+			$item['tags'][] = trim($row['tag_name']);
 		}
 	}
     
@@ -700,7 +739,7 @@ function fof_db_get_tag_id_map() {
     $result = fof_query_log($sql,null);
     $tags = array();
     while($row = fof_db_get_row($result)) {
-        $tags[$row['tag_id']] = $row['tag_name'];
+        $tags[$row['tag_id']] = trim($row['tag_name']);
     }
     
     return $tags;   
@@ -1024,36 +1063,52 @@ function fof_db_close_session(){
 function fof_db_read_session($id){
 	$hash = base64_encode(hash('tiger192,4',$id,True));
 	global $FOF_SESSION_TABLE;
-    $result = fof_query_log_private("SELECT data from $FOF_SESSION_TABLE where id = :sessid",
+    $result = fof_query_log_private("SELECT session_data from $FOF_SESSION_TABLE where session_id = :sessid",
     								array('sessid' => $hash),
     								array('sessid' => 'XXX session id hash XXX'));
     if ($result->rowCount()){
     	$record = fof_db_get_row($result);
-    	return $record['data'];
+    	return $record['session_data'];
     }
     return '';
 }
 
 function fof_db_write_session($id, $data){
 	global $FOF_SESSION_TABLE;
+	global $fof_connection;
+	
 	$hash = base64_encode(hash('tiger192,4',$id,True));
     $access = time();
-    return fof_query_log_private("REPLACE into $FOF_SESSION_TABLE VALUES (:sessid, :access, :data)",
+    
+    //do a separate delete then insert, cos not all database backends support replace
+    //don't really need the atomicity, because I assume php only ever issues unique sessin ids
+    //but hashes could collide, I suppose, and it seems good practice
+    $fof_connection->beginTransaction();
+    try {
+    	fof_query_log_private("DELETE from $FOF_SESSION_TABLE where session_id = ?", array($hash), array('XXX session id hash XXX'), False);
+    	fof_query_log_private("INSERT into $FOF_SESSION_TABLE (session_id, session_access, session_data) 
+    							VALUES (:sessid, :access, :data)",
     							array('sessid' => $hash, 'access' => $access, 'data' => $data),
-    							array('sessid' => 'XXX session id hash XXX'));
+    							array('sessid' => 'XXX session id hash XXX'),
+    							False);
+    	$fof_connection->commit();
+    	return True;
+    } catch (Exception $e) {
+    	$fof_connection->rollBack();
+    }
 }
 
 function fof_db_destroy_session($id){
 	global $FOF_SESSION_TABLE;
 	$hash = base64_encode(hash('tiger192,4',$id,True));
-    fof_query_log_private("DELETE from $FOF_SESSION_TABLE where id=?", array($hash), array('XXX session id hash XXX'));
+    fof_query_log_private("DELETE from $FOF_SESSION_TABLE where session_id=?", array($hash), array('XXX session id hash XXX'));
     return True;
 }
 
 function fof_db_clean_session($max){
 	global $FOF_SESSION_TABLE;
     $old = time() - $max;
-	return fof_query_log("DELETE from $FOF_SESSION_TABLE where access < ?", array($old));
+	return fof_query_log("DELETE from $FOF_SESSION_TABLE where session_access < ?", array($old));
 }
 
 ?>
