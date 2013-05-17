@@ -880,7 +880,13 @@ function fof_add_item_prefilter($function)
     $fof_item_prefilters[] = $function;
 }
 
-function fof_add_pref($name, $key, $type='string', $sanitiser=function($x){return False;})
+//do nothing function as default argument to fof_add_pref
+//php doesn't just let us pass a lambda as a default arg, hence why this
+//function is declared here
+function default_sanitiser($x) {
+	return False;
+}
+function fof_add_pref($name, $key, $type='string', $sanitiser='default_sanitiser')
 {
     global $fof_plugin_prefs;
     
