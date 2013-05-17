@@ -58,11 +58,8 @@ if ($feed > 0) {
 	$r = fof_db_get_feed_by_id($feed);
 	$title .= " - {$r['feed_title']}";
 }
-if ($what != 'all') {
-	$title .= ' - unread items';
-} else {
-	$title .= ' - all items';
-}
+$title .= " - $what items";
+
 if ($search != '') {
 	$title .= " - <a href=\"javascript:toggle_highlight()\">matching <i class=\"highlight\">$search</i></a>";
 }
