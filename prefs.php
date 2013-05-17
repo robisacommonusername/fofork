@@ -219,7 +219,7 @@ URL to be linked on shared page: <input type=string name=sharedurl value="<?php 
     	fof_log("considering " . $file);
         if(preg_match('/\.php$/',$file))
         {
-           $plugins[] = substr($file, 0, -4);
+           $plugins[] = htmlspecialchars(substr($file, 0, -4));
         }
     }
 
@@ -228,7 +228,7 @@ URL to be linked on shared page: <input type=string name=sharedurl value="<?php 
 ?>
 
 <?php foreach($plugins as $plugin) { ?>
-<input type=checkbox name=<?php echo $plugin ?> <?php if($prefs->get("plugin_" . $plugin)) echo "checked"; ?>> Enable plugin <tt><?php echo $plugin?></tt>?<br>
+<input type="checkbox" name="<?php echo $plugin ?>" <?php if($prefs->get("plugin_" . $plugin)) echo '"checked"'; ?>> Enable plugin <tt><?php echo $plugin?></tt>?<br>
 <?php } ?>
 
 <br>

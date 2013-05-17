@@ -880,10 +880,7 @@ function fof_add_item_prefilter($function)
     $fof_item_prefilters[] = $function;
 }
 
-function default_sanitiser($x){
-	return False;
-}
-function fof_add_pref($name, $key, $type="string", $sanitiser='default_sanitiser')
+function fof_add_pref($name, $key, $type='string', $sanitiser=function($x){return False;})
 {
     global $fof_plugin_prefs;
     
