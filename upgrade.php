@@ -18,6 +18,7 @@
  */
 
 require('fof-main.php'); //old (1.1.x) version
+define('FOF_VERSION','1.5.0');
 
 //reimplement some standard functions from 1.5.x series
 //but using 1.1.x style db calls
@@ -60,7 +61,7 @@ function future_db_get_version(){
 function backup_table($table, $oldSchema){
 	//very basic dump routine.  Doesn't handle nulls or whatever,
 	//but there shouldn't be any
-	$backupFn = 'cache' . DIRETCORY_SEPARATOR . "$table.sql";
+	$backupFn = 'cache' . DIRECTORY_SEPARATOR . "$table.sql";
 	echo "backing up $table to file $backupFn <br />";
 	$f = fopen($backupFn,'w');
 	fwrite($f,"DROP TABLE $table;\n");
@@ -71,7 +72,7 @@ function backup_table($table, $oldSchema){
 		$vals = array_values($row);
 		$vals = array_map('mysql_real_escape_string',$vals);
 		$placeholders = implode(',', array_fill(0,count($fields),'`%s`'));
-		$sql = vsprintf("INSERT into $table ($placeholders) VALUES "
+		$sql = vsprintf("INSERT into $table ($placeholders) VALUES ", $fields);
 		$placeholders = implode(',', array_fill(0,count($vals),"'%s'"));
 		$sql .= vsprintf("($placeholders);\n", $vals);
 		fwrite($f, $sql);
@@ -83,7 +84,7 @@ function restore_table($table){
 	$sql = file_get_contents($backupFn);
 	fof_db_query($sql,1);
 	if (mysql_errno()){
-		echo "restore from backup failed! <br />"
+		echo "restore from backup failed! <br />";
 		echo "backup file is still available at $backupFn - you can try and restore it manually";
 	} else {
 		unlink($backupFn);
@@ -94,7 +95,7 @@ function makeRestorer($table){
 		echo "ERROR: could not upgrade table $table <br />";
 		restore_table($table);
 		exit;
-	}
+	};
 }
 
 
