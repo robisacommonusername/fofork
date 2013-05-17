@@ -1,4 +1,21 @@
 <?php
+  /*
+ * This file is part of fofork
+ * 
+ * http://robisacommonusername.github.io/fofork
+ *
+ * upgrade.php - upgrades old (1.0 or 1.x) fofork to version 1.5 or 
+ * greater
+ * 
+ *
+ * fofork is derived from Feed on Feeds, by Steven Minutillo
+ * http://feedonfeeds.com/
+ * 
+ * Copyright (C) 2012-2013 Robert Palmer
+ *
+ * Distributed under the GPL - see LICENSE
+ *
+ */
 
 require('fof-main.php'); //old (1.1.x) version
 

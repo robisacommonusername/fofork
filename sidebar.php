@@ -1,11 +1,15 @@
 <?php
-/*
- * This file is part of FEED ON FEEDS - http://feedonfeeds.com/
+   /*
+ * This file is part of fofork
+ * 
+ * http://robisacommonusername.github.io/fofork
  *
  * sidebar.php - sidebar for all pages
  *
- *
- * Copyright (C) 2004-2007 Stephen Minutillo
+ * fofork is derived from Feed on Feeds, by Steven Minutillo
+ * http://feedonfeeds.com/
+ * 
+ * Copyright (C) 2004-2007 Stephen Minutillo, 2012-2013 Robert Palmer
  * steve@minutillo.com - http://minutillo.com/steve/
  *
  * Distributed under the GPL - see LICENSE
@@ -20,7 +24,7 @@ $CSRF_hash = fof_compute_CSRF_challenge();
 ?>
 <img id="throbber" src="image/throbber.gif" align="left" style="position: fixed; left: 0; top: 0; display: none;">
 
-<center id="welcome">Welcome <b><?php echo $_SESSION['user_name']; ?></b>!<br /> <a href="prefs.php">prefs</a> | <a href="logout.php">log out</a> | <a href="logout.php?everywhere=yes">log out everywhere</a> | <a href="http://feedonfeeds.com/">about</a></center>
+<center id="welcome">Welcome <b><?php echo $_SESSION['user_name']; ?></b>!<br /> <a href="prefs.php">prefs</a> | <a href="logout.php">log out</a> | <a href="logout.php?everywhere=yes">log out everywhere</a> | <a href="<?php echo FOFORK_WEBSITE; ?>">about</a></center>
 <br>
 <center><a href="add.php"><b>Add Feeds</b></a> / <a href="update.php"><b>Update Feeds</b></a></center>
 

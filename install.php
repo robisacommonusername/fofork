@@ -1,11 +1,15 @@
 <?php
-/*
- * This file is part of FEED ON FEEDS - http://feedonfeeds.com/
+  /*
+ * This file is part of fofork
+ * 
+ * http://robisacommonusername.github.io/fofork
  *
  * install.php - creates tables and cache directory, if they don't exist
  *
- *
- * Copyright (C) 2004-2007 Stephen Minutillo
+ * fofork is derived from Feed on Feeds, by Steven Minutillo
+ * http://feedonfeeds.com/
+ * 
+ * Copyright (C) 2004-2007 Stephen Minutillo, 2012-2013 Robert Palmer
  * steve@minutillo.com - http://minutillo.com/steve/
  *
  * Distributed under the GPL - see LICENSE
@@ -81,7 +85,7 @@ $iconv_ok = extension_loaded('iconv');
 <!DOCTYPE html>
 <html>
 
-<head><title>feed on feeds <?php echo FOF_VERSION;?> - installation</title>
+<head><title>fofork <?php echo FOF_VERSION;?> - installation</title>
 		<link rel="stylesheet" href="fof.css" media="screen" />
 		<script src="fof.js" type="text/javascript"></script>
 		<meta name="ROBOTS" content="NOINDEX, NOFOLLOW" />
@@ -118,7 +122,7 @@ $iconv_ok = extension_loaded('iconv');
 
 	</head>
 
-	<body><div>		<center style="font-size: 20px;"><a href="http://feedonfeeds.com/">Feed on Feeds</a> - Installation</center><br>
+	<body><div>		<center style="font-size: 20px;"><a href="<?php echo FOFORK_WEBSITE; ?>">fofork</a> - Installation</center><br>
 
 
 <?php

@@ -1,17 +1,25 @@
 <?php
 /*
- * This file is part of FEED ON FEEDS - http://feedonfeeds.com/
+ * This file is part of fofork
+ * 
+ * http://robisacommonusername.github.io/fofork
  *
- * fof-main.php - initializes FoF, and contains functions used from other scripts
+ * fof-main.php - initializes FoF, and contains functions used from 
+ * other scripts
  *
- *
- * Copyright (C) 2004-2007 Stephen Minutillo
+ * fofork is derived from Feed on Feeds, by Steven Minutillo
+ * http://feedonfeeds.com/
+ * 
+ * Copyright (C) 2004-2007 Stephen Minutillo, 2012-2013 Robert Palmer
  * steve@minutillo.com - http://minutillo.com/steve/
  *
  * Distributed under the GPL - see LICENSE
  *
  */
-
+ 
+/***********************************************************************
+//Setup code
+* *********************************************************************/
 fof_repair_drain_bamage();
 
 if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
@@ -27,6 +35,11 @@ if (substr($FOF_BASE_URL,-1,1) != '/'){
 	$FOF_BASE_URL .= '/';
 }
 $FOF_BASE_URL = preg_replace('/^https?:\/\//','',$FOF_BASE_URL);
+
+//set the website url here so we don't have to reset it all over the code
+define('FOFORK_WEBSITE','http://robisacommonusername.github.io/fofork');
+//version
+define('FOF_VERSION', '1.5.0');
 
 require_once('fof-db.php');
 require_once('classes/fof-prefs.php');
@@ -64,6 +77,10 @@ if(!$fof_installer)
 
 require_once('simplepie/simplepie.inc');
 
+
+/***********************************************************************
+//Library functions
+***********************************************************************/
 function fof_set_content_type()
 {
     static $set;

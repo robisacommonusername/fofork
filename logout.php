@@ -1,10 +1,15 @@
 <?php
-/*
- * This file is part of FEED ON FEEDS - http://feedonfeeds.com/
+   /*
+ * This file is part of fofork
+ * 
+ * http://robisacommonusername.github.io/fofork
  *
  * logout.php - kills user cookie, redirects to login page
  *
- * Copyright (C) 2004-2007 Stephen Minutillo
+ * fofork is derived from Feed on Feeds, by Steven Minutillo
+ * http://feedonfeeds.com/
+ * 
+ * Copyright (C) 2004-2007 Stephen Minutillo, 2012-2013 Robert Palmer
  * steve@minutillo.com - http://minutillo.com/steve/
  *
  * Distributed under the GPL - see LICENSE
