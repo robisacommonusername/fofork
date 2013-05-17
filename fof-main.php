@@ -844,15 +844,15 @@ function fof_init_plugins()
 
     $p =& FoF_Prefs::instance();
     
-    $dirlist = opendir(FOF_DIR . "/plugins");
+    $dirlist = opendir(FOF_DIR . DIRECTORY_SEPARATOR . 'plugins');
     while($file=readdir($dirlist))
     {
-    	fof_log("considering " . $file);
-        if(preg_match('/\.php$/',$file) && !$p->get('plugin_' . substr($file, 0, -4)))
+    	fof_log("considering $file");
+        if(preg_match('/\.php$/',$file) && $p->get('plugin_' . substr($file, 0, -4)))
         {
-        	fof_log("including " . $file);
+        	fof_log("including $file");
 
-            include(FOF_DIR . "/plugins/" . $file);
+            include(FOF_DIR . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . $file);
         }
     }
 

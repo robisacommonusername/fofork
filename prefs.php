@@ -103,7 +103,7 @@ if(isset($_POST['plugins']) && fof_authenticate_CSRF_challenge($CSRF_hash))
     }
     
     $plugins = array();
-    $dirlist = opendir(FOF_DIR . '/plugins');
+    $dirlist = opendir(FOF_DIR . DIRECTORY_SEPARATOR . 'plugins');
     while($file=readdir($dirlist))
     {
         if(preg_match('/\.php$/',$file))
@@ -116,7 +116,7 @@ if(isset($_POST['plugins']) && fof_authenticate_CSRF_challenge($CSRF_hash))
         
     foreach($plugins as $plugin)
     {
-        $prefs->set("plugin_" . $plugin, $_POST[$plugin] != "on");
+        $prefs->set("plugin_" . $plugin, $_POST[$plugin] == "on");
     }
 
 	$prefs->save(fof_current_user());
@@ -213,7 +213,7 @@ URL to be linked on shared page: <input type=string name=sharedurl value="<?php 
 <input type="hidden" name="CSRF_hash" value="<?php echo $challenge;?>">
 <?php
     $plugins = array();
-    $dirlist = opendir(FOF_DIR . "/plugins");
+    $dirlist = opendir(FOF_DIR . DIRECTORY_SEPARATOR . 'plugins');
     while($file=readdir($dirlist))
     {
     	fof_log("considering " . $file);
@@ -228,7 +228,7 @@ URL to be linked on shared page: <input type=string name=sharedurl value="<?php 
 ?>
 
 <?php foreach($plugins as $plugin) { ?>
-<input type=checkbox name=<?php echo $plugin ?> <?php if(!$prefs->get("plugin_" . $plugin)) echo "checked"; ?>> Enable plugin <tt><?php echo $plugin?></tt>?<br>
+<input type=checkbox name=<?php echo $plugin ?> <?php if($prefs->get("plugin_" . $plugin)) echo "checked"; ?>> Enable plugin <tt><?php echo $plugin?></tt>?<br>
 <?php } ?>
 
 <br>
