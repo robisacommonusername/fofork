@@ -65,12 +65,21 @@ function backup_table($table, $oldSchema){
 	echo "backing up $table to file $backupFn <br />";
 	$f = fopen($backupFn,'w');
 	fwrite($f,"DROP TABLE $table;\n");
+	//remove any newlines from $oldSchema
+	$oldSchema = str_replace(array("\n", "\r"), array(' ',' '), $oldSchema);
 	fwrite($f, $oldSchema);
+	fwrite($f, "\n");
 	$result = fof_db_query("SELECT * from $table",1);
 	while ($row = fof_db_get_row($result)){
-		$fields = array_keys($row);
-		$vals = array_values($row);
-		$vals = array_map('mysql_real_escape_string',$vals);
+		//$row has both numeric and string keys (ie all the values are in
+		//the array twice, with two different keys.  We only want the 
+		//string keys, and only want to include each value once.  Be careful!
+		$fields = array_filter(array_keys($row), function ($x) {
+			return !is_numeric($x);
+		});
+		$vals = array_map(function ($key) use($row){
+			return mysql_real_escape_string($row[$key]);
+		}, $fields);
 		$placeholders = implode(',', array_fill(0,count($fields),'`%s`'));
 		$sql = vsprintf("INSERT into $table ($placeholders) VALUES ", $fields);
 		$placeholders = implode(',', array_fill(0,count($vals),"'%s'"));
@@ -82,13 +91,25 @@ function backup_table($table, $oldSchema){
 function restore_table($table){
 	$backupFn = 'cache' . DIRECTORY_SEPARATOR . "$table.sql";
 	$sql = file_get_contents($backupFn);
-	fof_db_query($sql,1);
-	if (mysql_errno()){
-		echo "restore from backup failed! <br />";
-		echo "backup file is still available at $backupFn - you can try and restore it manually";
-	} else {
-		unlink($backupFn);
+	//mysql extension really does not like multiple sql statements
+	//separated by a ; - need to split them up, and query one at a time
+	//we have ensured in backup_table that each statement starts on a 
+	//new line, which makes splitting much easier
+	$lines = array_filter(
+		array_map('trim', explode("\n", $sql)),
+		function ($x){
+			return ($x != '');
+		});
+	foreach ($lines as $line) {
+		fof_db_query($line,1);
+		if (mysql_errno()){
+			echo 'restore from backup failed! ' . mysql_error() . '<br />';
+			echo "backup file is still available at $backupFn - you can try and restore it manually";
+			exit;
+		}
 	}
+	echo "Table $table was sucessfully restored from the backup file"; 
+	unlink($backupFn);
 }
 function makeRestorer($table){
 	return function() use($table){
@@ -97,25 +118,35 @@ function makeRestorer($table){
 		exit;
 	};
 }
-
+function fof_safe_query_nodie(/* $query, [$args...]*/){
+	$args  = func_get_args();
+    $query = array_shift($args);
+    if(is_array($args[0])) $args = $args[0];
+    $args  = array_map('mysql_real_escape_string', $args);
+    $query = vsprintf($query, $args);
+    
+    return fof_db_query($query, 1);
+}
 
 if (!fof_is_admin()) {
 	die('You must be logged in as admin to upgrade fofork!');
 }
 
 function upgradePoint1Point5($adminPassword){
-	global $FOF_USER_TABLE;
+	global $FOF_USER_TABLE, $FOF_SESSION_TABLE;
 	$FOF_CONFIG_TABLE = FOF_CONFIG_TABLE;
 	//performs an upgrade of the database from the 1.1 series to 1.5
 	
 	//create the config table
-	fof_safe_query("CREATE TABLE IF NOT EXISTS $FOF_CONFIG_TABLE (
+	fof_safe_query_nodie("CREATE TABLE IF NOT EXISTS $FOF_CONFIG_TABLE (
 	param VARCHAR( 128 ) NOT NULL ,
 	val TEXT NOT NULL ,
 	PRIMARY KEY (param))");
+	if (mysql_errno()) {die('Upgrade failed: ' . mysql_error());}
 	
 	//add some new parameters
-	fof_safe_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', '%s'), ('bcrypt_effort', '%d'), ('max_items_per_request', '%d')", FOF_VERSION, BCRYPT_EFFORT, 100);
+	fof_safe_query_nodie("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', '%s'), ('bcrypt_effort', '%d'), ('max_items_per_request', '%d')", FOF_VERSION, BCRYPT_EFFORT, 100);
+	if (mysql_errno()) {die('Upgrade failed: ' . mysql_error());}
 	
 	//move admin prefs into config table
 	$p =& FoF_Prefs::instance();
@@ -131,17 +162,20 @@ function upgradePoint1Point5($adminPassword){
     	$args[] = $val;
     }
     $paramString = implode(', ', $params);
-    fof_safe_query("INSERT into $FOF_CONFIG_TABLE (param, val) values $paramString", $args);
+    fof_safe_query_nodie("INSERT into $FOF_CONFIG_TABLE (param, val) values $paramString", $args);
+    if (mysql_errno()) {die('Upgrade failed: ' . mysql_error());}
     
     //check - is there a log password in the admin prefs?
     $logPassword = array_key_exists('log_password',$admin_prefs) ? $admin_prefs['log_password'] : fof_make_salt();
-    fof_safe_query("INSERT into $FOF_CONFIG_TABLE (param,val) values ('log_password', '%s')", $logPassword);
+    fof_safe_query_nodie("INSERT into $FOF_CONFIG_TABLE (param,val) values ('log_password', '%s')", $logPassword);
+    if (mysql_errno()) {die('Upgrade failed: ' . mysql_error());}
     
 	//update users table - drop salt, change hashing to bcrypt
 	//will need to drop all users except admin user
 	//no transactions!!
 	
-	$result = fof_safe_query("SELECT user_name, user_level, user_prefs from $FOF_USER_TABLE where user_id = 1");
+	$result = fof_safe_query_nodie("SELECT user_name, user_level, user_prefs from $FOF_USER_TABLE where user_id = 1");
+	if (mysql_errno()) {die('Upgrade failed: ' . mysql_error());}
 	if ($row = fof_db_get_row($result)){
 		backup_table($FOF_USER_TABLE,
 			"CREATE TABLE IF NOT EXISTS `$FOF_USER_TABLE` (
@@ -169,9 +203,9 @@ function upgradePoint1Point5($adminPassword){
 		
 		$salt = future_make_bcrypt_salt();
 		$newHash = crypt($adminPassword, $salt);
-		fof_safe_query("INSERT into $FOF_USER_TABLE (user_name, user_password_hash, user_level, user_prefs)
-				VALUES (admin,'%s','%s','%s')", $newHash, $row['user_level'], $row['user_prefs']);	
-		if (mysql_errno()) {$restorer();}
+		fof_safe_query_nodie("INSERT into $FOF_USER_TABLE (user_name, user_password_hash, user_level, user_prefs)
+				VALUES ('admin','%s','%s','%s')", $newHash, $row['user_level'], $row['user_prefs']);	
+		$restorer();
 	}
 	
 	//rename columns in session table.  Will not be able to do a
@@ -190,11 +224,21 @@ function upgradePoint1Point5($adminPassword){
 	if (mysql_errno()) {$restorer();}
 	fof_safe_query("ALTER table $FOF_SESSION_TABLE change `data` `session_data` text");
 	if (mysql_errno()) {$restorer();}
+	
+	//delete the backup files
+	$backupFn = 'cache'.DIRECTORY_SEPARATOR."$FOF_USER_TABLE.sql";
+	@unlink($backupFn);
+	$backupFn = 'cache'.DIRECTORY_SEPARATOR."$FOF_SESSION_TABLE.sql";
+	@unlink($backupFn);
     
     //clear the log file
-    $f = fopen('fof.log','w');
-    fwrite($f,'');
-    fclose($f);
+    try {
+		if (file_exists('fof.log') && is_writable('fof_log')) {
+			$f = fopen('fof.log','w');
+			fwrite($f,'');
+			fclose($f);
+		}
+	} catch (Exception $e) {}
 }
 
 if (isset($_POST['confirm']) && fof_authenticate_CSRF_challenge($_POST['CSRF_hash'])) {
