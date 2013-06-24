@@ -7,11 +7,11 @@ Additionally, any existing log files will be cleared.
 
 PLEASE backup your existing database and/or logs before proceeding.
 
-1. Upload the files 'upgrade.php', 'upgrade-export.php' and 
-'fof-config-sample.php' from the 1.5.x branch to the root of your web server
+1. Upload the files 'upgrade.php' and 'fof-config-sample.php' from the 
+	1.5.x branch to the root of your web server
 2. Delete your existing 'fof-config.php'
 3. Rename 'fof-config-sample.php' to 'fof-config.php', and edit the contents to 
-match your database username, password, hostname, etc
+	match your database username, password, hostname, etc
 4. Browse to /upgrade.php.  Enter your admin password, and click upgrade
 5. Delete all the 1.1 or 1.0 branch code on your webserver, and replace with 
-the 1.5.x branch code
+	the 1.5.x branch code

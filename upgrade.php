@@ -188,10 +188,10 @@ function upgradePoint1Point5($adminPassword){
 				PRIMARY KEY (`user_id`)
 			);\n");
 		$restorer = makeRestorer($FOF_USER_TABLE);
-		fof_safe_query("DROP TABLE $FOF_USER_TABLE");
+		fof_safe_query_nodie("DROP TABLE $FOF_USER_TABLE");
 		if (mysql_errno()) {$restorer();}
 		
-		fof_safe_query("CREATE TABLE $FOF_USER_TABLE (
+		fof_safe_query_nodie("CREATE TABLE $FOF_USER_TABLE (
   				user_id int(11) NOT NULL auto_increment,
   				user_name varchar(100) NOT NULL default '',
   				user_password_hash varchar(60) NOT NULL default '',
@@ -205,7 +205,7 @@ function upgradePoint1Point5($adminPassword){
 		$newHash = crypt($adminPassword, $salt);
 		fof_safe_query_nodie("INSERT into $FOF_USER_TABLE (user_name, user_password_hash, user_level, user_prefs)
 				VALUES ('admin','%s','%s','%s')", $newHash, $row['user_level'], $row['user_prefs']);	
-		$restorer();
+		if (mysql_errno()) {$restorer();}
 	}
 	
 	//rename columns in session table.  Will not be able to do a
@@ -218,11 +218,11 @@ function upgradePoint1Point5($adminPassword){
 			PRIMARY KEY (`id`)
 		);\n");
 	$restorer = makeRestorer($FOF_SESSION_TABLE);
-	fof_safe_query("ALTER table $FOF_SESSION_TABLE change `id` `session_id` varchar(32) NOT NULL");
+	fof_safe_query_nodie("ALTER table $FOF_SESSION_TABLE change `id` `session_id` varchar(32) NOT NULL");
 	if (mysql_errno()) {$restorer();}
-	fof_safe_query("ALTER TABLE $FOF_SESSION_TABLE CHANGE `access` `session_access` INT( 10 ) unsigned NOT NULL");
+	fof_safe_query_nodie("ALTER TABLE $FOF_SESSION_TABLE CHANGE `access` `session_access` INT( 10 ) unsigned NOT NULL");
 	if (mysql_errno()) {$restorer();}
-	fof_safe_query("ALTER table $FOF_SESSION_TABLE change `data` `session_data` text");
+	fof_safe_query_nodie("ALTER table $FOF_SESSION_TABLE change `data` `session_data` text");
 	if (mysql_errno()) {$restorer();}
 	
 	//delete the backup files

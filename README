@@ -3,7 +3,7 @@ Minutillo (steve@minutillo.com - http://minutillo.com/steve/).
 
 Minimum Requirements for Installing fofork:
 PHP >= 5.3, with xml, pcre, mysql, curl, zlib, mbstring and iconv extensions
-mysql/mariaDB 5
+mysql/mariadb 5 or postgresql >= 8
 curl >= 7.10.5
 
 Installation instructions:
@@ -15,3 +15,6 @@ Installation instructions:
 	name, login, etc
 5. Run install.php
 
+Upgrade instructions:
+To upgrade from a fofork 1.0.x or 1.1.x installation, please read the
+'UPGRADE' file
