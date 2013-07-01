@@ -571,9 +571,18 @@ function fof_db_get_items($user_id=1, $feed=null, $what='unread', $when=null, $s
     }
     
     if($search != null) {
-        $where .= 'AND (i.item_title like ? or i.item_content like ? )';
-        $args[] = $search;
-        $args[] = $search;
+        //$where .= "AND (i.item_title like ? or i.item_content like ? )";
+        
+        //PDO's effed escaping strikes again! Apparently it doesn't add the
+        //quotes around the placeholders when we're inside parentheses.
+        //or something like that.  All I know is that doing a search on
+        //"fuck pdo" will produce the sql
+        //" AND (i.item_tile like fuck pdo or i.item_content like fuck pdo )"
+        global $fof_connection;
+        $escaped_search = $fof_connection->quote("%$search%");
+        $where .= "AND (i.item_title like $escaped_search or i.item_content like $escaped_search ) ";
+        //$args[] = $search;
+        //$args[] = $search;
     }
     
     if ($order != 'desc') {
