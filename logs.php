@@ -22,16 +22,6 @@ if (!fof_is_admin()){
 	die('Only admin may view the logs!');
 }
 
-function decrypt_line($line){
-	$IV = substr($line, 0, 22);
-	$data = substr($line, 22);
-	$aes = new Crypt_AES();
-	$aes->setKey(fof_db_log_password());
-	$aes->setIV($IV);
-	$decoded = $aes->decrypt(base64_decode($data));
-	return addslashes($decoded);
-}
-
 //slurp all text, and split lines
 if (file_exists('fof.log')) {
 	$logLines = file('fof.log');
@@ -40,7 +30,19 @@ if (file_exists('fof.log')) {
 }
 
 //decrypt everything
-$decodedLines = array_map('decrypt_line', $logLines);
+//Things misbehave if we try reusing the same aes instance with different
+//IVs but same key (for some reason).  Thus we create a new AES instance
+//on every iteration here.
+$pwd = fof_db_log_password();
+$decodedLines = array_map(function($line) use ($pwd) {
+		$decoded = base64_decode($line);
+		$aes = new Crypt_AES();
+		$IV = substr($decoded, 0, 16);
+		$ct = substr($decoded, 16);
+		$aes->setIV($IV);
+		$aes->setKey($pwd);
+		return addslashes($aes->decrypt($ct));
+	}, $logLines);
 $lineArray = '["' . implode('","', $decodedLines) . '"]';
 
 if (isset($_POST['export'])){

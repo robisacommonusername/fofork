@@ -231,7 +231,7 @@ function fof_db_log_password() {
 	}
 	$result = fof_query("SELECT val from $FOF_CONFIG_TABLE where param = 'log_password'", null);
 	if ($row = fof_db_get_row($result)) {
-		$password = $row['val'];
+		$password = base64_decode($row['val']);
 	} else {
 		$password = FOF_DB_PASS;
 	}

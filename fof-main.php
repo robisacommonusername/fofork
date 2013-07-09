@@ -113,9 +113,9 @@ function fof_log($message, $topic="debug") {
     
     $aes = new Crypt_AES();
     $aes->setKey(fof_db_log_password());
-    $IV = fof_make_salt();
+    $IV = fof_make_aes_key();
     $aes->setIV($IV);
-    $cipherText = $IV . base64_encode($aes->encrypt($totalMessage)) . "\n";
+    $cipherText = base64_encode($IV . $aes->encrypt($totalMessage)) . "\n";
     
     fwrite($log, $cipherText);
 }
@@ -180,13 +180,14 @@ function require_user()
 	$_SESSION['last_access'] = time();
 }
 
-function fof_make_salt(){
+function fof_make_aes_key() {
+	//makes a 128 bit key, returned as a string of 16 raw bytes
 	$bytes = null;
 	//try to get something cryptographically secure (*nix only)
 	if (file_exists('/dev/urandom')){
 		try {
 			$f = fopen('/dev/urandom', 'r');
-			$bytes = fread($f, 32);
+			$bytes = fread($f, 16);
 			fclose($f);
 		} catch (Exception $e) {
 			$bytes = null;
@@ -203,7 +204,14 @@ function fof_make_salt(){
 			$bytes = hash('tiger160,4', $bytes . mt_rand(), True);
 		}
 	}
-	$salt = substr(str_replace('+', '.', base64_encode($bytes)), 0, 22);
+	return substr($bytes,0,16);
+}
+
+function fof_make_salt() {
+	//uses only printable characters, not raw binary.
+	//22 characters, but only 16bytes entropy
+	$k = fof_make_aes_key();
+	$salt = substr(str_replace('+', '.', base64_encode($k)), 0, 22);
 	return $salt;
 }
 
