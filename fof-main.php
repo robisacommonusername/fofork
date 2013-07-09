@@ -39,7 +39,7 @@ $FOF_BASE_URL = preg_replace('/^https?:\/\//','',$FOF_BASE_URL);
 //set the website url here so we don't have to reset it all over the code
 define('FOFORK_WEBSITE','http://robisacommonusername.github.io/fofork');
 //version
-define('FOF_VERSION', '1.5.0');
+define('FOF_VERSION', '1.6.0');
 
 require_once('fof-db.php');
 require_once('classes/fof-prefs.php');
