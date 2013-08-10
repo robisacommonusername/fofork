@@ -984,7 +984,7 @@ function fof_db_authenticate($user_name, $password){
     
     	$row = fof_db_get_row($result);
     	$computedHash = crypt($password, $row['user_password_hash']);
-    	if ($computedHash === $row['user_password_hash']){
+    	if (fof_slow_compare($computedHash, $row['user_password_hash'])){
     		$_SESSION['user_name'] = $row['user_name'];
     		$_SESSION['user_id'] = $row['user_id'];
     		$_SESSION['user_level'] = $row['user_level'];
@@ -1039,7 +1039,7 @@ function fof_db_validate_cookie($token, $userAgent){
 	if ($result instanceof PDOStatement){
 		if ($result->rowCount() > 0){
 			$row = fof_db_get_row($result);
-			if (hash('tiger160,4',$userAgent . $token) === $row['user_agent_hash']){
+			if (fof_slow_compare(hash('tiger160,4',$userAgent . $token),$row['user_agent_hash'])){
 				$uid = $row['user_id'];
 				$result = fof_query_log("SELECT * from $FOF_USER_TABLE where user_id=?", array($uid));
 				if ($result->rowCount() > 0){

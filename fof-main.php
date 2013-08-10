@@ -222,6 +222,19 @@ function fof_make_bcrypt_salt() {
 	return $final;
 }
 
+function fof_slow_compare($a,$b){
+	//compare strings $a and $b by comparing every character, even if a
+	//mismatch is found (prevent timing attacks)
+	//returns true if strings are equal
+	$lena = strlen($a); $lenb = strlen($b);
+	$min = $lena < $lenb ? $lena : $lenb;
+	$res = $lena == $lenb ? 0x00 : 0xff;
+	for ($i=0; $i<$min; $i++){
+		$res |= (ord($a{$i}) ^ ord($b{$i}));
+	}
+	return $res === 0;
+}
+
 function fof_place_cookie($user_id){
 	global $FOF_BASE_URL;
 	$new_id = fof_make_salt();
