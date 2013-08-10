@@ -103,5 +103,18 @@ var FofLogViewer = (function () {
 		document.getElementById('text_area').value = logText;
 		
 	};
+	
+	my.clear = function(hash) {
+		//clears the log file
+		if (confirm("Are you sure you wish to delete the log file?")){
+			var url = "clear-logs.php";
+			var params = {clear: 'true', CSRF_hash: hash};
+			var complete = function (response) { alert(response.responseText); };
+			var options = { method: 'post', parameters: params, onComplete: complete };
+    
+			new Ajax.Request(url, options);
+		}
+		return false;
+	};
 	return my;
 })();

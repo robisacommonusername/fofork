@@ -115,7 +115,8 @@ if (isset($_POST['export'])){
 
  	<br /><br />
  	<textarea rows="20" cols="100" id="text_area">
-	</textarea>
+	</textarea><br /><br />
+	<center><a onclick="FofLogViewer.clear('<?php echo fof_compute_CSRF_challenge(); ?>')" href="#">Clear logs</a></center>
 <?php
 }
 ?>
