@@ -26,6 +26,10 @@ if(fof_is_admin() && isset($_POST['adminprefs']) && fof_authenticate_CSRF_challe
 	$prefs->setAdmin('autotimeout', intval($_POST['autotimeout']));
 	$prefs->setAdmin('logging', $_POST['logging'] ? True : False);
 	$prefs->setAdmin('max_items_per_request', intval($_POST['max_items_per_request']));
+	$effort = intval($_POST['bcrypt_effort']);
+	if ($effort > 0 && $effort < 25) {
+		$prefs->setAdmin('bcrypt_effort', $effort);
+	}
 	$prefs->save();
     	
 	$message .= ' Saved admin prefs.';
@@ -309,6 +313,7 @@ Purge read items after <input size="4" type="string" name="purge" value="<?php e
 Allow automatic feed updates every <input size="4" type="string" name="autotimeout" value="<?php echo intval($prefs->getAdmin('autotimeout'))?>"> minutes<br><br>
 Allow manual feed updates every <input size="4" type="string" name="manualtimeout" value="<?php echo intval($prefs->getAdmin('manualtimeout'))?>"> minutes<br><br>
 Maximum number of items per page request <input size="4" type="string" name="max_items_per_request" value="<?php echo intval($prefs->getAdmin('max_items_per_request'))?>"><br><br>
+Bcrypt effort parameter <input size="4" type="string" name="bcrypt_effort" value="<?php echo $prefs->getAdmin('bcrypt_effort');?>"><br /><br />
 <input type="submit" name="adminprefs" value="Save Options">
 </form>
 

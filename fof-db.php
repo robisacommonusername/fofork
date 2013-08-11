@@ -966,7 +966,7 @@ function fof_db_set_admin_prefs($prefs) {
 	global $FOF_CONFIG_TABLE;
 	
 	if (count($prefs) == 0) return;
-	$allowedKeys = array('logging' => null, 'autotimeout' => null, 'manualtimeout' => null, 'purge' => null, 'max_items_per_request' => null);
+	$allowedKeys = array('logging' => null, 'autotimeout' => null, 'manualtimeout' => null, 'purge' => null, 'max_items_per_request' => null, 'bcrypt_effort' => null);
 	//performance not important, this shouldn't change often
 	$updater = fof_prepare_query_log("UPDATE $FOF_CONFIG_TABLE set val = ? where param = ?");
 	foreach (array_intersect_key($prefs, $allowedKeys) as $key => $val) {
