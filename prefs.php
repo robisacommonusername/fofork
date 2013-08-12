@@ -16,19 +16,35 @@
  *
  */
 
-include_once("fof-main.php");
+include_once('fof-main.php');
 $prefs =& FoF_Prefs::instance();
 $CSRF_hash = $_POST['CSRF_hash'];
-if(fof_is_admin() && isset($_POST['adminprefs']) && fof_authenticate_CSRF_challenge($CSRF_hash))
-{
-	$prefs->setAdmin('purge', intval($_POST['purge']));
-	$prefs->setAdmin('manualtimeout', intval($_POST['manualtimeout']));
-	$prefs->setAdmin('autotimeout', intval($_POST['autotimeout']));
-	$prefs->setAdmin('logging', $_POST['logging'] ? True : False);
-	$prefs->setAdmin('max_items_per_request', intval($_POST['max_items_per_request']));
-	$effort = intval($_POST['bcrypt_effort']);
-	if ($effort > 0 && $effort < 25) {
-		$prefs->setAdmin('bcrypt_effort', $effort);
+if (fof_is_admin() 
+	&& isset($_POST['adminprefs']) 
+	&& fof_authenticate_CSRF_challenge($CSRF_hash)) 
+{	
+	$allowedKeys = array(
+		'purge' => fof_int_validator(0,365),
+		'manualtimeout' => fof_int_validator(1,1000),
+		'autotimeout' => fof_int_validator(1,1000),
+		'logging' => fof_bool_validator(),
+		'max_items_per_request' => fof_int_validator(1,1000),
+		'bcrypt_effort' => fof_int_validator(5,20),
+		'open_registration' => fof_bool_validator()
+	);
+	//problem; for the checkboxes, if we untick them, nothing gets posted
+	//fix that
+	foreach (array('logging', 'open_registration') as $k){
+		if (!isset($_POST[$k])) {
+			$_POST[$k] = 'off';
+		}
+	}
+	foreach (array_intersect_key($_POST, $allowedKeys) as $k => $v){
+		$validator = $allowedKeys[$k];
+		list($ok, $fixed) = $validator($v);
+		if ($ok) {
+			$prefs->setAdmin($k, $fixed);
+		}
 	}
 	$prefs->save();
     	
@@ -66,18 +82,32 @@ if(isset($_GET['untagfeed']) && fof_authenticate_CSRF_challenge($_GET['CSRF_hash
     }
 }
 
-if(isset($_POST['prefs']) && fof_authenticate_CSRF_challenge($CSRF_hash))
-{
-	$prefs->set('favicons', $_POST['favicons'] ? True : False);
-	$prefs->set('keyboard', $_POST['keyboard'] ? True : False);
-	$prefs->set('newtabs', $_POST['newtabs'] ? True : False);
-	$prefs->set('tzoffset', intval($_POST['tzoffset']));
-	$prefs->set('howmany', intval($_POST['howmany']));
-	$prefs->set('order', $_POST['order'] == 'asc' ? 'asc' : 'desc');
-	$prefs->set('sharing', $_POST['sharing'] == 'no' ? 'no' : ($_POST['sharing'] == 'all' ? 'all' : 'tagged'));
-	$prefs->set('sharedname', htmlspecialchars($_POST['sharedname']));
-	$prefs->set('sharedurl', htmlspecialchars($_POST['sharedurl']));
-	$prefs->save(fof_current_user());
+if(isset($_POST['prefs']) && fof_authenticate_CSRF_challenge($CSRF_hash)) {
+	$allowedKeys = array(
+		'favicons' => fof_bool_validator(),
+		'keyboard' => fof_bool_validator(),
+		'newtabs' => fof_bool_validator(),
+		'tzoffset' => fof_int_validator(-12,12),
+		'order' => fof_string_validator('/asc|desc/'),
+		'sharing' => fof_string_validator('/no|all|shared/'),
+		'sharedname' => function($x) {return array(True, htmlspecialchars($x));},
+		'sharedurl' => function($x) {return array(True, htmlspecialchars($x));},
+		'feed_order' => fof_string_validator('/max_age|feed_title|feed_age|feed_unread/'),
+		'feed_direction' => fof_string_validator('/asc|desc/')
+	);
+	//problem; for the checkboxes, if we untick them, nothing gets posted
+	//fix that
+	foreach (array('favicons','keyboard','newtabs') as $k){
+		if (!isset($_POST[$k])) $_POST[$k] = 'off';
+	}
+	foreach (array_intersect_key($_POST, $allowedKeys) as $k => $v){
+		$validator = $allowedKeys[$k];
+		list($ok, $fixed) = $validator($v);
+		if ($ok) {
+			$prefs->set($k, $fixed);
+		}
+	}
+	$prefs->save();
     
     if($_POST['password'] && ($_POST['password'] == $_POST['password2']))
     {

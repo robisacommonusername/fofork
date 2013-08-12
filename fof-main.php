@@ -1000,6 +1000,28 @@ function fof_htmlspecialchars($str){
 	return $new;
 }
 
+function fof_int_validator($lower, $upper) {
+	return function($x) use($lower, $upper){
+		$val = intval($x);
+		$ok = ($val >= $lower && $val <= $upper);
+		return array($ok, $val);
+	};
+}
+
+function fof_bool_validator() {
+	return function($x) {
+		$fixed = preg_match('/on|true|checked|1/i',$x) ? True : False;
+		return array(True, $fixed);
+	};
+}
+
+function fof_string_validator($regex) {
+	return function($x) use($regex){
+		$ok = preg_match($regex, $x) ? True : False;
+		return array($ok, $x);
+	};
+}
+
 function fof_repair_drain_bamage()
 {
     if (ini_get('register_globals')) foreach($_REQUEST as $k=>$v) { unset($GLOBALS[$k]); }

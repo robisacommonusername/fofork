@@ -754,8 +754,8 @@ function change_feed_order(order, direction, hash)
 {
     throb();
     
-    var url = "set-prefs.php";
-    var params = {feed_order:order, feed_direction:direction, CSRF_hash:hash};
+    var url = "prefs.php";
+    var params = {prefs:true, feed_order:order, feed_direction:direction, CSRF_hash:hash};
     var complete = function () { refreshlist(); };
     var options = { method: 'post', parameters: params, onComplete: complete };
     

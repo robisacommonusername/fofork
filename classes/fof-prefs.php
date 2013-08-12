@@ -57,17 +57,7 @@ class FoF_Prefs {
             'feed_direction' => 'asc',
             );
         
-        $admin_defaults = array(
-            'purge' => 30,
-            'autotimeout' => 30,
-            'manualtimeout' => 15,
-            'logging' => False,
-            'max_items_per_request' => 100,
-            'bcrypt_effort' => 9
-             );
-        
         $this->stuff_array($this->prefs, $defaults);
-        $this->stuff_array($this->admin_prefs, $admin_defaults);
     }
     
     function stuff_array(&$array, $defaults) {
@@ -98,6 +88,9 @@ class FoF_Prefs {
     
     function save() {
         fof_db_save_prefs($this->user_id, $this->prefs);
+        
+        //this function includes permission checking to ensure
+        //that user is actually admin
         fof_db_set_admin_prefs($this->admin_prefs);
     }
 }
