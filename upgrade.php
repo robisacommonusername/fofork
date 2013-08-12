@@ -4,8 +4,7 @@
  * 
  * http://robisacommonusername.github.io/fofork
  *
- * upgrade.php - upgrades old (1.0 or 1.x) fofork to version 1.5 or 
- * greater
+ * upgrade.php - upgrades old (1.0 or 1.x or 1.5) fofork to version 1.6
  * 
  *
  * fofork is derived from Feed on Feeds, by Steven Minutillo
@@ -18,18 +17,16 @@
  */
 
 require('fof-main.php'); //old (1.1.x) version
-define('FOF_VERSION','1.5.0');
 
-//reimplement some standard functions from 1.5.x series
-//but using 1.1.x style db calls
-
-function future_make_salt(){
+//perform setup - import required functions
+function future_make_aes_key() {
+	//makes a 128 bit key, returned as a string of 16 raw bytes
 	$bytes = null;
 	//try to get something cryptographically secure (*nix only)
 	if (file_exists('/dev/urandom')){
 		try {
 			$f = fopen('/dev/urandom', 'r');
-			$bytes = fread($f, 32);
+			$bytes = fread($f, 16);
 			fclose($f);
 		} catch (Exception $e) {
 			$bytes = null;
@@ -46,19 +43,77 @@ function future_make_salt(){
 			$bytes = hash('tiger160,4', $bytes . mt_rand(), True);
 		}
 	}
-	$salt = substr(str_replace('+', '.', base64_encode($bytes)), 0, 22);
+	return substr($bytes,0,16);
+}
+
+function future_make_salt() {
+	//uses only printable characters, not raw binary.
+	//22 characters, but only 16bytes entropy
+	$k = fof_make_aes_key();
+	$salt = substr(str_replace('+', '.', base64_encode($k)), 0, 22);
 	return $salt;
 }
-function future_make_bcrypt_salt(){
+
+function future_make_bcrypt_salt() {
 	$salt = future_make_salt();
-	$effort = BCRYPT_EFFORT;
+	$effort = fof_db_bcrypt_effort(); //REVIEW: this function may not exist!!
 	$final = '$2a$' . $effort . '$' . $salt;
 	return $final;
 }
-function future_db_get_version(){
-	return '1.1';
+$new_version = '1.6.0';
+define('FOF_NEW_VERSION','1.6.0');
+
+//version specific setup.  Mostly involving database access
+if (!function_exists('fof_db_get_version')){
+	//version 1.0 or 1.1 setup
+	$old_version = '1.1';
+	
+	//define some table names
+	$FOF_CONFIG_TABLE = FOF_DB_PREFIX . 'config';
+	define('BCRYPT_EFFORT', '9');
+	
+	//database access function
+	$fof_upgrader_query = function($query, $args) {
+		$args  = array_map('mysql_real_escape_string', $args);
+		$query = vsprintf($query, $args);
+    
+		$result = fof_db_query($query, 1);
+		if (mysql_errno()){
+			throw new UpgraderDatabaseException();
+		}
+	};
+	
+	//database escape function
+	$fof_upgrader_escape = function($arg) {
+		return mysql_real_escape_string($arg);
+	};
+} else {
+	//version 1.5 or 1.6, with PDO backend
+	$old_version = fof_db_get_version();
+	
+	$fof_upgrader_query = function($query, $args){
+		//need to do string interpolation for compatability with old style db
+		global $fof_connection;
+		$args = array_map(function ($arg) use ($fof_connection) {
+			return $fof_connection->quote($arg);
+		}, $args);
+		$sql = vsprintf($query, $args);
+		try {
+			$result = fof_query($sql, null, False)
+		} catch (PDOException $e) {
+			throw new UpgraderDatabaseException();
+		}
+		return $result;
+	};
+	
+	$fof_upgrader_escape = function($arg) {
+		global $fof_connection;
+		return $fof_connection->quote($arg);
+	};
 }
+
 function backup_table($table, $oldSchema){
+	global $fof_upgrader_query, $fof_upgrader_escape;
 	//very basic dump routine.  Doesn't handle nulls or whatever,
 	//but there shouldn't be any
 	$backupFn = 'cache' . DIRECTORY_SEPARATOR . "$table.sql";
@@ -69,7 +124,7 @@ function backup_table($table, $oldSchema){
 	$oldSchema = str_replace(array("\n", "\r"), array(' ',' '), $oldSchema);
 	fwrite($f, $oldSchema);
 	fwrite($f, "\n");
-	$result = fof_db_query("SELECT * from $table",1);
+	$result = $fof_upgrader_query("SELECT * from $table",null);
 	while ($row = fof_db_get_row($result)){
 		//$row has both numeric and string keys (ie all the values are in
 		//the array twice, with two different keys.  We only want the 
@@ -77,8 +132,8 @@ function backup_table($table, $oldSchema){
 		$fields = array_filter(array_keys($row), function ($x) {
 			return !is_numeric($x);
 		});
-		$vals = array_map(function ($key) use($row){
-			return mysql_real_escape_string($row[$key]);
+		$vals = array_map(function ($key) use($row, $fof_upgrader_escape){
+			return $fof_upgrader_escape($row[$key]);
 		}, $fields);
 		$placeholders = implode(',', array_fill(0,count($fields),'`%s`'));
 		$sql = vsprintf("INSERT into $table ($placeholders) VALUES ", $fields);
@@ -89,6 +144,8 @@ function backup_table($table, $oldSchema){
 	fclose($f);
 }
 function restore_table($table){
+	global $fof_upgrader_query;
+	
 	$backupFn = 'cache' . DIRECTORY_SEPARATOR . "$table.sql";
 	$sql = file_get_contents($backupFn);
 	//mysql extension really does not like multiple sql statements
@@ -101,8 +158,9 @@ function restore_table($table){
 			return ($x != '');
 		});
 	foreach ($lines as $line) {
-		fof_db_query($line,1);
-		if (mysql_errno()){
+		try {
+			$fof_upgrader_query($line,null);
+		} catch (UpgraderDatabaseException $e)
 			echo 'restore from backup failed! ' . mysql_error() . '<br />';
 			echo "backup file is still available at $backupFn - you can try and restore it manually";
 			exit;
@@ -132,50 +190,47 @@ if (!fof_is_admin()) {
 	die('You must be logged in as admin to upgrade fofork!');
 }
 
-function upgradePoint1Point5($adminPassword){
-	global $FOF_USER_TABLE, $FOF_SESSION_TABLE;
-	$FOF_CONFIG_TABLE = FOF_CONFIG_TABLE;
+function upgradePoint1Point6($adminPassword){
+	global $FOF_USER_TABLE, $FOF_SESSION_TABLE, $FOF_CONFIG_TABLE;
+	global $fof_upgrader_query;
 	//performs an upgrade of the database from the 1.1 series to 1.5
+	try {
+		//create the config table
+		$fof_upgrader_query("CREATE TABLE IF NOT EXISTS $FOF_CONFIG_TABLE (
+		param VARCHAR( 128 ) NOT NULL ,
+		val TEXT NOT NULL ,
+		PRIMARY KEY (param))", null);
 	
-	//create the config table
-	fof_safe_query_nodie("CREATE TABLE IF NOT EXISTS $FOF_CONFIG_TABLE (
-	param VARCHAR( 128 ) NOT NULL ,
-	val TEXT NOT NULL ,
-	PRIMARY KEY (param))");
-	if (mysql_errno()) {die('Upgrade failed: ' . mysql_error());}
-	
-	//add some new parameters
-	fof_safe_query_nodie("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', '%s'), ('bcrypt_effort', '%d'), ('max_items_per_request', '%d')", FOF_VERSION, BCRYPT_EFFORT, 100);
-	if (mysql_errno()) {die('Upgrade failed: ' . mysql_error());}
-	
-	//move admin prefs into config table
-	$p =& FoF_Prefs::instance();
-    $admin_prefs = $p->admin_prefs;
+		//add some new parameters
+		$fof_upgrader_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', '%s'), ('bcrypt_effort', '%d'), ('max_items_per_request', '%d')", array(FOF_NEW_VERSION, BCRYPT_EFFORT, 100));
+		//move admin prefs into config table
+		$p =& FoF_Prefs::instance();
+		$admin_prefs = $p->admin_prefs;
     
-    $adminKeys = array('purge' => null, 'autotimeout' => null, 'manualtimeout' => null, 'logging' => null);
-    $actualAdminPrefs = array_intersect_key($admin_prefs, $adminKeys);
-    $params = array();
-    $args = array();
-    foreach ($actualAdminPrefs as $key => $val){
-    	$params[] = "('%s', '%s')";
-    	$args[] = $key;
-    	$args[] = $val;
-    }
-    $paramString = implode(', ', $params);
-    fof_safe_query_nodie("INSERT into $FOF_CONFIG_TABLE (param, val) values $paramString", $args);
-    if (mysql_errno()) {die('Upgrade failed: ' . mysql_error());}
+		$adminKeys = array('purge' => null, 'autotimeout' => null, 'manualtimeout' => null, 'logging' => null);
+		$actualAdminPrefs = array_intersect_key($admin_prefs, $adminKeys);
+		$params = array();
+		$args = array();
+		foreach ($actualAdminPrefs as $key => $val){
+			$params[] = "('%s', '%s')";
+			$args[] = $key;
+			$args[] = $val;
+		}
+		$paramString = implode(', ', $params);
+		$fof_upgrader_query("INSERT into $FOF_CONFIG_TABLE (param, val) values $paramString", $args);
     
-    //check - is there a log password in the admin prefs?
-    $logPassword = array_key_exists('log_password',$admin_prefs) ? $admin_prefs['log_password'] : fof_make_salt();
-    fof_safe_query_nodie("INSERT into $FOF_CONFIG_TABLE (param,val) values ('log_password', '%s')", $logPassword);
-    if (mysql_errno()) {die('Upgrade failed: ' . mysql_error());}
+		//generate new log password (old logs become unreadable)
+		$logPassword = base64_encode(future_make_aes_key());
+		$fof_upgrader_query("INSERT into $FOF_CONFIG_TABLE (param,val) values ('log_password', '%s')", array($logPassword));
     
-	//update users table - drop salt, change hashing to bcrypt
-	//will need to drop all users except admin user
-	//no transactions!!
+		//update users table - drop salt, change hashing to bcrypt
+		//will need to drop all users except admin user
+		//no transactions!!
 	
-	$result = fof_safe_query_nodie("SELECT user_name, user_level, user_prefs from $FOF_USER_TABLE where user_id = 1");
-	if (mysql_errno()) {die('Upgrade failed: ' . mysql_error());}
+		$result = $fof_upgrader_query("SELECT user_name, user_level, user_prefs from $FOF_USER_TABLE where user_id = 1",null);
+	} catch (UpgraderDatabaseException $e) {
+		die('Upgrade failed!!');
+	}
 	if ($row = fof_db_get_row($result)){
 		backup_table($FOF_USER_TABLE,
 			"CREATE TABLE IF NOT EXISTS `$FOF_USER_TABLE` (
@@ -188,24 +243,24 @@ function upgradePoint1Point5($adminPassword){
 				PRIMARY KEY (`user_id`)
 			);\n");
 		$restorer = makeRestorer($FOF_USER_TABLE);
-		fof_safe_query_nodie("DROP TABLE $FOF_USER_TABLE");
-		if (mysql_errno()) {$restorer();}
-		
-		fof_safe_query_nodie("CREATE TABLE $FOF_USER_TABLE (
+		try {
+			$fof_upgrader_query("DROP TABLE $FOF_USER_TABLE",null);
+			$fof_upgrader_query("CREATE TABLE $FOF_USER_TABLE (
   				user_id int(11) NOT NULL auto_increment,
   				user_name varchar(100) NOT NULL default '',
   				user_password_hash varchar(60) NOT NULL default '',
   				user_level enum('user','admin') NOT NULL default 'user',
   				user_prefs text,
   				PRIMARY KEY  (user_id), UNIQUE KEY (user_name)
-				)");
-		if (mysql_errno()) {$restorer();}
+				)", null);
+		} catch (UpgraderDatabaseException $e) {$restorer();}
 		
 		$salt = future_make_bcrypt_salt();
 		$newHash = crypt($adminPassword, $salt);
-		fof_safe_query_nodie("INSERT into $FOF_USER_TABLE (user_name, user_password_hash, user_level, user_prefs)
-				VALUES ('admin','%s','%s','%s')", $newHash, $row['user_level'], $row['user_prefs']);	
-		if (mysql_errno()) {$restorer();}
+		try {
+			$fof_upgrader_query("INSERT into $FOF_USER_TABLE (user_name, user_password_hash, user_level, user_prefs)
+				VALUES ('admin','%s','%s','%s')", array($newHash, $row['user_level'], $row['user_prefs']));	
+		} catch (UpgraderDatabaseException $e) {$restorer();}
 	}
 	
 	//rename columns in session table.  Will not be able to do a
@@ -218,12 +273,11 @@ function upgradePoint1Point5($adminPassword){
 			PRIMARY KEY (`id`)
 		);\n");
 	$restorer = makeRestorer($FOF_SESSION_TABLE);
-	fof_safe_query_nodie("ALTER table $FOF_SESSION_TABLE change `id` `session_id` varchar(32) NOT NULL");
-	if (mysql_errno()) {$restorer();}
-	fof_safe_query_nodie("ALTER TABLE $FOF_SESSION_TABLE CHANGE `access` `session_access` INT( 10 ) unsigned NOT NULL");
-	if (mysql_errno()) {$restorer();}
-	fof_safe_query_nodie("ALTER table $FOF_SESSION_TABLE change `data` `session_data` text");
-	if (mysql_errno()) {$restorer();}
+	try {
+		$fof_upgrader_query("ALTER table $FOF_SESSION_TABLE change `id` `session_id` varchar(32) NOT NULL", null);
+		$fof_upgrader_query("ALTER TABLE $FOF_SESSION_TABLE CHANGE `access` `session_access` INT( 10 ) unsigned NOT NULL",null);
+		$fof_upgrader_query("ALTER table $FOF_SESSION_TABLE change `data` `session_data` text");
+	} catch (UpgraderDatabaseException $e) {$restorer();}
 	
 	//delete the backup files
 	$backupFn = 'cache'.DIRECTORY_SEPARATOR."$FOF_USER_TABLE.sql";
@@ -234,9 +288,29 @@ function upgradePoint1Point5($adminPassword){
     //clear the log file
     try {
 		if (file_exists('fof.log') && is_writable('fof_log')) {
-			$f = fopen('fof.log','w');
-			fwrite($f,'');
-			fclose($f);
+			@$f = fopen('fof.log','w');
+			@fwrite($f,'');
+			@fclose($f);
+		}
+	} catch (Exception $e) {}
+}
+
+function upgradePoint5Point6() {
+	global $FOF_CONFIG_TABLE;
+	//update the database log key to new format, clear old logs
+	//clear the log file
+	$k = future_make_aes_key();
+	$encoded = base64_encode($k);
+	try {
+		fof_query("UPDATE $FOF_CONFIG_TABLE SET val = ? where param = 'log_password'", array($encoded), False);
+	} catch (PDOException $e) {
+		die('Upgrade process failed, could not update database');
+	}
+    try {
+		if (file_exists('fof.log') && is_writable('fof_log')) {
+			@$f = fopen('fof.log','w');
+			@fwrite($f,'');
+			@fclose($f);
 		}
 	} catch (Exception $e) {}
 }
@@ -255,8 +329,6 @@ if (isset($_POST['confirm']) && fof_authenticate_CSRF_challenge($_POST['CSRF_has
 		die('Please enter the correct admin password to upgrade fofork!');
 	}
 }
-$oldVersion = future_db_get_version();
-$newVersion = FOF_VERSION;
 
 ?>
 <!DOCTYPE html>
@@ -267,11 +339,11 @@ $newVersion = FOF_VERSION;
 <body>
 <center><h1> Upgrade Feed on Feeds (fofork)</h1></center><br />
 <div style="display: inline" width=50%>
-This script will upgrade the database schema from fofork <?php echo $oldVersion;?> to fofork <?php echo $newVersion;?>
+This script will upgrade the database schema from fofork <?php echo $old_version;?> to fofork <?php echo $new_version;?>
 <br />
 <br />
 You need to be logged in as admin to run this script.  After you have clicked confirm, you should replace all the php files
-for fofork on your web server with the newer (version <?php echo $newVersion;?>) versions.
+for fofork on your web server with the newer (version <?php echo $new_version;?>) versions.
 <br />
 <br />
 Please note that if upgrading from versions 1.0.x or 1.1.x to 1.5 or greater, you will lose any user accounts you have created (with the exception of the admin account).  All users except admin will be deleted, and will need to be recreated.  This is due to the new password hashing method used in versions 1.5 and greater.</div>
