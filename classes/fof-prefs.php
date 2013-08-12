@@ -86,6 +86,10 @@ class FoF_Prefs {
     	return $this->admin_prefs;
     }
     
+    function clear($k){
+		unset($this->prefs[$k]);
+	}
+    
     function save() {
         fof_db_save_prefs($this->user_id, $this->prefs);
         

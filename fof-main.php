@@ -31,10 +31,10 @@ if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
 require_once('fof-config.php');
 //set the base url
 $FOF_BASE_URL = FOF_BASE_URL;
-if (substr($FOF_BASE_URL,-1,1) != '/'){
-	$FOF_BASE_URL .= '/';
+if (substr($FOF_BASE_URL,-1,1) == '/'){
+	$FOF_BASE_URL = substr($FOF_BASE_URL,0,-1);
 }
-$FOF_BASE_URL = preg_replace('/^https?:\/\//','',$FOF_BASE_URL);
+//$FOF_BASE_URL = preg_replace('/^https?:\/\//','',$FOF_BASE_URL);
 
 //set the website url here so we don't have to reset it all over the code
 define('FOFORK_WEBSITE','http://robisacommonusername.github.io/fofork');
@@ -67,7 +67,7 @@ if(!$fof_installer)
     }
     else
     {
-        $_SESSION['user_id'] = 1;
+        //$_SESSION['user_id'] = 1;
     }
 	$fof_prefs_obj =& FoF_Prefs::instance();
     ob_start();
@@ -245,8 +245,7 @@ function fof_place_cookie($user_id){
 	//set httponly true, but https only to false (allow non-https logins, etc)
 	
 	//possible dns rebinding problem here, so ensure cookie can only be accessed from our domain
-	$domain = substr($FOF_BASE_URL,0,-1); //remove trailing /
-	setcookie('token',$new_id, time()+60*60*24*30, '',$domain,False,True); //30 day expiry
+	setcookie('token',$new_id, time()+60*60*24*30, '',$FOF_BASE_URL,False,True); //30 day expiry
 }
 
 function fof_validate_cookie(){

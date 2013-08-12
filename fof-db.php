@@ -1005,6 +1005,14 @@ function fof_db_authenticate($user_name, $password){
     		if ($storedEffort != $requiredEffort) {
     			fof_db_change_password($user_name, $password); //same password, just rehashes
     		}
+    		
+    		//check that non admin user is confirmed
+    		if ($row['user_level'] != 'admin'){
+				$p = unserialize($row['user_prefs']);
+				if (!$p['confirmed']){
+					return False;
+				}
+			}
     		return True;
    		}
    	}

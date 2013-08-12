@@ -184,7 +184,15 @@ if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['p
     	$username = htmlspecialchars($_POST['username']);
     	if (preg_match('/^[a-zA-Z0-9]{1,32}$/',$username)){
     		$password = $_POST['password'];
-			$message = fof_db_add_user($username, $password) ? "User '$username' added." : "A user named '$username' already exists.  Please try again";
+    		$uniq = fof_db_add_user($username, $password);
+			$message = $uniq ? "User '$username' added." : "A user named '$username' already exists.  Please try again";
+			if ($uniq){
+				//confirm this user (since added manually by admin)
+				$uid = fof_db_get_user_id($username);
+				$u_prefs = new FoF_Prefs($uid);
+				$u_prefs->set('confirmed',true);
+				$u_prefs->save();
+			}
 		} else {
 			$message = 'Invalid username entered';
 		}
