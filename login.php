@@ -71,6 +71,10 @@ if(isset($_POST['user_name']) && isset($_POST['user_password']))
 <div>
 	<form action="login.php" method="POST" style="display: inline">
 		<center><a href="http://feedonfeeds.com/" style="font-size: 20px; font-family: georgia;">Feed on Feeds</a></center><br>
+		<?php
+		if (fof_db_registration_allowed()) { ?>
+			<center><a href="register.php">Register Account</a></center><br />
+		<?php } ?>
 		User name:<br /><input type=string name=user_name style='font-size: 16px'><br /><br />
 		Password:<br /><input type=password name=user_password style='font-size: 16px'><br /><br />
 		Remember me:  <input type=checkbox name="persistent" value="True"><br />

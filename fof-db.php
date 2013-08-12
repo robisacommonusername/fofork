@@ -951,6 +951,14 @@ function fof_db_save_prefs($user_id, $prefs) {
     fof_query_log("update $FOF_USER_TABLE set user_prefs = ? where user_id = ?", array($prefs, $user_id));
 }
 
+function fof_db_registration_allowed(){
+	global $FOF_CONFIG_TABLE;
+	$result = fof_query_log("SELECT val from $FOF_CONFIG_TABLE where param='open_registration'", array());
+	$row = fof_db_get_row($result);
+	$v = preg_match('/on|checked|true|1/i', $row['val']) ? True : False;
+	return $v;
+}
+
 function fof_db_get_admin_prefs() {
 	global $FOF_CONFIG_TABLE;
 	
