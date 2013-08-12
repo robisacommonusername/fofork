@@ -134,7 +134,7 @@ if ($_POST['install_confirmed'] == 'yes' && isset($_POST['password']) && isset($
 		echo 'Inserting initial data... <br />';
 		
 		fof_query("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (1, 'unread'), (2, 'star')", null, False);
-		fof_query("insert into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?), ('log_password', ?), ('logging', '0'), ('autotimeout', '10'), ('manualtimeout', '5'), ('purge', '7'), ('max_items_per_request', '100')", array(FOF_VERSION, BCRYPT_EFFORT, base64_encode(fof_make_aes_key())), False);
+		fof_query("insert into $FOF_CONFIG_TABLE (param, val) values ('version', ?), ('bcrypt_effort', ?), ('log_password', ?), ('logging', '0'), ('autotimeout', '10'), ('manualtimeout', '5'), ('purge', '7'), ('max_items_per_request', '100'), ('open_registration', '0')", array(FOF_VERSION, BCRYPT_EFFORT, base64_encode(fof_make_aes_key())), False);
 
 		echo 'Done.<hr>';
 		

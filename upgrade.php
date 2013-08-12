@@ -16,7 +16,7 @@
  *
  */
 
-require('fof-main.php'); //old (1.1.x) version
+require('fof-main.php'); //old version
 
 //perform setup - import required functions
 function future_make_aes_key() {
@@ -64,6 +64,11 @@ $new_version = '1.6.0';
 define('FOF_NEW_VERSION','1.6.0');
 
 //version specific setup.  Mostly involving database access
+//these are only required for backupTable and restoreTable functions
+//which must work on all of 1.0, 1.1 and 1.5 backends.
+
+//inside functions like upgradePoiny1Point5, can use the 1.1 style
+//database calls directly
 if (!function_exists('fof_db_get_version')){
 	//version 1.0 or 1.1 setup
 	$old_version = '1.1';
@@ -108,7 +113,10 @@ if (!function_exists('fof_db_get_version')){
 	
 	$fof_upgrader_escape = function($arg) {
 		global $fof_connection;
-		return $fof_connection->quote($arg);
+		//$fof_connection->quote($arg) will add the '' around string
+		//not compatible with 1.0 or 1.1 which does escaping only, no quotes
+		$quoted = $fof_connection->quote($arg);
+		return substr($quoted, 1, strlen($quoted)-2);
 	};
 }
 
@@ -202,7 +210,7 @@ function upgradePoint1Point6($adminPassword){
 		PRIMARY KEY (param))", null);
 	
 		//add some new parameters
-		$fof_upgrader_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', '%s'), ('bcrypt_effort', '%d'), ('max_items_per_request', '%d')", array(FOF_NEW_VERSION, BCRYPT_EFFORT, 100));
+		$fof_upgrader_query("INSERT into $FOF_CONFIG_TABLE (param, val) values ('version', '%s'), ('bcrypt_effort', '%d'), ('max_items_per_request', '%d'), ('open_registration', '0')", array(FOF_NEW_VERSION, BCRYPT_EFFORT, 100));
 		//move admin prefs into config table
 		$p =& FoF_Prefs::instance();
 		$admin_prefs = $p->admin_prefs;
@@ -297,12 +305,15 @@ function upgradePoint1Point6($adminPassword){
 
 function upgradePoint5Point6() {
 	global $FOF_CONFIG_TABLE;
+	global $fof_upgrader_query;
+	//add the open_registration parameter and
 	//update the database log key to new format, clear old logs
 	//clear the log file
 	$k = future_make_aes_key();
 	$encoded = base64_encode($k);
 	try {
 		fof_query("UPDATE $FOF_CONFIG_TABLE SET val = ? where param = 'log_password'", array($encoded), False);
+		fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) VALUES ('open_regsitration','0')", array(), False);
 	} catch (PDOException $e) {
 		die('Upgrade process failed, could not update database');
 	}
