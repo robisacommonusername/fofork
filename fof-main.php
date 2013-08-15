@@ -245,7 +245,8 @@ function fof_place_cookie($user_id){
 	//set httponly true, but https only to false (allow non-https logins, etc)
 	
 	//possible dns rebinding problem here, so ensure cookie can only be accessed from our domain
-	setcookie('token',$new_id, time()+60*60*24*30, '',$FOF_BASE_URL,False,True); //30 day expiry
+	$domain = preg_replace('|https?://|', '', $FOF_BASE_URL);
+	setcookie('token',$new_id, time()+60*60*24*30, '',$domain,False,True); //30 day expiry
 }
 
 function fof_validate_cookie(){
