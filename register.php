@@ -27,6 +27,8 @@ if (!fof_db_registration_allowed()){
 }
 fof_set_content_type();
 $fields = array('username','email','password','password2');
+
+//confirm registration
 if (isset($_GET['uid']) && isset($_GET['token'])){
 	//confirm registration
 	$uid = intval($_GET['uid']);
@@ -41,7 +43,8 @@ if (isset($_GET['uid']) && isset($_GET['token'])){
 		die();
 	}
 }
-//check the registration
+
+//register a new user
 //confirm that all required fields have been set validly,
 //and that all honeypot fields are ''
 if ($_POST['registered'] == 'true'){
@@ -52,63 +55,66 @@ if ($_POST['registered'] == 'true'){
 			die();
 		}
 	}
-	//validate user data
-	$validators = array(
-		'username' => fof_string_validator('/^[a-zA-Z0-9]{1,32}$/'),
-		'email' => fof_string_validator(
-		"/[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/")
-		);
+	//check user data
 	$msg = '';
 	$allOk = True;
-	foreach ($fields as $field){
-		$code = $fieldCodes[$field];
-		if (!isset($_POST[$code])){
-			die();
-		}
-		$val = $_POST[$code];
-		if (array_key_exists($field, $validators)){
-			list($ok) = $validators[$field]($val);
-			if (!$ok){
-				$msg .= "Bad $field value supplied <br />";
-				$allOk = False;
-			}
-		}
-	}
 	$password = $_POST[$fieldCodes['password']];
 	$password2 = $_POST[$fieldCodes['password2']];
+	$username = $_POST[$fieldCodes['username']];
+	$email = $_POST[$fieldCodes['email']];
+	if (!preg_match('/^[a-zA-Z0-9]{1,32}$/', $username)){
+		$msg .= 'Bad username entered <br />';
+		$allOk = false;
+	}
+	if (fof_db_get_user_id($username) !== null){
+		$msg .= 'That username is already taken! <br />';
+		$allOk = false;
+	}
 	if ($password != $password2){
 		$msg .= 'Passwords do not match! <br />';
 		$allOk = False;
 	}
+	if (!preg_match('/^[^@]+@[^@.]+[.]?[^@]*$/', $email)){
+		$msg .= 'Bad email entered <br />';
+		$allOk = False;
+	}
+	//should also check that the email hasn't been used to register
+	//another account
 	if ($allOk){
-		$username = $_POST[$fieldCodes['username']];
-		$email = $_POST[$fieldCodes['email']];
-		$res = fof_db_add_user($username, $password);
-		if (!$res){
-			$msg .= 'That username is already taken! <br />';
-		} else {
-			$uid = fof_db_get_user_id($username);
-			$token = fof_make_salt();
-			$enc_token = urlencode($token);
+		fof_db_add_user($username, $password);
+		$uid = fof_db_get_user_id($username);
+		$token = fof_make_salt();
+		$enc_token = urlencode($token);
 			
-			//email out token
-			$subject = 'fofork registration - confirmation';
-			$body = "Please click this
-			<a href=\"$FOF_BASE_URL/register.php?uid=$uid&token=$enc_token>
-			link to confirm your registration</a><br />";
-			mail($email,$subject,$body);
-		
-			$prefs = new FoF_Prefs($uid);
-			$prefs->set('email', $email);
-			$prefs->set('confirmed', False);
-			$prefs->set('token',$token);
-			$prefs->save();
-			session_unset();
-			session_destroy(True);
-			exit();
-		}
+		//email out token
+		$subject = 'fofork registration - confirmation';
+		$body = <<<END
+		<html>
+		<head>
+		<title>fofork registration - confirmation</title>
+		</head>
+		<body>
+		Thank you for registering a fofork account at $FOF_BASE_URL <br /><br />
+		To confirm you registration, please click the following link, and login
+		with the details you provided at registration:
+		<a href=\"$FOF_BASE_URL/register.php?uid=$uid&token=$enc_token\">
+		$FOF_BASE_URL/register.php?uid=$uid&token=$enc_token</a>
+		</body>
+		</html>
+END;
+		mail($email, $subject, $body);
+		$prefs = new FoF_Prefs($uid);
+		$prefs->set('email', $email);
+		$prefs->set('confirmed', False);
+		$prefs->set('token',$token);
+		$prefs->save();
+		session_unset();
+		session_destroy();
+		$msg = 'Thank you for registering.  Please check your nominated email account to confirm your registration'; 
 	}
 }
+
+//otherwise, display registration form
 //to minimise spam signups, we'll randomly generate the field names, 
 //and present them in a random order
 //The bot has a 1/24 chance of guessing correctly
