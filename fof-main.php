@@ -31,10 +31,11 @@ if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
 require_once('fof-config.php');
 //set the base url
 $FOF_BASE_URL = FOF_BASE_URL;
+//remove trailing / if there is one
+//base url should have form like https?://subdomain.domain.com
 if (substr($FOF_BASE_URL,-1,1) == '/'){
 	$FOF_BASE_URL = substr($FOF_BASE_URL,0,-1);
 }
-//$FOF_BASE_URL = preg_replace('/^https?:\/\//','',$FOF_BASE_URL);
 
 //set the website url here so we don't have to reset it all over the code
 define('FOFORK_WEBSITE','http://robisacommonusername.github.io/fofork');

@@ -54,7 +54,7 @@ else
     if (isset($_POST['return'])){
     	//prevent open redirect by checking return address
     	//also need to strip any newlines to prevent response splitting
-    	$regex = '/^https?:\/\/' . preg_replace('/\//','\\/',$FOF_BASE_URL) . '[^\n\r]*$/';
+    	$regex = "|^$FOF_BASE_URL/[^\n\r]*$|";
     	$url = urldecode($_POST['return']);
     	if (preg_match($regex, $url)){
     		header("Location: $url");

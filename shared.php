@@ -54,11 +54,8 @@ if(isset($_GET['feed']))
 
 $result = fof_get_items($user, $feed, $which, NULL, 0, 100);
 
-//DO not do this, use fof_base_url, and hardcode in the shared.php part
-//should also allow for https if it's turned on
-$protocol = $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
-$shared_feed = $protocol . $FOF_BASE_URL . "/shared.php?user=$user&format=atom";
-$shared_link = $protocol . $FOF_BASE_URL . "/shared.php?user=$user";
+$shared_feed = $FOF_BASE_URL . "/shared.php?user=$user&format=atom";
+$shared_link = $FOF_BASE_URL . "/shared.php?user=$user";
 
 if(isset($_GET['which']))
 {
