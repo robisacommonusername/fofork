@@ -620,7 +620,7 @@ function fof_escape_feed_info($feed){
 	$stripper = new FofFeedSanitiser();
 	$id = intval($feed['feed_id']);
    	$url = $stripper->sanitiseLink($feed['feed_url']);
-   	$title = fof_htmlspecialchars($feed['feed_title']);
+   	$title = fof_htmlspecialchars(strip_tags($feed['feed_title']));
    	$link = $stripper->sanitiseLink($feed['feed_link']);  
    	$tags = array_map('fof_htmlspecialchars', $feed['tags']);
    	$feed_image = $stripper->sanitiseLink($feed['feed_image']);
@@ -638,13 +638,13 @@ function fof_escape_feed_info($feed){
 function fof_escape_item_info($item){
 	$stripper = new FofItemSanitiser();
 	$feed_link = $stripper->sanitiseLink($item['feed_link']);
-	$feed_title = fof_htmlspecialchars($item['feed_title']);
+	$feed_title = fof_htmlspecialchars(strip_tags($item['feed_title']));
 	$feed_image = $stripper->sanitiseLink($item['feed_image']);
-	$feed_description = fof_htmlspecialchars($item['feed_description']);
+	$feed_description = fof_htmlspecialchars(strip_tags($item['feed_description']));
 
 	$item_link = $stripper->sanitiseLink($item['item_link']);
 	$item_id = intval($item['item_id']);
-	$item_title = fof_htmlspecialchars($item['item_title']);
+	$item_title = fof_htmlspecialchars(strip_tags($item['item_title']));
 	$item_content = $stripper->sanitise($item['item_content']);
 	
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
