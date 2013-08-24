@@ -15,7 +15,7 @@
  * Distributed under the GPL - see LICENSE
  *
  */
-require_once('simplepie/simplepie.inc');
+require_once('simplepie/simplepie_1.3.1.mini.php');
 
 if(file_exists("./cache/" . md5($_GET[i]) . ".spi"))
 {
