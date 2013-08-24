@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS fof_tag (
   tag_name char(100) NOT NULL default '',
   PRIMARY KEY  (tag_id)
 );
-CREATE UNIQUE INDEX tag_name_tag_idx on $FOF_TAGE_TABLE (tag_name);
+CREATE UNIQUE INDEX tag_name_tag_idx on $FOF_TAG_TABLE (tag_name);
 
 CREATE TYPE user_level_type as ENUM('user','admin');
 CREATE TABLE IF NOT EXISTS $FOF_USER_TABLE (
@@ -56,10 +56,12 @@ CREATE TABLE IF NOT EXISTS $FOF_USER_TABLE (
   user_name varchar(100) NOT NULL default '',
   user_password_hash varchar(60) NOT NULL default '',
   user_level user_level_type default 'user',
+  user_email varchar(511) NOT NULL default '',
   user_prefs text,
   PRIMARY KEY  (user_id)
 );
 CREATE UNIQUE INDEX user_name_user_idx on $FOF_USER_TABLE (user_name);
+CREATE UNIQUE INDEX user_email_user_idx on $FOF_USER_TABLE (user_email);
 
 CREATE TABLE IF NOT EXISTS $FOF_COOKIE_TABLE (
   token_hash varchar(40) NOT NULL default '',

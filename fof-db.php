@@ -951,38 +951,6 @@ function fof_db_save_prefs($user_id, $prefs) {
     fof_query_log("update $FOF_USER_TABLE set user_prefs = ? where user_id = ?", array($prefs, $user_id));
 }
 
-function fof_db_registration_allowed(){
-	global $FOF_CONFIG_TABLE;
-	$result = fof_query_log("SELECT val from $FOF_CONFIG_TABLE where param='open_registration'", array());
-	$row = fof_db_get_row($result);
-	$v = preg_match('/on|checked|true|1/i', $row['val']) ? True : False;
-	return $v;
-}
-
-function fof_db_get_admin_prefs() {
-	global $FOF_CONFIG_TABLE;
-	
-	$result = fof_query_log("SELECT * from $FOF_CONFIG_TABLE where param in ('logging','autotimeout','manualtimeout','purge','max_items_per_request','open_registration','bcrypt_effort')", null);
-	$ret = array();
-	while ($row = fof_db_get_row($result)){
-		$ret[$row['param']] = $row['val'];
-	}
-	return $ret;
-}
-
-function fof_db_set_admin_prefs($prefs) {
-	global $FOF_CONFIG_TABLE;
-	
-	if (count($prefs) == 0) return;
-	if (!fof_is_admin()) return;
-	$allowedKeys = array('logging' => null, 'autotimeout' => null, 'manualtimeout' => null, 'purge' => null, 'max_items_per_request' => null, 'bcrypt_effort' => null, 'open_registration' => null);
-	//performance not important, this shouldn't change often
-	$updater = fof_prepare_query_log("UPDATE $FOF_CONFIG_TABLE set val = ? where param = ?");
-	foreach (array_intersect_key($prefs, $allowedKeys) as $key => $val) {
-		$updater(array($val, $key));
-	} 
-}
-
 function fof_db_authenticate($user_name, $password){
     global $FOF_USER_TABLE;
     $result = fof_query_log("select * from $FOF_USER_TABLE where user_name = ?", array($user_name));
@@ -1017,6 +985,60 @@ function fof_db_authenticate($user_name, $password){
    		}
    	}
     return False;
+}
+
+function fof_db_get_user_id_by_email($email){
+	//return user id assosciated with the given email address
+	//or returns False if nothing found
+	global $FOF_USER_TABLE;
+	$r = fof_query_log_private("SELECT user_id from $FOF_USER_TABLE where user_email = ? limit 1",
+		array($email),
+		array('XXX email address XXX'));
+	if ($r->rowCount() == 0){
+		$ret = False;
+	} else {
+		$row = fof_db_get_row($r);
+		$ret = $row['user_id'];
+	}
+	return $ret;
+}
+
+function fof_db_set_email($uid, $email){
+	fof_query_log_private("UPDATE $FOF_USER_TABLE set user_email = :email where user_id = :uid", array('email' => $email, 'uid' => $uid), array('email' => 'XXX email XXX'));
+}
+/////////////////////////////////////////////////////////
+// More utility functions
+////////////////////////////////////////////////////////
+function fof_db_registration_allowed(){
+	global $FOF_CONFIG_TABLE;
+	$result = fof_query_log("SELECT val from $FOF_CONFIG_TABLE where param='open_registration'", array());
+	$row = fof_db_get_row($result);
+	$v = preg_match('/on|checked|true|1/i', $row['val']) ? True : False;
+	return $v;
+}
+
+function fof_db_get_admin_prefs() {
+	global $FOF_CONFIG_TABLE;
+	
+	$result = fof_query_log("SELECT * from $FOF_CONFIG_TABLE where param in ('logging','autotimeout','manualtimeout','purge','max_items_per_request','open_registration','bcrypt_effort')", null);
+	$ret = array();
+	while ($row = fof_db_get_row($result)){
+		$ret[$row['param']] = $row['val'];
+	}
+	return $ret;
+}
+
+function fof_db_set_admin_prefs($prefs) {
+	global $FOF_CONFIG_TABLE;
+	
+	if (count($prefs) == 0) return;
+	if (!fof_is_admin()) return;
+	$allowedKeys = array('logging' => null, 'autotimeout' => null, 'manualtimeout' => null, 'purge' => null, 'max_items_per_request' => null, 'bcrypt_effort' => null, 'open_registration' => null);
+	//performance not important, this shouldn't change often
+	$updater = fof_prepare_query_log("UPDATE $FOF_CONFIG_TABLE set val = ? where param = ?");
+	foreach (array_intersect_key($prefs, $allowedKeys) as $key => $val) {
+		$updater(array($val, $key));
+	} 
 }
 
 function fof_db_bcrypt_effort() {

@@ -80,6 +80,10 @@ if ($_POST['registered'] == 'true'){
 	}
 	//should also check that the email hasn't been used to register
 	//another account
+	if (fof_db_get_user_id_by_email($email) !== False){
+		$msg .= 'An account has already been registered with that email address <br />';
+		$allOk = False;
+	}
 	if ($allOk){
 		fof_db_add_user($username, $password);
 		$uid = fof_db_get_user_id($username);
@@ -104,7 +108,8 @@ if ($_POST['registered'] == 'true'){
 END;
 		mail($email, $subject, $body);
 		$prefs = new FoF_Prefs($uid);
-		$prefs->set('email', $email);
+		fof_db_set_email($uid, $email);
+		//$prefs->set('email', $email);
 		$prefs->set('confirmed', False);
 		$prefs->set('token',$token);
 		$prefs->save();

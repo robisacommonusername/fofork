@@ -54,8 +54,9 @@ CREATE TABLE IF NOT EXISTS $FOF_USER_TABLE (
   user_name varchar(100) NOT NULL default '',
   user_password_hash varchar(60) NOT NULL default '',
   user_level enum('user','admin') NOT NULL default 'user',
+  user_email varchar(511) NOT NULL default '',
   user_prefs text,
-  PRIMARY KEY  (user_id), UNIQUE KEY (user_name)
+  PRIMARY KEY  (user_id), UNIQUE KEY (user_name), UNIQUE KEY (user_email)
 );
 
 CREATE TABLE IF NOT EXISTS $FOF_COOKIE_TABLE (

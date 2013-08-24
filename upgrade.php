@@ -63,6 +63,8 @@ function future_make_bcrypt_salt() {
 $new_version = '1.6.0';
 define('FOF_NEW_VERSION','1.6.0');
 
+class UpgraderDatabaseException extends Exception {
+}
 //version specific setup.  Mostly involving database access
 //these are only required for backupTable and restoreTable functions
 //which must work on all of 1.0, 1.1 and 1.5 backends.
@@ -201,7 +203,7 @@ if (!fof_is_admin()) {
 function upgradePoint1Point6($adminPassword){
 	global $FOF_USER_TABLE, $FOF_SESSION_TABLE, $FOF_CONFIG_TABLE;
 	global $fof_upgrader_query;
-	//performs an upgrade of the database from the 1.1 series to 1.5
+	//performs an upgrade of the database from the 1.1 series to 1.6
 	try {
 		//create the config table
 		$fof_upgrader_query("CREATE TABLE IF NOT EXISTS $FOF_CONFIG_TABLE (
@@ -258,8 +260,9 @@ function upgradePoint1Point6($adminPassword){
   				user_name varchar(100) NOT NULL default '',
   				user_password_hash varchar(60) NOT NULL default '',
   				user_level enum('user','admin') NOT NULL default 'user',
+  				user_email varchar(511) NOT NULL default '',
   				user_prefs text,
-  				PRIMARY KEY  (user_id), UNIQUE KEY (user_name)
+  				PRIMARY KEY  (user_id), UNIQUE KEY (user_name), UNIQUE KEY (user_email)
 				)", null);
 		} catch (UpgraderDatabaseException $e) {$restorer();}
 		
@@ -304,16 +307,27 @@ function upgradePoint1Point6($adminPassword){
 }
 
 function upgradePoint5Point6() {
-	global $FOF_CONFIG_TABLE;
+	global $FOF_CONFIG_TABLE, $FOF_USER_TABLE;
 	global $fof_upgrader_query;
 	//add the open_registration parameter and
 	//update the database log key to new format, clear old logs
+	//add email parameter to user table
 	//clear the log file
 	$k = future_make_aes_key();
 	$encoded = base64_encode($k);
 	try {
 		fof_query("UPDATE $FOF_CONFIG_TABLE SET val = ? where param = 'log_password'", array($encoded), False);
 		fof_query("INSERT into $FOF_CONFIG_TABLE (param, val) VALUES ('open_regsitration','0')", array(), False);
+		//create index on user_email
+		switch (FOF_DB_TYPE){
+			case 'pgsql':
+				fof_query("ALTER TABLE $FOF_USER_TABLE ADD user_email varchar(511) NOT NULL after user_level", array(), False);
+				fof_query("CREATE UNIQUE INDEX user_email_user_idx on $FOF_USER_TABLE (user_email)");
+				break;
+			case 'mysql':
+				fof_query("ALTER TABLE `$FOF_USER_TABLE` ADD `user_email` VARCHAR( 511 ) NOT NULL AFTER `user_level`, ADD UNIQUE (`user_email`)", array(), False);
+			default:
+		}
 	} catch (PDOException $e) {
 		die('Upgrade process failed, could not update database');
 	}
