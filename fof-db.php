@@ -197,14 +197,6 @@ function fof_db_get_row($result) {
     }
     return $ret;
 }
-//Deprecate??
-function fof_db_get_all_rows($result) {
-	$ret = array();
-	if ($result instanceof PDOStatement){
-		$ret = $result->fetchAll(PDO::FETCH_ASSOC);
-	}
-	return $ret;
-}
 
 function fof_db_optimize() {
 	global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE, $FOF_COOKIE_TABLE, $FOF_SESSION_TABLE, $FOF_CONFIG_TABLE;
