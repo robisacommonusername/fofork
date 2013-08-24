@@ -233,7 +233,7 @@ function fof_db_log_password() {
 	if ($row = fof_db_get_row($result)) {
 		$password = base64_decode($row['val']);
 	} else {
-		$password = FOF_DB_PASS;
+		throw new Exception('ERROR: Could not get log password from database!');
 	}
 	return $password;
 }
