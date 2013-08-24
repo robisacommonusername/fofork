@@ -15,14 +15,18 @@
  * Distributed under the GPL - see LICENSE
  *
  */
-require_once('simplepie/simplepie_1.3.1.mini.php');
 
-if(file_exists("./cache/" . md5($_GET[i]) . ".spi"))
-{
-    SimplePie_Misc::display_cached_file($_GET['i'], './cache', 'spi');
-}
-else
-{
+//may kill off this file
+$fn = './cache/' . md5($_GET[i]) . '.spi';
+if (file_exists($fn)) {
+	//is this a security risk? Review
+	$item = unserialize(file_get_contents($fn));
+	header('Content-type:' . $item['headers']['content-type']);
+	echo $item['body'];
+	exit;
+	//deprecated
+    //SimplePie_Misc::display_cached_file($_GET['i'], './cache', 'spi');
+} else {
     header('Location: image/feed-icon.png');
 }
 ?>
