@@ -1015,8 +1015,8 @@ function fof_htmlspecialchars($str){
 	$new = htmlspecialchars($str, ENT_QUOTES, 'UTF-8', False);
 	
 	//Fix simplepie's problems
-	$new = preg_replace_callback('/&amp;(lt|gt|quot|amp|#039|pound|#163|mdash|#151);/',
-		function ($match){ return "&${match[1]};";}, $new);
+	$new = preg_replace('/&amp;(lt|gt|quot|amp|#039|pound|#163|mdash|#151);/',
+		'&$1;', $new);
 		
 	//allow some very basic tags, eg <em>
 	$allowedTags = array('em');
