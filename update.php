@@ -59,18 +59,14 @@ else
 
 $feeds = fof_multi_sort($feeds, 'feed_cache_attempt_date', false);
 
-print("<script>\nwindow.onload = ajaxupdate;\nfeedslist = [");
-    
-foreach($feeds as $feed)
-{
-	$title = $feed['feed_title'];
-	$id = $feed['feed_id'];
-    
-    $feedjson[] = "{'id': $id, 'title': '" . addslashes($title) . "'}";
-}
+echo '<script>window.onload = ajaxupdate;';
 
-print(join($feedjson, ", "));
-print("];\n</script>");
+//create a json array of [{id : $id, title : $title}, ...] pairs
+$feedjson = json_encode(
+				array_map(function($feed) {
+					return array('id' => $feed['feed_id'], 'title' => $feed['feed_title']);
+				}, $feeds));
+echo "var feedslist = $feedjson; </script>";
 
 include("footer.php");
 ?>

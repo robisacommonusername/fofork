@@ -16,7 +16,7 @@
  *
  */
 
-include("header.php");
+include('header.php');
 
 $url = $_POST['rss_url'];
 $opml = $_POST['opml_url'];
@@ -87,14 +87,12 @@ OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo h
 if(count($feeds))
 {
 	$challenge = fof_compute_CSRF_challenge();
-
-	foreach($feeds as $feed)
-	{
-    	$feedjson[] = "{'url': '" . addslashes($feed) . "'}";
-	}
+	$feedjson = json_encode(
+					array_map(function ($feed){
+						return array('url' => $feed);
+					}, $feeds));
 	$feedListStr = join($feedjson, ', ');
-	print("<script> window.onload = function(){feedslist=[$feedListStr]; ajaxadd('$challenge');};</script>");
-	print("<br />");
+	echo "<script> window.onload = function(){feedslist=$feedjson; ajaxadd('$challenge');};</script><br />";
 }
-include("footer.php");
+include('footer.php');
 ?>

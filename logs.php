@@ -41,9 +41,9 @@ $decodedLines = array_map(function($line) use ($pwd) {
 		$ct = substr($decoded, 16);
 		$aes->setIV($IV);
 		$aes->setKey($pwd);
-		return addslashes($aes->decrypt($ct));
+		return $aes->decrypt($ct);
 	}, $logLines);
-$lineArray = '["' . implode('","', $decodedLines) . '"]';
+$lineArray = json_encode($decodedLines);
 
 if (isset($_POST['export'])){
 	//export text file
