@@ -1,17 +1,13 @@
-These instructions allow you to upgrade from fofork 1.0.x or 1.1.x to 
-fofork 1.5.x
+These instructions allow you to upgrade from fofork 1.5.x to 1.6.y
 
-Please note that due to changes in the password hashing in fofork 1.5.x, all 
-user accounts except the admin account will be deleted during the upgrade.
-Additionally, any existing log files will be cleared.
+If you wish to upgrade from the 1.0 or 1.1 branches, you can either
+1. First upgrade to version 1.5 (using the upgrade script distributed with
+	the 1.5 branch releases), and the upgrade to version 1.6 OR
+2. Uninstall your existing installation, and run a clean install
 
 PLEASE backup your existing database and/or logs before proceeding.
 
-1. Upload the files 'upgrade.php' and 'fof-config-sample.php' from the 
-	1.5.x branch to the root of your web server
-2. Delete your existing 'fof-config.php'
-3. Rename 'fof-config-sample.php' to 'fof-config.php', and edit the contents to 
-	match your database username, password, hostname, etc
-4. Browse to /upgrade.php.  Enter your admin password, and click upgrade
-5. Delete all the 1.1 or 1.0 branch code on your webserver, and replace with 
-	the 1.5.x branch code
+1. Upload the file 'upgrade.php' from the 1.6.y branch to the root of your web server
+2. Browse to /upgrade.php.  Enter your admin password, and click upgrade
+3. Delete all the 1.5 branch code on your webserver, and replace with 
+	the 1.6 branch code
