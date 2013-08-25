@@ -1005,9 +1005,19 @@ function fof_htmlspecialchars($str){
 	//that if text has ALREADY been escaped, it won't stuff things up.
 	//ie & becomes &amp;
 	//but &quot; is NOT transformed to &amp;quot;
-	$new = preg_replace('/&(?!(lt|gt|quot|amp|#039|pound|#163|mdash|#151);)/', '&amp;', $str);
-	$new = str_replace(array('<','>','"', "'"), array('&lt;','&gt;','&quot;','&#039;'), $new);
 	
+	//Also, Due to some retarded choices in the simplepie sanitiser
+	//class, simplepie sometimes double escapes, and so we need to fix that.
+	
+	//Future: rewrite the sanitiser class so we don't need to kludge things up.
+	//Use the double escape option - what comes in has already been double
+	//escaped, don't make things worse!
+	$new = htmlspecialchars($str, ENT_QUOTES, 'UTF-8', False);
+	
+	//Fix simplepie's problems
+	$new = preg_replace_callback('/&amp;(lt|gt|quot|amp|#039|pound|#163|mdash|#151);/',
+		function ($match){ return "&${match[1]};";}, $new);
+		
 	//allow some very basic tags, eg <em>
 	$allowedTags = array('em');
 	$toFind = array_map(function($tag){return "&lt;$tag&gt;";}, $allowedTags);
