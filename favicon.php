@@ -17,7 +17,10 @@
  */
 
 //may kill off this file
-$fn = './cache/' . md5($_GET[i]) . '.spi';
+if (!preg_match('/^[0-9a-f]{32}$/i', $_GET[i])){
+	die();
+}
+$fn = './cache/' . $_GET[i] . '.spi';
 if (file_exists($fn)) {
 	//is this a security risk? Review
 	$item = unserialize(file_get_contents($fn));
@@ -27,6 +30,6 @@ if (file_exists($fn)) {
 	//deprecated
     //SimplePie_Misc::display_cached_file($_GET['i'], './cache', 'spi');
 } else {
-    header('Location: image/feed-icon.png');
+    header('Location: ./image/feed-icon.png');
 }
 ?>
