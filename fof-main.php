@@ -121,16 +121,13 @@ function fof_log($message, $topic="debug") {
     fwrite($log, $cipherText);
 }
 
-function require_user()
-{
-    if(!isset($_SESSION['authenticated']))
-    {
+function check_session(){
+	if(!isset($_SESSION['authenticated'])) {
     	if (fof_validate_cookie()){
     		//prevent session fixation
     		session_regenerate_id(True);
     	} else {
-        	Header("Location: login.php");
-        	exit();
+        	return False;
         }
     }
     //check user agent hasn't changed
@@ -140,8 +137,7 @@ function require_user()
 			session_unset();
 			session_destroy();
 			setcookie('PHPSESSID', '');
-			header('Location: login.php');
-			exit();
+			return False;
 		}
 	} else {
 		$_SESSION['hash_salt'] = fof_make_salt();
@@ -173,12 +169,19 @@ function require_user()
 				session_unset();
 				session_destroy();
 				setcookie('PHPSESSID','');
-				header('Location: login.php');
-				exit();
+				return False;
 			}
 		}
 	}
 	$_SESSION['last_access'] = time();
+	return True;
+}
+
+function require_user() {
+	if (!check_session()){
+		header('Location: login.php');
+		exit();
+	}
 }
 
 function fof_make_aes_key() {
