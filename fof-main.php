@@ -162,8 +162,10 @@ function check_session(){
 				//to have an expired session (ie still won't be able to do CSRF)
 				//this is potentially dangerous, as it allows an attacker who has acquired the old session id
 				//to do a CSRF
-				if (hash('tiger160,4', $_SESSION['user_name'] . $old_id) === $_POST['CSRF_hash']){
-					$_POST['CSRF_hash'] = hash('tiger160,4', $_SESSION['user_name'] . session_id());
+				if (fof_slow_compare(
+					hash('tiger160,4', $_SESSION['user_name'] . $old_id),
+					$_POST['CSRF_hash'])){
+						$_POST['CSRF_hash'] = hash('tiger160,4', $_SESSION['user_name'] . session_id());
 				}
 			} else {
 				session_unset();
@@ -305,7 +307,7 @@ function fof_compute_CSRF_challenge(){
 function fof_authenticate_CSRF_challenge($response){
 	$user_name = $_SESSION['user_name'];
     $challenge = hash('tiger160,4', $user_name . session_id());
-    return ($challenge === $response);
+    return fof_slow_compare($challenge,$response);
 }
 
 function fof_prefs()
