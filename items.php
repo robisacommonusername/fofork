@@ -19,35 +19,7 @@
 include_once('fof-main.php');
 include_once('fof-render.php');
 
-if($_GET['how'] == 'paged' && !isset($_GET['which'])){
-	$which = 0;
-} else {
-	$which = intval($_GET['which']);
-}
-
-if(!isset($_GET['what'])) {
-    $what = 'unread';
-} else {
-    $what = htmlspecialchars($_GET['what']);
-}
-
-if(!isset($_GET['order'])) {
-	$order = $fof_prefs_obj->get('order') == 'asc' ? 'asc' : 'desc';
-} else {
-	$order = $_GET['order'] == 'asc' ? 'asc' : 'desc';
-}
-
-$how = htmlspecialchars($_GET['how']);
-$feed = intval($_GET['feed']);
-$when = htmlspecialchars($_GET['when']);
-$howmany = intval($_GET['howmany']);
-if (!$howmany){
-	$howmany = intval($fof_prefs_obj->get('howmany'));
-}
-if ($howmany > intval($fof_prefs_obj->getAdmin('max_items_per_request'))){
-	$howmany = intval($fof_prefs_obj->getAdmin('max_items_per_request'));
-}
-$search = isset($_GET['search']) ? htmlspecialchars($_GET['search']) : "";
+list($feed,$what,$when,$which,$how,$howmany,$search) = fof_safe_parse_item_constraints($_GET);
 
 //prepare the page title
 $title = 'feed on feeds';

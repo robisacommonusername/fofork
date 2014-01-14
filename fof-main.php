@@ -592,6 +592,42 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
    return $feeds;
 }
 
+function fof_safe_parse_item_constraints($arr){
+	//reads in the how, what, etc parameters in $_GET, and puts them into safe form
+	global $fof_prefs_obj;
+	if($arr['how'] == 'paged' && !isset($arr['which'])){
+		$which = 0;
+	} else {
+		$which = intval($arr['which']);
+	}
+
+	if(!isset($arr['what'])) {
+	    $what = 'unread';
+	} else {
+	    $what = htmlspecialchars($arr['what']);
+	}
+	
+	if(!isset($arr['order'])) {
+		$order = $fof_prefs_obj->get('order') == 'asc' ? 'asc' : 'desc';
+	} else {
+		$order = $arr['order'] == 'asc' ? 'asc' : 'desc';
+	}
+	
+	$how = htmlspecialchars($arr['how']);
+	$feed = intval($arr['feed']);
+	$when = htmlspecialchars($arr['when']);
+	$howmany = intval($arr['howmany']);
+	if (!$howmany){
+		$howmany = intval($fof_prefs_obj->get('howmany'));
+	}
+	if ($howmany > intval($fof_prefs_obj->getAdmin('max_items_per_request'))){
+		$howmany = intval($fof_prefs_obj->getAdmin('max_items_per_request'));
+	}
+	$search = isset($arr['search']) ? htmlspecialchars($arr['search']) : "";
+	
+	return array($feed,$what,$when,$which,$how,$howmany,$search);
+}
+
 function fof_get_items($user_id, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
 {
    global $fof_item_filters;
