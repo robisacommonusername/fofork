@@ -252,18 +252,25 @@ function fof_place_cookie($user_id){
 
 function fof_validate_cookie(){
 	if (isset($_COOKIE['token'])){
+		$token = $_COOKIE['token'];
 		//check that the cookie is the correct length, correct alphabet.  This is to reduce chance
 		//of attacker finding a working preimage from the hash (ie minimise the size of the working preimage space)
-		if (!preg_match('|^[./0-9a-zA-z]{22}$|', $_COOKIE['token'])) {
+		if (!preg_match('|^[./0-9a-zA-z]{22}$|', $token)) {
 			return False;
 		}
-		$result = fof_db_validate_cookie($_COOKIE['token'], $_SERVER['HTTP_USER_AGENT']);
+		$result = fof_db_validate_cookie($token, $_SERVER['HTTP_USER_AGENT']);
 		if (is_array($result)){
-			$_SESSION['authenticated'] = True;
-			$_SESSION['user_name'] = $result['user_name'];
-			$_SESSION['user_id'] = $result['user_id'];
-			$_SESSION['user_level'] = $result['user_level'];
-			return True;
+			//check how old the token is
+			if (time() < $result['token_expiry']) {
+				$_SESSION['authenticated'] = True;
+				$_SESSION['user_name'] = $result['user_name'];
+				$_SESSION['user_id'] = $result['user_id'];
+				$_SESSION['user_level'] = $result['user_level'];
+				return True;
+			} else {
+				//persistent login token has expired, clear it from db
+				fof_db_delete_cookie($token);
+			}
 		}
 	}
 	return False;

@@ -1058,8 +1058,8 @@ function fof_db_place_cookie($oldToken, $newToken, $uid, $user_agent){
 		$query .= " or token_hash=?";
 	}
 	$result = fof_query_log($query, $args);
-	$result = fof_query_log_private("INSERT into $FOF_COOKIE_TABLE (token_hash, user_id, user_agent_hash) VALUES (:tokenhash, :userid, :useragenthash)",
-									array('tokenhash' => hash('tiger160,4', $newToken), 'userid' => $uid, 'useragenthash' => hash('tiger160,4', $user_agent . $newToken)),
+	$result = fof_query_log_private("INSERT into $FOF_COOKIE_TABLE (token_hash, token_expiry, user_id, user_agent_hash) VALUES (:tokenhash, :tokenexpiry, :userid, :useragenthash)",
+									array('tokenhash' => hash('tiger160,4', $newToken), 'tokenexpiry'=>time()+30*24*60*60, 'userid' => $uid, 'useragenthash' => hash('tiger160,4', $user_agent . $newToken)),
 									array('tokenhash' => 'XXX token hash XXX'));
 	return True;
 }

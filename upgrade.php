@@ -61,6 +61,7 @@ function upgradePoint5Point6() {
 	//add the open_registration parameter and
 	//update the database log key to new format, clear old logs
 	//add email parameter to user table
+	//add token_expiry parameter to cookie table
 	//update favicon cache format
 	//clear the log file
 	$k = future_make_aes_key();
@@ -81,6 +82,8 @@ function upgradePoint5Point6() {
 				fof_query("ALTER TABLE `$FOF_USER_TABLE` ADD `user_email` VARCHAR( 511 ) NOT NULL AFTER `user_level`, ADD UNIQUE (`user_email`)", array(), False);
 			default:
 		}
+		//add token expiry
+		fof_query("ALTER TABLE $FOF_COOKIE_TABLE ADD token_expiry INT NOT NULL AFTER token_hash", array(), False); 
 		//update favicon format
 		$res = fof_query("SELECT feed_id,feed_image from $FOF_FEED_TABLE", array(), False);
 		while ($row = fof_db_get_row($res)){

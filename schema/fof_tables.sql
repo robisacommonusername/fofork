@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS $FOF_USER_TABLE (
 
 CREATE TABLE IF NOT EXISTS $FOF_COOKIE_TABLE (
   token_hash varchar(40) NOT NULL default '',
+  token_expiry integer NOT NULL default '0',
   user_id int(11) NOT NULL default '0',
   user_agent_hash varchar(40) NOT NULL default '',
   PRIMARY KEY  (token_hash)
