@@ -1,4 +1,4 @@
-This is fofork, a GPL RSS aggregator forked from "Feed on Feeds" by Steven
+This is fofork version 1.6a, a GPL RSS aggregator forked from "Feed on Feeds" by Steven
 Minutillo (steve@minutillo.com - http://minutillo.com/steve/).
 
 Minimum Requirements for Installing fofork:
@@ -16,5 +16,5 @@ Installation instructions:
 5. Run install.php
 
 Upgrade instructions:
-To upgrade from a fofork 1.0.x or 1.1.x installation, please read the
+To upgrade from a fofork 1.5.x installation, please read the
 'UPGRADE' file
