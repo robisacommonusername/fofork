@@ -94,7 +94,7 @@ function fof_api_get_feeds(){
 
 function fof_api_get_items(){
 	$uid = fof_current_user();
-	list($feed,$what,$when,$which,$how,$howmany,$search) =
+	list($feed,$what,$when,$which,$how,$howmany,$order,$search) =
 		fof_safe_parse_item_constraints($_REQUEST);
 	return array(100,'',fof_get_items($uid, $feed, $what, $when, 
 		$which, $howmany, $order, $search));

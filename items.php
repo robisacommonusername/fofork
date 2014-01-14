@@ -19,7 +19,7 @@
 include_once('fof-main.php');
 include_once('fof-render.php');
 
-list($feed,$what,$when,$which,$how,$howmany,$search) = fof_safe_parse_item_constraints($_GET);
+list($feed,$what,$when,$which,$how,$howmany,$order,$search) = fof_safe_parse_item_constraints($_GET);
 
 //prepare the page title
 $title = 'feed on feeds';

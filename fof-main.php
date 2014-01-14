@@ -622,7 +622,7 @@ function fof_safe_parse_item_constraints($arr){
 	}
 	$search = isset($arr['search']) ? htmlspecialchars($arr['search']) : "";
 	
-	return array($feed,$what,$when,$which,$how,$howmany,$search);
+	return array($feed,$what,$when,$which,$how,$howmany,$order,$search);
 }
 
 function fof_get_items($user_id, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
