@@ -263,17 +263,11 @@ function fof_validate_cookie(){
 		}
 		$result = fof_db_validate_cookie($token, $_SERVER['HTTP_USER_AGENT']);
 		if (is_array($result)){
-			//check how old the token is
-			if (time() < $result['token_expiry']) {
-				$_SESSION['authenticated'] = True;
-				$_SESSION['user_name'] = $result['user_name'];
-				$_SESSION['user_id'] = $result['user_id'];
-				$_SESSION['user_level'] = $result['user_level'];
-				return True;
-			} else {
-				//persistent login token has expired, clear it from db
-				fof_db_delete_cookie($token);
-			}
+			$_SESSION['authenticated'] = True;
+			$_SESSION['user_name'] = $result['user_name'];
+			$_SESSION['user_id'] = $result['user_id'];
+			$_SESSION['user_level'] = $result['user_level'];
+			return True;
 		}
 	}
 	return False;
