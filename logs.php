@@ -9,7 +9,7 @@
  * fofork is derived from Feed on Feeds, by Steven Minutillo
  * http://feedonfeeds.com/
  * 
- * Copyright (C) 2012-2013 Robert Palmer
+ * Copyright (C) 2012-2014 Robert Palmer
  *
  * Distributed under the GPL - see LICENSE
  *
@@ -22,19 +22,12 @@ if (!fof_is_admin()){
 	die('Only admin may view the logs!');
 }
 
-//slurp all text, and split lines
-if (file_exists('fof.log')) {
-	$logLines = file('fof.log');
-} else {
-	$logLines = array();
-}
-
-//decrypt everything
-//Things misbehave if we try reusing the same aes instance with different
-//IVs but same key (for some reason).  Thus we create a new AES instance
-//on every iteration here.
-$pwd = fof_db_log_password();
-$decodedLines = array_map(function($line) use ($pwd) {
+function make_decoder($pwd){
+	return function($line) use ($pwd) {
+		//Note that we create a new instance of Crypt_AES every time this
+		//function is called. This is not as inefficient as it might seem,
+		//since we're unable to reuse instances to decrypt multiple lines
+		//with different IVs (the internal state of Crypt_AES gets stuffed up)
 		$decoded = base64_decode($line);
 		$aes = new Crypt_AES();
 		$IV = substr($decoded, 0, 16);
@@ -42,17 +35,102 @@ $decodedLines = array_map(function($line) use ($pwd) {
 		$aes->setIV($IV);
 		$aes->setKey($pwd);
 		return $aes->decrypt($ct);
-	}, $logLines);
-$lineArray = json_encode($decodedLines);
+	};
+}
 
-if (isset($_POST['export'])){
-	//export text file
+$pwd = fof_db_log_password();
+
+switch ($_POST['action']){
+	
+///////////////////////////////////////////	
+//export the decrypted log as a text file
+///////////////////////////////////////////	
+	case 'export':
 	header('Content type: text/plain');
 	header('Content-Disposition: attachment; filename="fof_log.txt"');
-	foreach ($decodedLines as $line) echo "$line\n";
+	if (!file_exists('fof.log')){
+		exit();
+	}
+	$f = fopen('fof.log','r');
+	$decoder = make_decoder($pwd);
+	while (($line = fgets($f)) !== False){
+		echo $decoder($line);
+		echo "\n";
+	}
+	fclose($f);
+	exit();
 	
-} else {
-	//send html output to browser, including log viewer controls
+	
+///////////////////////////////////////////	
+//fetch some subset of the log file using ajax requests
+//useful for large logs
+//////////////////////////////////////////
+	case 'ajax':
+	$offset = intval($_POST['offset']);
+	if (file_exists('fof.log')){
+		$f = fopen('fof.log','r');
+		fseek($f,-1,SEEK_END);
+		$len = ftell($f);
+		if ($offset < 0){
+			if ($offset < -1*$len){
+				$offset = -1*$len;
+			}
+			fseek($f,$offset,SEEK_END);
+		} else {
+			if ($offset > $len){
+				$offset = $len;
+			}
+			fseek($f,$offset,SEEK_SET);
+		}
+		//read in 64K
+		$text = fread($f,64*1024);
+		fclose($f);
+		//find first and last new line characters
+		$first = strpos($text,"\n") + 1;
+		$last = strrpos($text,"\n");
+		$len = $last-$first+1;
+		$encLines = explode("\n",substr($text,$first,$len));
+		//remove the trailing empty string from the last newline
+		if ($encLines[-1] == ''){
+			array_pop($encLines);
+		}
+		$decLines = array_map(make_decoder($pwd), $encLines);
+	} else {
+		$decLines = array();
+		$len = 0;
+	}
+	$arr = array(
+		'status' => 200,
+		'message' => '',
+		'CSRF_hash' => fof_compute_CSRF_challenge(),
+		'data' => array(
+			'offset' => $offset+$first,
+			'len' => $len,
+			'lines' => $decLines));
+	echo json_encode($arr);
+	exit();
+	
+///////////////////////////////////////////	
+//delete the log file	
+//////////////////////////////////////////
+	case 'clear':
+	if (isset($_POST['CSRF_hash'])){
+		if (fof_authenticate_CSRF_challenge($_POST['CSRF_hash'])){
+			$f = fopen('fof.log','w');
+			fwrite($f, '');
+			fclose($f);
+			echo 'Log file cleared.';
+			exit;
+		}
+	}
+	echo 'Bad request';
+	exit();
+
+
+//////////////////////////////////////////
+//send html to browser
+//////////////////////////////////////////
+	default:
 	include('header.php');
 	?>
 	<link rel="stylesheet" type="text/css" media="all" href="jsdatepick/jsDatePick_ltr.min.css" />
@@ -70,8 +148,9 @@ if (isset($_POST['export'])){
 		target:"after_id",
 		dateFormat:"%Y-%m-%d"});
 		
-		FofLogViewer.allLines = <?php echo $lineArray; ?>;
-		FofLogViewer.update();
+		FofLogViewer.fetch();
+		//FofLogViewer.lastOffset = -64*1024;
+		//FofLogViewer.allLines = <?php echo $lineArray; ?>;
 	};
 	</script>
 	
@@ -110,14 +189,14 @@ if (isset($_POST['export'])){
 		Show results from after <input type="text" id="after_id" name="after" value="<?php echo $after;?>"  onchange="FofLogViewer.update()"><br /><br />
 
  		<form method="post" action="logs.php">
- 		<input type="hidden" name="export" value="yes">
+ 		<input type="hidden" name="action" value="export">
  		<input type="submit" value="Export log as text file" id="export_btn"></form>
 
  	<br /><br />
- 	<textarea rows="20" cols="100" id="text_area">
+ 	<textarea rows="20" cols="100" id="text_area" onscroll="FofLogViewer.scrollListener();">
 	</textarea><br /><br />
 	<center><a onclick="FofLogViewer.clear('<?php echo fof_compute_CSRF_challenge(); ?>')" href="#">Clear logs</a></center>
 <?php
 }
-?>
 
+?>

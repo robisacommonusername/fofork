@@ -1,5 +1,7 @@
 var FofLogViewer = (function () {
 	my = {};
+	my.lastOffset = -1;
+	my.allLines = [];
 	
 	var makeSearchFilter = function (needle, positive, insensitive, regex) {
 		function escapeRegExp(str) {
@@ -107,8 +109,8 @@ var FofLogViewer = (function () {
 	my.clear = function(hash) {
 		//clears the log file
 		if (confirm("Are you sure you wish to delete the log file?")){
-			var url = "clear-logs.php";
-			var params = {clear: 'true', CSRF_hash: hash};
+			var url = "logs.php";
+			var params = {action: 'clear', CSRF_hash: hash};
 			var complete = function (response) { alert(response.responseText); };
 			var options = { method: 'post', parameters: params, onComplete: complete };
     
@@ -116,5 +118,52 @@ var FofLogViewer = (function () {
 		}
 		return false;
 	};
+	
+	my.fetch = function(){
+		//fetch part of the decoded log file
+		var url = 'logs.php';
+		var params = {action: 'ajax'};
+		params.offset = my.lastOffset - 64*1024;
+		var complete = function (resp) {
+			var ret = JSON.parse(resp.responseText);
+			if (ret.status == 200){
+				if (ret.data.offset != my.lastOffset){
+					//add lines to array
+					var oldNumLines = my.allLines.length;
+					my.allLines = ret.data.lines.concat(my.allLines);
+					var newNumLines = my.allLines.length;
+					
+					//update
+					my.lastOffset = ret.data.offset;
+					var newLines = ret.data.lines;
+					DOMobjects.forEach(function (obj) {
+						if (document.getElementById(obj.checkbox_id).checked) {
+							newLines = obj.filterFunction(newLines);
+						}
+					});
+			
+					//place the new lines into the text area
+					var text_area = document.getElementById('text_area');
+					var logText = newLines.join('\n\n');
+					var oldText = text_area.value;
+					text_area.value = logText + '\n\n' + oldText;
+					
+					//scroll to correct position
+					var pos = (1-oldNumLines/newNumLines) * text_area.scrollHeight;
+					text_area.scrollTop = pos;
+				}
+			}
+		};
+		var options = {method: 'post', parameters: params, onComplete: complete};
+		
+		new Ajax.Request(url, options);
+	};
+	
+	my.scrollListener = function(){
+		if (document.getElementById('text_area').scrollTop == 0) {
+			my.fetch();
+		}
+	}
+	
 	return my;
 })();
