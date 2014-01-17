@@ -19,7 +19,10 @@ require_once('fof-main.php');
 require_once('classes/AES.php');
 
 if (!fof_is_admin()){
-	die('Only admin may view the logs!');
+	$arr = array(
+		'status' => 401,
+		'message' => 'Only admin may view the logs!');
+	die(json_encode($arr));
 }
 
 function make_decoder($pwd){
