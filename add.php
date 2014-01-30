@@ -91,7 +91,6 @@ if(count($feeds))
 					array_map(function ($feed){
 						return array('url' => $feed);
 					}, $feeds));
-	$feedListStr = join($feedjson, ', ');
 	echo "<script> window.onload = function(){feedslist=$feedjson; ajaxadd('$challenge');};</script><br />";
 }
 include('footer.php');
