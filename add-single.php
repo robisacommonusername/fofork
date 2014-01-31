@@ -65,9 +65,8 @@ if (fof_authenticate_CSRF_challenge($hash)){
     } else {
     	//need to add feed to db.  No feed exists with either the specified url
     	//or with the parsed url
-    	$desc = $rss->get_description();
-    	if (!$desc) {$desc = $rss->get_title();}
-    	$id = fof_add_feed($url, $rss->get_title(), $rss->get_link(), $desc);
+    	$icon = 'favicon.php?i=' . md5($rss->get_favicon());
+    	$id = fof_add_feed($url, $rss->get_title(), $rss->get_link(), $rss->get_description(), $icon);
         fof_update_feed($id);
         fof_db_add_subscription($user_id, $id);
         if($unread != 'no') {

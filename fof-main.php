@@ -732,13 +732,15 @@ function fof_prepare_url($url)
     return $url;
 }
 
-function fof_add_feed($url, $title, $link, $description)
-{
-   if($title == "") $title = "[no title]";
-
-   $id = fof_db_add_feed($url, $title, $link, $description);
+function fof_add_feed($url, $title, $link, $description, $icon) {
+	//title and description must be non-null (enforced by database, will
+	//cause failure on postgres)
+	if (!$title) $title = "[no title]";
+	if (!$description) $description = $title;
+	
+	$id = fof_db_add_feed($url, $title, $link, $description, $icon);
    
-   return $id;
+	return $id;
 }
 
 function fof_get_subscribed_users($feed_id)

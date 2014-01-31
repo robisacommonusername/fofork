@@ -340,11 +340,11 @@ function fof_db_get_feed_by_id($feed_id) {
     return $row;
 }
 
-function fof_db_add_feed($url, $title, $link, $description) {
+function fof_db_add_feed($url, $title, $link, $description, $icon) {
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $fof_connection;
     
-    list($res,$id) =fof_query_log_get_id("INSERT into $FOF_FEED_TABLE (feed_url,feed_title,feed_link,feed_description) values (?, ?, ?, ?)", 
-    									array($url, $title, $link, $description),
+    list($res,$id) =fof_query_log_get_id("INSERT into $FOF_FEED_TABLE (feed_url,feed_title,feed_link,feed_description,feed_image) values (?, ?, ?, ?, ?)", 
+    									array($url, $title, $link, $description, $icon),
     									$FOF_FEED_TABLE,
     									'feed_id');
     
