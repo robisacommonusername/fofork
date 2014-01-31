@@ -55,6 +55,8 @@ if (fof_authenticate_CSRF_challenge($hash)){
 			$title = htmlspecialchars($feed['feed_title'], ENT_QUOTES);
 			$url = $stripper->sanitiseLink($feed['feed_url']);
         } else {
+			$url = $feed['feed_url'];
+			$id = $feed['feed_id'];
 			fof_db_add_subscription($user_id, $feed['feed_id']);
 			if($unread != 'no') {
 				fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
@@ -64,7 +66,6 @@ if (fof_authenticate_CSRF_challenge($hash)){
     	//need to add feed to db.  No feed exists with either the specified url
     	//or with the parsed url
     	$id = fof_add_feed($url, $rss->get_title(), $rss->get_link(), $rss->get_description() );
-		
         fof_update_feed($id);
         fof_db_add_subscription($user_id, $id);
         if($unread != 'no') {

@@ -112,11 +112,9 @@ function fof_prepare_query_log($sql){
 
 function fof_query_log_get_id($sql, $params, $table, $id_param){
 	//performs a query, returning the result and the last insert id
-	//while trying to prevent race conditions
 	global $fof_connection;
 	$t1 = microtime(true);
 	try {
-		$fof_connection->beginTransaction();
 		$result = $fof_connection->prepare($sql);
 		$result->execute($params);
 		//get the id of the last insert
@@ -137,10 +135,8 @@ function fof_query_log_get_id($sql, $params, $table, $id_param){
 			$arr = $temp_res->fetch(PDO::FETCH_ASSOC);
 			$id = $arr[$id_param];
 		}
-		$fof_connection->commit();
 		
 	} catch (PDOException $e) {
-		$fof_connection->rollBack();
 		die('Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? Database says: <b>'. $e->getMessage() . '</b>');
 	}
 	$t2 = microtime(true);
