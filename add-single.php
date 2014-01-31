@@ -65,7 +65,9 @@ if (fof_authenticate_CSRF_challenge($hash)){
     } else {
     	//need to add feed to db.  No feed exists with either the specified url
     	//or with the parsed url
-    	$id = fof_add_feed($url, $rss->get_title(), $rss->get_link(), $rss->get_description() );
+    	$desc = $rss->get_description();
+    	if (!$desc) {$desc = $rss->get_title();}
+    	$id = fof_add_feed($url, $rss->get_title(), $rss->get_link(), $desc);
         fof_update_feed($id);
         fof_db_add_subscription($user_id, $id);
         if($unread != 'no') {
