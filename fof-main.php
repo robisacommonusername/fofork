@@ -755,6 +755,8 @@ function fof_parse($url)
     
     $pie = new SimplePie();
     $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
+    //register our whitelist sanitiser
+    $pie->registry->register('Sanitize','SimplePie_StrictSanitiser');
     //$pie->set_favicon_handler("favicon.php");
 	$pie->set_feed_url($url);
 	//$pie->set_javascript(false);
