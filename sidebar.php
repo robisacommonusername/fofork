@@ -282,7 +282,7 @@ foreach($feeds as $feed)
 	print "</td>";
 
    print "<td>";
-   $stitle = fof_htmlspecialchars($title);
+   $stitle = htmlspecialchars($title,ENT_QUOTES,'UTF-8',False);
    print "<a href=\"$link\" title=\"home page\"><b>$stitle</b></a></td>";
 
    print "<td><nobr>";

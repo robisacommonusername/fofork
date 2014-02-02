@@ -687,12 +687,13 @@ function fof_sanitise_link($url){
 function fof_escape_feed_info($feed){
 	$id = intval($feed['feed_id']);
    	$url = fof_sanitise_link($feed['feed_url']);
-   	$title = fof_htmlspecialchars(strip_tags($feed['feed_title']));
+   	$title = htmlspecialchars(strip_tags($feed['feed_title']),ENT_QUOTES,'UTF-8',False);
    	$link = fof_sanitise_link($feed['feed_link']);  
-   	$tags = array_map('fof_htmlspecialchars', $feed['tags']);
+   	$tags = array_map(function($x) {return htmlspecialchars($x,ENT_QUOTES,'UTF-8',False);
+		}, $feed['tags']);
    	$feed_image = fof_sanitise_link($feed['feed_image']);
    	
-   	$description = fof_htmlspecialchars($feed['feed_description']);
+   	$description = htmlspecialchars($feed['feed_description'],ENT_QUOTES,'UTF-8',False);
    	$age = intval($feed['feed_age']);
    	$unread = intval($feed['feed_unread']);
    	$starred = intval($feed['feed_starred']);
@@ -704,14 +705,14 @@ function fof_escape_feed_info($feed){
 
 function fof_escape_item_info($item){
 	$feed_link = fof_sanitise_link($item['feed_link']);
-	$feed_title = fof_htmlspecialchars(strip_tags($item['feed_title']));
+	$feed_title = htmlspecialchars(strip_tags($item['feed_title']),ENT_QUOTES,'UTF-8',False);
 	$feed_image = fof_sanitise_link($item['feed_image']);
-	$feed_description = fof_htmlspecialchars(strip_tags($item['feed_description']));
+	$feed_description = htmlspecialchars(strip_tags($item['feed_description']),ENT_QUOTES,'UTF-8',False);
 
 	$item_link = fof_sanitise_link($item['item_link']);
 	$item_id = intval($item['item_id']);
-	$item_title = fof_htmlspecialchars(strip_tags($item['item_title']));
-	$item_content = fof_sanitise_link($item['item_content']);
+	$item_title = htmlspecialchars(strip_tags($item['item_title']),ENT_QUOTES,'UTF-8',False);
+	$item_content = $item['item_content'];
 	
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
 	return array($feed_link, $feed_title, $feed_image, $feed_description, $item_link, $item_id, $item_title, $item_content, $item_published);
@@ -1068,35 +1069,6 @@ function fof_todays_date()
     $offset = $prefs['tzoffset'];
     
     return gmdate( "Y/m/d", time() + ($offset * 60 * 60) );
-}
-
-function fof_htmlspecialchars($str){
-	//essentially does the same thing as htmlspecialchars($string, ENT_QUOTES), except
-	//that if text has ALREADY been escaped, it won't stuff things up.
-	//ie & becomes &amp;
-	//but &quot; is NOT transformed to &amp;quot;
-	
-	//Also, Due to some retarded choices in the simplepie sanitiser
-	//class, simplepie sometimes double escapes, and so we need to fix that.
-	
-	//Future: rewrite the sanitiser class so we don't need to kludge things up.
-	//Use the double escape option - what comes in has already been double
-	//escaped, don't make things worse!
-	$new = htmlspecialchars($str, ENT_QUOTES, 'UTF-8', False);
-	
-	//Fix simplepie's problems
-	$new = preg_replace('/&amp;(lt|gt|quot|amp|#039|pound|#163|mdash|#151);/',
-		'&$1;', $new);
-		
-	//allow some very basic tags, eg <em>
-	$allowedTags = array('em');
-	$toFind = array_map(function($tag){return "&lt;$tag&gt;";}, $allowedTags);
-	$toFind2 = array_map(function($tag){return "&lt;/$tag&gt;";}, $allowedTags);
-	$replace = array_map(function($tag){return "<$tag>";}, $allowedTags);
-	$replace2 = array_map(function($tag){return "</$tag>";}, $allowedTags);
-	$new = str_replace(array_merge($toFind,$toFind2), array_merge($replace,$replace2), $new);
-	
-	return $new;
 }
 
 function fof_int_validator($lower, $upper) {

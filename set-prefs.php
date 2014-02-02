@@ -216,7 +216,7 @@ if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'] && fof_au
 }
 
 if (isset($message)){
-	$escaped_msg = fof_htmlspecialchars($message);
+	$escaped_msg = htmlspecialchars($message,ENT_QUOTES,'UTF-8',False);
 	echo "<br><font color=\"red\">$escaped_msg</font><br />";
 }
 ?>

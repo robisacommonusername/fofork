@@ -72,7 +72,7 @@ if(isset($_GET['feed']))
 $shared_feed = fof_sanitise_link($shared_feed);
 $shared_link = fof_sanitise_link($shared_link);
 if ($extratitle){
-	$extratitle = fof_htmlspecialchars($extratitle);
+	$extratitle = htmlspecialchars($extratitle,ENT_QUOTES,'UTF-8',False);
 }
 
 //Begin output to browser
