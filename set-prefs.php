@@ -94,7 +94,8 @@ if(isset($_POST['prefs']) && fof_authenticate_CSRF_challenge($CSRF_hash)) {
 		'sharedname' => function($x) {return array(True, htmlspecialchars($x));},
 		'sharedurl' => function($x) {return array(True, htmlspecialchars($x));},
 		'feed_order' => fof_string_validator('/max_age|feed_title|feed_age|feed_unread/'),
-		'feed_direction' => fof_string_validator('/asc|desc/')
+		'feed_direction' => fof_string_validator('/asc|desc/'),
+		'howmany' => fof_int_validator(1,250)
 	);
 	//problem; for the checkboxes, if we untick them, nothing gets posted
 	//fix that
