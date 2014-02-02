@@ -45,7 +45,6 @@ define('FOF_VERSION', '1.6.0');
 require_once('fof-db.php');
 require_once('classes/fof-prefs.php');
 require_once('classes/AES.php');
-require_once('strippers.php');
 
 fof_db_connect();
 
@@ -658,14 +657,40 @@ function fof_get_item($user_id, $item_id)
    return $item;
 }
 
+function fof_sanitise_link($url){
+	//output of this function should always be safe to place between
+	//<a href="<?php echo $output">
+	//note that this function is for injecting into html context,
+	//NOT javascript context
+	$url = html_entity_decode($url);
+	$url = urldecode($url);
+	//kill off javascript:, vbscript:, etc
+	$processed = trim(strtolower($url));
+	if (strpos($processed, 'javascript:') === False && strpos($processed, 'vbscript:') === False){
+		$ret = $url;
+	} else {
+		$ret = '';
+	}
+	//look for ' or ".  These are commonly used to try and escape href="" and thus inject scripts
+	//kill anything to the right
+	$ret = preg_replace('/".*$/','',$ret);
+	$ret = preg_replace("/'.*$/",'',$ret);
+	
+	//look for attempted path traversals (www.example.com/../../../systemfile)
+	$ret = preg_replace('/([.]{2}\/?)+/', '', $ret);
+	
+	//remove any html tags
+	$ret = strip_tags($ret);
+	return $ret;
+}
+
 function fof_escape_feed_info($feed){
-	$stripper = new FofFeedSanitiser();
 	$id = intval($feed['feed_id']);
-   	$url = $stripper->sanitiseLink($feed['feed_url']);
+   	$url = fof_sanitise_link($feed['feed_url']);
    	$title = fof_htmlspecialchars(strip_tags($feed['feed_title']));
-   	$link = $stripper->sanitiseLink($feed['feed_link']);  
+   	$link = fof_sanitise_link($feed['feed_link']);  
    	$tags = array_map('fof_htmlspecialchars', $feed['tags']);
-   	$feed_image = $stripper->sanitiseLink($feed['feed_image']);
+   	$feed_image = fof_sanitise_link($feed['feed_image']);
    	
    	$description = fof_htmlspecialchars($feed['feed_description']);
    	$age = intval($feed['feed_age']);
@@ -678,16 +703,15 @@ function fof_escape_feed_info($feed){
 }
 
 function fof_escape_item_info($item){
-	$stripper = new FofItemSanitiser();
-	$feed_link = $stripper->sanitiseLink($item['feed_link']);
+	$feed_link = fof_sanitise_link($item['feed_link']);
 	$feed_title = fof_htmlspecialchars(strip_tags($item['feed_title']));
-	$feed_image = $stripper->sanitiseLink($item['feed_image']);
+	$feed_image = fof_sanitise_link($item['feed_image']);
 	$feed_description = fof_htmlspecialchars(strip_tags($item['feed_description']));
 
-	$item_link = $stripper->sanitiseLink($item['item_link']);
+	$item_link = fof_sanitise_link($item['item_link']);
 	$item_id = intval($item['item_id']);
 	$item_title = fof_htmlspecialchars(strip_tags($item['item_title']));
-	$item_content = $stripper->sanitise($item['item_content']);
+	$item_content = fof_sanitise_link($item['item_content']);
 	
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
 	return array($feed_link, $feed_title, $feed_image, $feed_description, $item_link, $item_id, $item_title, $item_content, $item_published);

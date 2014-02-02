@@ -46,8 +46,7 @@ if(isset($_GET['feed']))
     $feed = $_GET['feed'];
     $r = fof_db_get_feed_by_id($feed);
 
-    $sanitiser = new FofFeedSanitiser();
-    $feed_link = $sanitiser->sanitiseLink($r['feed_link']);
+    $feed_link = fof_sanitise_link($r['feed_link']);
     $feed_title = htmlspecialchars($r['feed_title']);
     $extratitle .= ' from <a href="' . $feed_link . '">' . $feed_title . '</a>';
 }
@@ -70,9 +69,8 @@ if(isset($_GET['feed']))
 }
 
 #escape output - strip tags is not sufficient, need to ensure can't escape from href=""
-$sanitiser = new FofFeedSanitiser();
-$shared_feed = $sanitiser->sanitiseLink($shared_feed);
-$shared_link = $sanitiser->sanitiseLink($shared_link);
+$shared_feed = fof_sanitise_link($shared_feed);
+$shared_link = fof_sanitise_link($shared_link);
 if ($extratitle){
 	$extratitle = fof_htmlspecialchars($extratitle);
 }

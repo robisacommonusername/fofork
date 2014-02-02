@@ -49,11 +49,10 @@ if (fof_authenticate_CSRF_challenge($hash)){
     	if (fof_db_is_subscribed($user_id, $feed['feed_url'])) {
 			//Already subscribed - render the feed link
 			$alreadySubscribed = True;
-			$stripper = new FofFeedSanitiser();
-			$link = $stripper->sanitiseLink($feed['feed_link']);
+			$link = fof_sanitise_link($feed['feed_link']);
 			$description = htmlspecialchars($feed['feed_description'], ENT_QUOTES);
 			$title = htmlspecialchars($feed['feed_title'], ENT_QUOTES);
-			$url = $stripper->sanitiseLink($feed['feed_url']);
+			$url = fof_sanitise_link($feed['feed_url']);
         } else {
 			$url = $feed['feed_url'];
 			$id = $feed['feed_id'];
