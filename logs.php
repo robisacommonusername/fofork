@@ -25,18 +25,20 @@ if (!fof_is_admin()){
 	die(json_encode($arr));
 }
 
-function decode_line($line,$pwd) {
-	//Note that we create a new instance of Crypt_AES every time this
-	//function is called. This is not as inefficient as it might seem,
-	//since we're unable to reuse instances to decrypt multiple lines
-	//with different IVs (the internal state of Crypt_AES gets stuffed up)
-	$decoded = base64_decode($line);
-	$aes = new Crypt_AES();
-	$IV = substr($decoded, 0, 16);
-	$ct = substr($decoded, 16);
-	$aes->setIV($IV);
-	$aes->setKey($pwd);
-	return $aes->decrypt($ct);
+function make_decoder($pwd){
+	return function($line) use ($pwd) {
+		//Note that we create a new instance of Crypt_AES every time this
+		//function is called. This is not as inefficient as it might seem,
+		//since we're unable to reuse instances to decrypt multiple lines
+		//with different IVs (the internal state of Crypt_AES gets stuffed up)
+		$decoded = base64_decode($line);
+		$aes = new Crypt_AES();
+		$IV = substr($decoded, 0, 16);
+		$ct = substr($decoded, 16);
+		$aes->setIV($IV);
+		$aes->setKey($pwd);
+		return $aes->decrypt($ct);
+	};
 }
 
 $pwd = fof_db_log_password();
@@ -53,8 +55,9 @@ switch ($_POST['action']){
 		exit();
 	}
 	$f = fopen('fof.log','r');
+	$decoder = make_decoder($pwd);
 	while (($line = fgets($f)) !== False){
-		echo decode_line($line,$pwd);
+		echo $decoder($line);
 		echo "\n";
 	}
 	fclose($f);
@@ -94,10 +97,7 @@ switch ($_POST['action']){
 		if ($encLines[-1] == ''){
 			array_pop($encLines);
 		}
-		$decLines = array_map(function($x) use($pwd){
-			return htmlspecialchars(decode_line($x,$pwd),ENT_QUOTES,'UTF-8',False);
-			}, $encLines);
-		
+		$decLines = array_map(make_decoder($pwd), $encLines);
 	} else {
 		$decLines = array();
 		$len = 0;
@@ -196,8 +196,7 @@ switch ($_POST['action']){
  		<input type="submit" value="Export log as text file" id="export_btn"></form>
 
  	<br /><br />
- 	<div id="log_throbber"><image src="image/throbber.gif">Loading...</image></div>
- 	<textarea rows="20" cols="100" id="text_area">
+ 	<textarea rows="20" cols="100" id="text_area" onscroll="FofLogViewer.scrollListener();">
 	</textarea><br /><br />
 	<center><a onclick="FofLogViewer.clear('<?php echo fof_compute_CSRF_challenge(); ?>')" href="#">Clear logs</a></center>
 <?php
