@@ -268,7 +268,7 @@ class SimplePie_StrictSanitiser extends SimplePie_Sanitize {
 
 			if ($type & (SIMPLEPIE_CONSTRUCT_TEXT | SIMPLEPIE_CONSTRUCT_IRI))
 			{
-				$data = htmlspecialchars($data, ENT_COMPAT, 'UTF-8');
+				$data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8', False);
 			}
 
 			if ($this->output_encoding !== 'UTF-8')
