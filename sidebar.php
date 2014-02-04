@@ -280,20 +280,34 @@ foreach($feeds as $feed)
 	   print "<a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a>";
 	}
 	print "</td>";
-
-   print "<td>";
-   $stitle = htmlspecialchars($title,ENT_QUOTES,'UTF-8',False);
-   print "<a href=\"$link\" title=\"home page\"><b>$stitle</b></a></td>";
-
-   print "<td><nobr>";
+	
+	print "<td>";
    
-   print "<a href=\"update.php?feed=$id\" title=\"update\">u</a>";
-   print " <a href=\"#\" title=\"mark all read\" onclick=\"if(confirm('Mark all [$stitle] items as read --are you SURE?')) { mark_feed_read($id); return false; }  else { return false; }\">m</a>";
-   print " <a  title=\"delete\" onclick=\"if(confirm('Delete feed [$stitle] - are you SURE?')) {delete_feed($id, '$CSRF_hash'); return false;} else {return false;}\" href=\"#\">d</a>";
-   
-   print "</nobr></td>";
-
-   print "</tr>";
+	//stitle will be injected into page in the context of a javascript string.
+	//it's thus necessary to remove any newline characters that the title
+	//may contain, as these will result in the javascript parser producing
+	//unterminated string errors.  ie
+	//var a = 'This is
+	// a string';
+	// is not valid javascript
+	$stitle = htmlspecialchars(
+		str_replace(
+			array("\r","\n"),
+			array('',''),
+			$title),
+		ENT_QUOTES);
+	
+	print "<a href=\"$link\" title=\"home page\"><b>$stitle</b></a></td>";
+	
+	print "<td><nobr>";
+	
+	print "<a href=\"update.php?feed=$id\" title=\"update\">u</a>";
+	print " <a href=\"#\" title=\"mark all read\" onclick=\"if(confirm('Mark all [$stitle] items as read --are you SURE?')) { mark_feed_read($id); return false; }  else { return false; }\">m</a>";
+	print " <a  title=\"delete\" onclick=\"if(confirm('Delete feed [$stitle] - are you SURE?')) {delete_feed($id, '$CSRF_hash'); return false;} else {return false;}\" href=\"#\">d</a>";
+	
+	print "</nobr></td>";
+	
+	print "</tr>";
 }
 
 ?>
