@@ -124,6 +124,7 @@ var FofLogViewer = (function () {
 		var url = 'logs.php';
 		var params = {action: 'ajax'};
 		params.offset = my.lastOffset - 64*1024;
+		Element.show('log_throbber');
 		var complete = function (resp) {
 			var ret = JSON.parse(resp.responseText);
 			if (ret.status == 200){
@@ -151,19 +152,16 @@ var FofLogViewer = (function () {
 					//scroll to correct position
 					var pos = (1-oldNumLines/newNumLines) * text_area.scrollHeight;
 					text_area.scrollTop = pos;
+					my.fetch();
+					return true;
 				}
 			}
+			Element.hide('log_throbber');
 		};
 		var options = {method: 'post', parameters: params, onComplete: complete};
 		
 		new Ajax.Request(url, options);
 	};
-	
-	my.scrollListener = function(){
-		if (document.getElementById('text_area').scrollTop == 0) {
-			my.fetch();
-		}
-	}
 	
 	return my;
 })();

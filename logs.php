@@ -196,7 +196,8 @@ switch ($_POST['action']){
  		<input type="submit" value="Export log as text file" id="export_btn"></form>
 
  	<br /><br />
- 	<textarea rows="20" cols="100" id="text_area" onscroll="FofLogViewer.scrollListener();">
+ 	<div id="log_throbber"><image src="image/throbber.gif">Loading...</image></div>
+ 	<textarea rows="20" cols="100" id="text_area">
 	</textarea><br /><br />
 	<center><a onclick="FofLogViewer.clear('<?php echo fof_compute_CSRF_challenge(); ?>')" href="#">Clear logs</a></center>
 <?php
