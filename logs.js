@@ -123,18 +123,17 @@ var FofLogViewer = (function () {
 		//fetch part of the decoded log file
 		var url = 'logs.php';
 		var params = {action: 'ajax'};
-		params.offset = my.lastOffset - 64*1024;
+		params.offset = my.lastOffset - 256*1024; //get 256k at a time
 		Element.show('log_throbber');
 		var complete = function (resp) {
 			var ret = JSON.parse(resp.responseText);
 			if (ret.status == 200){
 				if (ret.data.offset != my.lastOffset){
 					//add lines to array
-					var oldNumLines = my.allLines.length;
 					my.allLines = ret.data.lines.concat(my.allLines);
-					var newNumLines = my.allLines.length;
 					
-					//update
+					//update (only filter the new lines, existing lines
+					//have already been filtered)
 					my.lastOffset = ret.data.offset;
 					var newLines = ret.data.lines;
 					DOMobjects.forEach(function (obj) {
@@ -142,16 +141,22 @@ var FofLogViewer = (function () {
 							newLines = obj.filterFunction(newLines);
 						}
 					});
-			
-					//place the new lines into the text area
+					
 					var text_area = document.getElementById('text_area');
+					var oldScrollHeight = text_area.scrollHeight;
+					var oldScrollTop = text_area.scrollTop;
+					
+					//place the new lines into the text area
 					var logText = newLines.join('\n\n');
 					var oldText = text_area.value;
 					text_area.value = logText + '\n\n' + oldText;
 					
 					//scroll to correct position
-					var pos = (1-oldNumLines/newNumLines) * text_area.scrollHeight;
+					var heightNewLines = text_area.scrollHeight - oldScrollHeight;
+					var pos = oldScrollTop + heightNewLines;
 					text_area.scrollTop = pos;
+					
+					//get next section of log file
 					my.fetch();
 					return true;
 				}
