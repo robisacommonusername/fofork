@@ -23,7 +23,8 @@ fof_add_item_filter('fof_balancetags');
 	1.0  First Version
 */
 
-function fof_balancetags($text) {
+function fof_balancetags($item) {
+	$text = $item['item_content'];
 
 	$tagstack = array(); $stacksize = 0; $tagqueue = ''; $newtext = '';
 
@@ -117,7 +118,9 @@ function fof_balancetags($text) {
 	// WP fix for the bug with HTML comments
 	$newtext = str_replace("< !--","<!--",$newtext);
 	$newtext = str_replace("<    !--","< !--",$newtext);
+	
+	$item['item_content'] = $newtext;
 
-	return $newtext;
+	return $item;
 }
 ?>

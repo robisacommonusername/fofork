@@ -634,9 +634,8 @@ function fof_get_items($user_id, $feed=NULL, $what="unread", $when=NULL, $start=
    
    for($i=0; $i<count($items); $i++)
    {
-   	  foreach($fof_item_filters as $filter)
-   	  {
-		  $items[$i]['item_content'] = $filter($items[$i]['item_content']);
+   	  foreach($fof_item_filters as $filter) {
+		  $items[$i] = $filter($items[$i]);
       }
    }
    
@@ -649,9 +648,8 @@ function fof_get_item($user_id, $item_id)
 
    $item = fof_db_get_item($user_id, $item_id);
    
-   foreach($fof_item_filters as $filter)
-   {
-      $item['item_content'] = $filter($item['item_content']);
+   foreach($fof_item_filters as $filter) {
+	   $item = $filter($item);
    }
    
    return $item;
@@ -946,10 +944,9 @@ function fof_apply_plugin_tags($feed_id, $item_id = null, $user_id = null)
 
 function fof_init_plugins()
 {
-	global $fof_item_filters, $fof_item_prefilters, $fof_tag_prefilters, $fof_plugin_prefs;
+	global $fof_item_filters, $fof_tag_prefilters, $fof_plugin_prefs;
     
     $fof_item_filters = array();
-    $fof_item_prefilters = array();
     $fof_plugin_prefs = array();
 	$fof_tag_prefilters = array();
 
@@ -982,13 +979,6 @@ function fof_add_item_filter($function)
     global $fof_item_filters;
     
     $fof_item_filters[] = $function;
-}
-
-function fof_add_item_prefilter($function)
-{
-    global $fof_item_prefilters;
-    
-    $fof_item_prefilters[] = $function;
 }
 
 //do nothing function as default argument to fof_add_pref

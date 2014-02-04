@@ -1,11 +1,10 @@
 <?php 
 
-fof_add_item_prefilter('fof_enclosures');
+fof_add_item_filter('fof_enclosures');
 
-function fof_enclosures($item, $link, $title, $content)
+function fof_enclosures($item)
 {
-    if ($enclosure = $item->get_enclosure(0))
-    {
+    if ($enclosure = $item->get_enclosure(0)) {
         $html = '<br><br><a href="#" onclick="show_enclosure(event); return false;">show enclosure</a><div style="display: none" align="center" width="auto">';
         $html .= '<p>' . $enclosure->embed(array(
             'audio' => 'plugins/place_audio.png',
@@ -23,7 +22,7 @@ function fof_enclosures($item, $link, $title, $content)
             $html .= ')</i>';
         $html .= '</div>';
     }
-
-   return array($link, $title, $content . $html);
+	$item['item_content'] = $item['item_content'] . $html;
+   return $item;
 }
 ?>
