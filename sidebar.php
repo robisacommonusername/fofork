@@ -37,24 +37,14 @@ $allowedOrders = array('feed_age', 'max_date', 'feed_unread', 'feed_url', 'feed_
 $order = in_array($order, $allowedOrders) ? $order : 'feed_age' ;
 $direction = $fof_prefs_obj->get('feed_direction') == 'asc' ? 'asc' : 'desc';
 
-if(!isset($_GET['what']))
-{
-    $what = "unread";
-}
-else
-{
-    $what = htmlspecialchars($_GET['what']);
+if(!isset($_GET['what'])) {
+	$what = 'unread';
+} else {
+	$what = htmlspecialchars($_GET['what'], ENT_QUOTES);
 }
 
-$when = htmlspecialchars($_GET['when']);
-
-$searchEscaped = htmlspecialchars($_GET['search'], ENT_QUOTES);
-
-$whatEscaped = htmlspecialchars($what, ENT_QUOTES);
-$whenEscaped = htmlspecialchars($when, ENT_QUOTES);
-
-//echo "<script>what='$whatEscaped'; when='$whenEscaped';</script>";
-
+$when = htmlspecialchars($_GET['when'], ENT_QUOTES);
+$search = htmlspecialchars($_GET['search'], ENT_QUOTES);
 $feeds = fof_get_feeds(fof_current_user(), $order, $direction);
 
 foreach($feeds as $row)
@@ -82,16 +72,16 @@ echo "<script>starred = $starred;</script>";
 <li <?php if($what == "star") echo "style='background: #ddd'" ?> ><a href=".?what=star"><img src="image/star-on.gif" border="0" height="10" width="10"> Starred <span id="starredcount"><?php if($starred) echo "($starred)" ?></span></a></li>
 <li <?php if($what == "all" && isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&when=today">&lt; Today</a></li>
 <li <?php if($what == "all" && !isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&how=paged">All Items <?php if($total) echo "($total)" ?></a></li>
-<li <?php if(isset($searchEscaped)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
-<form action="." id="search" <?php if(!isset($searchEscaped)) echo 'style="display: none"' ?>>
-<input id="searchfield" name="search" value="<?php echo $searchEscaped ?>">
+<li <?php if(isset($search)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
+<form action="." id="search" <?php if(!isset($search)) echo 'style="display: none"' ?>>
+<input id="searchfield" name="search" value="<?php echo $search ?>">
 <?php
 	if($what == "unread")
 		echo '<input type="hidden" name="what" value="all">';
 	else
-		echo '<input type="hidden" name="what" value="'.$whatEscaped.'">';
+		echo '<input type="hidden" name="what" value="'.$what.'">';
 ?>
-<?php if(isset($_GET['when'])) echo "<input type='hidden' name='what' value='$whenEscaped'>" ?>
+<?php if(isset($_GET['when'])) echo "<input type='hidden' name='what' value='$when'>" ?>
 </form>
 </li>
 </ul>
