@@ -29,7 +29,7 @@ function decrypt_line($line){
 	$aes->setKey(fof_db_log_password());
 	$aes->setIV($IV);
 	$decoded = $aes->decrypt(base64_decode($data));
-	return $decoded;
+	return addslashes($decoded);
 }
 
 //slurp all text, and split lines
@@ -41,6 +41,7 @@ if (file_exists('fof.log')) {
 
 //decrypt everything
 $decodedLines = array_map('decrypt_line', $logLines);
+$lineArray = '["' . implode('","', $decodedLines) . '"]';
 
 if (isset($_POST['export'])){
 	//export text file
@@ -51,10 +52,6 @@ if (isset($_POST['export'])){
 } else {
 	//send html output to browser, including log viewer controls
 	include('header.php');
-	$escaped_lines = array_map(function($x){
-		return htmlspecialchars($x,'ENT_QUOTES','UTF-8',False);
-	}, $decodedLines);
-	$lineArray = json_encode($escaped_lines);
 	?>
 	<link rel="stylesheet" type="text/css" media="all" href="jsdatepick/jsDatePick_ltr.min.css" />
 	<script type="text/javascript" src="jsdatepick/jsDatePick.full.1.3.js"></script>
