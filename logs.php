@@ -152,8 +152,6 @@ switch ($_POST['action']){
 		dateFormat:"%Y-%m-%d"});
 		
 		FofLogViewer.fetch();
-		//FofLogViewer.lastOffset = -64*1024;
-		//FofLogViewer.allLines = <?php echo $lineArray; ?>;
 	};
 	</script>
 	
@@ -196,6 +194,7 @@ switch ($_POST['action']){
  		<input type="submit" value="Export log as text file" id="export_btn"></form>
 
  	<br /><br />
+ 	<div id="log_throbber"><img src="image/throbber.gif">Loading...</div>
  	<textarea rows="20" cols="100" id="text_area" onscroll="FofLogViewer.scrollListener();">
 	</textarea><br /><br />
 	<center><a onclick="FofLogViewer.clear('<?php echo fof_compute_CSRF_challenge(); ?>')" href="#">Clear logs</a></center>
