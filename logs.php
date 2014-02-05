@@ -195,7 +195,7 @@ switch ($_POST['action']){
 
  	<br /><br />
  	<div id="log_throbber"><img src="image/throbber.gif">Loading...</div>
- 	<textarea rows="20" cols="100" id="text_area" onscroll="FofLogViewer.scrollListener();">
+ 	<textarea rows="20" cols="100" id="text_area">
 	</textarea><br /><br />
 	<center><a onclick="FofLogViewer.clear('<?php echo fof_compute_CSRF_challenge(); ?>')" href="#">Clear logs</a></center>
 <?php
