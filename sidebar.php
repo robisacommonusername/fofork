@@ -16,7 +16,7 @@
  *
  */
 
-include_once("fof-main.php");
+include_once('fof-main.php');
 
 fof_set_content_type();
 $CSRF_hash = fof_compute_CSRF_challenge();
@@ -32,20 +32,24 @@ $CSRF_hash = fof_compute_CSRF_challenge();
 
 <?php
 
-$order = $fof_prefs_obj->get('feed_order');
+//Required for ordering the feeds in the sidebar
+$feed_order = $fof_prefs_obj->get('feed_order');
 $allowedOrders = array('feed_age', 'max_date', 'feed_unread', 'feed_url', 'feed_title');
-$order = in_array($order, $allowedOrders) ? $order : 'feed_age' ;
-$direction = $fof_prefs_obj->get('feed_direction') == 'asc' ? 'asc' : 'desc';
+$feed_order = in_array($feed_order, $allowedOrders) ? $feed_order : 'feed_age' ;
+$feed_direction = $fof_prefs_obj->get('feed_direction') == 'asc' ? 'asc' : 'desc';
 
+//these parameters are used in the case of a search, so that searches can
+//preserve the what, when, which, etc. i.e. this allows searching within
+//the currently displayed feed, etc
 if(!isset($_GET['what'])) {
-	$what = 'unread';
+	$what = 'all';
 } else {
 	$what = htmlspecialchars($_GET['what'], ENT_QUOTES);
 }
 
 $when = htmlspecialchars($_GET['when'], ENT_QUOTES);
 $search = htmlspecialchars($_GET['search'], ENT_QUOTES);
-$feeds = fof_get_feeds(fof_current_user(), $order, $direction);
+$feeds = fof_get_feeds(fof_current_user(), $feed_order, $feed_direction);
 
 foreach($feeds as $row)
 {
@@ -73,15 +77,10 @@ echo "<script>starred = $starred;</script>";
 <li <?php if($what == "all" && isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&when=today">&lt; Today</a></li>
 <li <?php if($what == "all" && !isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&how=paged">All Items <?php if($total) echo "($total)" ?></a></li>
 <li <?php if(isset($search)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
-<form action="." id="search" <?php if(!isset($search)) echo 'style="display: none"' ?>>
+<form action="." id="search" <?php if(!isset($search)) echo 'style="display: none"';?>>
 <input id="searchfield" name="search" value="<?php echo $search ?>">
-<?php
-	if($what == "unread")
-		echo '<input type="hidden" name="what" value="all">';
-	else
-		echo '<input type="hidden" name="what" value="'.$what.'">';
-?>
-<?php if(isset($_GET['when'])) echo "<input type='hidden' name='what' value='$when'>" ?>
+<?php echo '<input type="hidden" name="what" value="'.$what.'">'; ?>
+<?php if ($what == '' && $when != '') echo "<input type='hidden' name='what' value='$when'>"; ?>
 </form>
 </li>
 </ul>
@@ -179,9 +178,9 @@ $name["feed_title"] = "title";
 foreach ($allowedOrders as $col)
 {
 	$challenge = fof_compute_CSRF_challenge();
-    if($col == $order)
+    if($col == $feed_order)
     {
-        $url = "return change_feed_order('$col', '" . ($direction == "asc" ? "desc" : "asc") . "', '$challenge')";
+        $url = "return change_feed_order('$col', '" . ($feed_direction == "asc" ? "desc" : "asc") . "', '$challenge')";
     }
     else
     {
@@ -199,9 +198,9 @@ foreach ($allowedOrders as $col)
         echo $name[$col];
     }
     
-    if($col == $order)
+    if($col == $feed_order)
     {
-        echo ($direction == "asc") ? "&darr;" : "&uarr;";
+        echo ($feed_direction == "asc") ? "&darr;" : "&uarr;";
     }
     
     echo "</a></nobr></td>";
