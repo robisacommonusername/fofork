@@ -46,9 +46,11 @@ if(!isset($_GET['what'])) {
 } else {
 	$what = htmlspecialchars($_GET['what'], ENT_QUOTES);
 }
-
 $when = htmlspecialchars($_GET['when'], ENT_QUOTES);
+$direction = $_GET['order'] == 'asc' ? 'asc' : 'desc';
 $search = htmlspecialchars($_GET['search'], ENT_QUOTES);
+
+//get feeds for display in sidebar
 $feeds = fof_get_feeds(fof_current_user(), $feed_order, $feed_direction);
 
 foreach($feeds as $row)
@@ -79,8 +81,13 @@ echo "<script>starred = $starred;</script>";
 <li <?php if(isset($search)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
 <form action="." id="search" <?php if(!isset($search)) echo 'style="display: none"';?>>
 <input id="searchfield" name="search" value="<?php echo $search ?>">
-<?php echo '<input type="hidden" name="what" value="'.$what.'">'; ?>
-<?php if ($what == '' && $when != '') echo "<input type='hidden' name='what' value='$when'>"; ?>
+<?php if ($what != '') {
+	echo '<input type="hidden" name="what" value="'.$what.'">';
+}?>
+<input type="hidden" name="order" value="<?php echo $direction ?>">
+<?php if ($what == '' && $when != '') {
+	echo '<input type="hidden" name="what" value="'.$when.'">';
+} ?>
 </form>
 </li>
 </ul>

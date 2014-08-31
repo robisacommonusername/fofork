@@ -60,13 +60,13 @@ $navLink = implode(' | ', $navParts);
 
 <ul id="item-display-controls" class="inline-list">
 	<li class="orderby"><?php
-	
-	echo ($order == 'desc') ? '[new to old]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=desc\">[new to old]</a>" ;
+	$search_clause = ($search == '' ? '' : "search=$search&amp;");
+	echo ($order == 'desc') ? '[new to old]' : '<a href=".?'.$search_clause."feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=desc\">[new to old]</a>" ;
 	
 	?></li>
 	<li class="orderby"><?php
 
-	echo ($order == 'asc') ? '[old to new]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=asc\">[old to new]</a>" ;
+	echo ($order == 'asc') ? '[old to new]' : '<a href=".?'.$search_clause."feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=asc\">[old to new]</a>" ;
 	
 	?></li>
 	<li><a href="javascript:flag_all();mark_read()"><strong>Mark all read</strong></a></li>
