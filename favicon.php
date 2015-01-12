@@ -16,20 +16,13 @@
  *
  */
 
-//may kill off this file
-if (!preg_match('/^[0-9a-f]{32}$/i', $_GET[i])){
-	die();
-}
-$fn = './cache/' . $_GET[i] . '.spi';
-if (file_exists($fn)) {
-	//is this a security risk? Review
-	$item = unserialize(file_get_contents($fn));
-	header('Content-type:' . $item['headers']['content-type']);
-	echo $item['body'];
-	exit;
-	//deprecated
-    //SimplePie_Misc::display_cached_file($_GET['i'], './cache', 'spi');
-} else {
-    header('Location: ./image/feed-icon.png');
-}
+require('classes/IconDownloader.php');
+$url = $_GET['url'];
+$downloader = new IconDownloader($url);
+$gd_img = $downloader->getIconImage();
+//var_dump($gd_img);
+//die();
+header('Content-type: image/png');
+imagepng($gd_img);
+imagedestroy($gd_img);
 ?>

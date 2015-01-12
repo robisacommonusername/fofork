@@ -815,30 +815,6 @@ function fof_update_feed($id) {
     
     $image = $feed['feed_image'];
     $image_cache_date = $feed['feed_image_cache_date'];
-    
-    if($feed['feed_image_cache_date'] < (time() - (7*24*60*60))){
-        $image = $rss->get_favicon();
-        //new simplepie no longer caches the favicons, so we'll do it manually
-        if (!preg_match('|^favicon.php?i=|', $image)){
-			$cached_image = 'favicon.php?i=' . md5($image);
-			$img_data = file_get_contents($image);
-			if ($img_data !== False){
-				//get the response headers, and put them into same format
-				//as simplpie used to ie server => server data, etag => ...
-				$headers = array_reduce($http_response_header,
-					function ($acc, $x){
-						$parts = explode(':', $x);
-						$k = strtolower(array_shift($parts));
-						$v =  trim(implode(':',$parts));
-						return array_merge($acc, array($k => $v));
-					}, array());
-				$fn = './cache/' . md5($image) . '.spi';
-				file_put_contents($fn, serialize(array('headers' => $headers, 'body' => $img_data)));
-				$image = $cached_image;
-			}
-		}
-        $image_cache_date = time();
-    }
 	
 	$title =  $rss->get_title();
 	if($title == "") $title = "[no title]";

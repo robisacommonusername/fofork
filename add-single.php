@@ -64,7 +64,7 @@ if (fof_authenticate_CSRF_challenge($hash)){
     } else {
     	//need to add feed to db.  No feed exists with either the specified url
     	//or with the parsed url
-    	$icon = 'favicon.php?i=' . md5($rss->get_favicon());
+    	$icon = 'favicon.php?url=' . urlencode($rss->get_link());
     	$id = fof_add_feed($url, $rss->get_title(), $rss->get_link(), $rss->get_description(), $icon);
         fof_update_feed($id);
         fof_db_add_subscription($user_id, $id);

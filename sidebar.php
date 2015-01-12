@@ -237,7 +237,9 @@ foreach($feeds as $feed)
    $agestrabbr = $feed['agestrabbr'];
    $lateststr = $feed['lateststr'];
    $lateststrabbr = $feed['lateststrabbr'];
-
+   
+   //over-ride the old favicon code
+   $feed_image = 'favicon.php?url=' . urlencode($link);
 
    if(++$t % 2)
    {

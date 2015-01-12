@@ -60,6 +60,8 @@ function fof_render_item($item){
 	      $item_title,
 	      $item_content,
 	       $item_published) = fof_escape_item_info($item);
+	//override feed image in the database
+	$feed_image = 'favicon.php?url=' . urlencode($feed_link);
 
 	$prefs = fof_prefs();
 	$offset = $prefs['tzoffset'];
