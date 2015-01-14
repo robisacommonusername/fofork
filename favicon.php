@@ -20,8 +20,6 @@ require('classes/IconDownloader.php');
 $url = $_GET['url'];
 $downloader = new IconDownloader($url);
 $gd_img = $downloader->getIconImage();
-//var_dump($gd_img);
-//die();
 header('Content-type: image/png');
 imagepng($gd_img);
 imagedestroy($gd_img);

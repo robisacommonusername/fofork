@@ -136,11 +136,6 @@ class IconDownloader {
 		return $gd_img;
 	}
 	
-	public function getIconPng(){
-		//return some bytes for the image in png format
-		$img = $this->getIconImage();
-		return IconDownloader::PNGBytes($img);
-	}
 	
 	public function getCacheUpdateTime(){
 		$cache_file = $this->getCacheFile();
@@ -203,12 +198,24 @@ class IconDownloader {
 		$height = $bmp_info['height']/2;
 		$bpp = $bmp_info['bpp'];
 		$ncolours = $bmp_info['ncolours'] == 0 ? 1<<$bmp_info['bpp'] : $bmp_info['ncolours'];
-		$bitmap_data = unpack('C*',substr($img_data,40+4*$ncolours));
-		//TODO: decompress if necessary
 		
+		//rows of bitmap data must be padded to multiple of 4 bytes = 32 bits
+		//add some 'dummy' pixels that won't get drawn to image width
+		//we have $width*$bpp bits per row, need to make it up to multiple of 32
+		$bits_per_row = $width*$bpp;
+		$words_per_row = ceil($bits_per_row/32);
+		$pad_bits = $words_per_row*32 - $bits_per_row;
+		$pad_width = $width + ceil($pad_bits/$bpp);
+		$nbytes = $height*$words_per_row*4;
+		
+		//TODO: decompress if necessary
+		$bitmap_data = unpack('C*',substr($img_data,40+4*$ncolours,$nbytes));
+		$transparency = unpack('C*',substr($img_data,40+4*$ncolours+$nbytes));
 		//draw the bitmap
-		$img = imagecreatetruecolor($width,$height);
+		$img = imagecreate($width,$height);
+		
 		//allocate colours from the colour table
+		$trans_colour = null;
 		if ($ncolours > 0) {
 			$colour_map = unpack('V*', substr($img_data,40,$ncolours*4));
 			//note that unpack gives us keys starting from 1, we use
@@ -219,26 +226,48 @@ class IconDownloader {
 					$b = $x & 0xff;
 					return imagecolorallocate($img, $r, $g, $b); 
 				}, array_values($colour_map));
+			//find a colour that isn't in the colour table to use for
+			//transparency
+			array_multisort($colour_map);
+			//add white onto the end
+			$colour_map[] = 0xffffff;
+			$last = 0;
+			while (count($colour_map) > 0){
+				$curr = array_pop($colour_map);
+				$mid = floor(($curr+$last)/2);
+				if ($mid != $curr && $mid != $last){
+					$r = $mid>>16 & 0xff;
+					$g = $mid>>8 & 0xff;
+					$b = $mid & 0xff;
+					$trans_colour = imagecolorallocate($img,$r,$g,$b);
+					break;
+				}
+				$last = $curr;
+			}
 		}
-		
+		if (is_null($trans_colour)){
+			$trans_colour = imagecolorallocate($img,255,255,0);  //magenta
+		}
+		imagefill($img,0,0,$trans_colour);
+
 		$excess_bits = 0;
 		$acc = 0;
 		$row = 0;
 		$col = 0;
 		$bpp_mask = (1 << $bpp) - 1;
-		//rows of bitmap data must be padded to multiple of 4 bytes = 32 bits
-		//add some 'dummy' pixels that won't get drawn to image width
-		//we have $width*$bpp bits per row, need to make it up to multiple of 32
-		$bits_per_row = $width*$bpp;
-		$words_per_row = ceil($bits_per_row/32);
-		$pad_bits = $words_per_row*32 - $bits_per_row;
-		$pad_width = $width + ceil($pad_bits/$bpp);
-		$nbytes = $height*$words_per_row*4;
+		$trans_bits = 0;
+		$trans_acc = 0;
+		$any_transparent = 0;
 		for ($i=1; $i<=$nbytes; $i++){
 			$acc = $acc<<8 | $bitmap_data[$i];
 			$excess_bits += 8;
 			while ($excess_bits >= $bpp){
 				//we've got enough data for a new pixel (or several)
+				if ($trans_bits == 0){
+					$trans_bits = 8;
+					$trans_acc = array_shift($transparency);
+					$any_transparent |= $trans_acc;
+				}
 				$shift = $excess_bits - $bpp;
 				$next_pixel_unshifted = $acc & ($bpp_mask << $shift);
 				$next_pixel = $next_pixel_unshifted >> $shift;
@@ -258,17 +287,33 @@ class IconDownloader {
 					$colour = imagecolorallocate($img,$r,$g,$b);
 				}
 				
-				//draw pixel
+				//draw pixel - don't draw on dummy (pad) columns
 				if ($col < $width){
-					//don't draw on dummy (pad) columns
-					imagesetpixel($img,$col,$height-$row-1,$colour);
+					//get pixel transparency
+					$pixel_trans = $trans_acc & 128; //read the high bit first
+					$trans_acc = $trans_acc << 1;
+					$trans_bits--;
+					if ($pixel_trans == 0){
+						imagesetpixel($img,$col,$height-$row-1,$colour);
+					}
 				}
 				$col++;
 				if ($col >= $pad_width){
 					$col = 0;
 					$row++;
+					//flush the transparency accumulator, get rid of pad
+					//bytes in the tranparency mask
+					$bytes_to_consume = 4*ceil($width/32)-ceil($width/8);
+					for ($byte=0; $byte<$bytes_to_consume; $byte++){
+						array_shift($transparency);
+					}
+					$trans_bits = 0;
 				}
 			}
+		}
+		
+		if ($any_transparent){
+			imagecolortransparent($img, $trans_color);
 		}
 		return $img;
 	}
