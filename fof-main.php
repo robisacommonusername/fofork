@@ -194,11 +194,14 @@ function fof_make_aes_key() {
 			$f = fopen('/dev/urandom', 'r');
 			$bytes = fread($f, 16);
 			fclose($f);
+			//if any of the above fail, there probably won't be an exception,
+			//PHP will issue a warning, and $bytes will be FALSE
+			//Good god, this language is a piece of shit.
 		} catch (Exception $e) {
 			$bytes = null;
 		}
 	}
-	if ($bytes === null) {
+	if ($bytes === false || $bytes === null) {
 		//fallback using mersenne twister.  Not great, but hopefully can extract
 		//enough entropy from mt_rand without being able to reconstruct internal state.
 		//the hashing is important! Must not give attacker access to the outputs!
