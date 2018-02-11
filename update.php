@@ -63,9 +63,17 @@ echo '<script>window.onload = ajaxupdate;';
 
 //create a json array of [{id : $id, title : $title}, ...] pairs
 $feedjson = json_encode(
-				array_map(function($feed) {
-					return array('id' => $feed['feed_id'], 'title' => $feed['feed_title']);
-				}, $feeds));
+    array_map(
+        function($feed) {
+            $title = htmlspecialchars($feed['feed_title'], ENT_QUOTES);
+            return array(
+                'id' => $feed['feed_id'],
+                'title' => $title
+            );
+        },
+        $feeds
+    )
+);
 echo "var feedslist = $feedjson; </script>";
 
 include("footer.php");

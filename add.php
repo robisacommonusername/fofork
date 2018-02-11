@@ -84,13 +84,17 @@ OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo h
 </form>
 
 <?php
-if(count($feeds))
-{
+if(count($feeds)) {
 	$challenge = fof_compute_CSRF_challenge();
 	$feedjson = json_encode(
-					array_map(function ($feed){
-						return array('url' => $feed);
-					}, $feeds));
+        array_map(
+            function ($feed){
+                $display_url = htmlspecialchars($feed, ENT_QUOTES);
+                return array('url' => $display_url);
+            },
+            $feeds
+        )
+    );
 	echo "<script> window.onload = function(){feedslist=$feedjson; ajaxadd('$challenge');};</script><br />";
 }
 include('footer.php');
